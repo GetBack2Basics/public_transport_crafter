@@ -1,0 +1,38 @@
+# Environments
+.venv/
+env/
+venv/
+ENV/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local Data Artifacts (All processing and storage lives on GCS)
+data/
+*.parquet
+*.geoparquet
+*.geojson
+*.zip
+*.tar.gz
+
+# Local HTML reports (All reviews live on GCS)
+data/reports/
+*.html
+!runner/templates/*.html
+
+# Secrets & Environment variables
+.env
+.env.local
+.agents/
+
+# IDE / OS files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+scratch/

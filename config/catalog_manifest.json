@@ -1,0 +1,107 @@
+{
+  "version": "1.0.0",
+  "last_updated": "2026-10-20",
+  "default_crs": "EPSG:7856",
+  "description": "Authoritative registry of NSW Public Transport feeds (GTFS & Opal matrices)",
+  "datasets": {
+    "tfnsw_gtfs_sydneytrains": {
+      "agency_id": "SydneyTrains",
+      "mode": "rail",
+      "region": "Greater Sydney",
+      "protocol": "tfnsw_api",
+      "endpoint": "https://api.transport.nsw.gov.au/v1/gtfs/schedule/sydneytrains",
+      "format": "gtfs_zip",
+      "target_tables": ["routes", "trips", "stop_times", "stops", "shapes", "calendar"],
+      "default_destination": "data/lake/sydneytrains.parquet",
+      "description": "Sydney Suburban and Intercity electrified rail network schedules"
+    },
+    "tfnsw_gtfs_nswtrains": {
+      "agency_id": "NSWTrainLink",
+      "mode": "rail_coach",
+      "region": "NSW Intercity & Regional",
+      "protocol": "tfnsw_api",
+      "endpoint": "https://api.transport.nsw.gov.au/v1/gtfs/schedule/nswtrains",
+      "format": "gtfs_zip",
+      "target_tables": ["routes", "trips", "stop_times", "stops", "shapes", "calendar"],
+      "default_destination": "data/lake/nswtrains.parquet",
+      "description": "NSW TrainLink Intercity (Hunter, Central Coast, Blue Mountains, South Coast) and Regional train and coach services"
+    },
+    "tfnsw_gtfs_metro": {
+      "agency_id": "SydneyMetro",
+      "mode": "metro",
+      "region": "Greater Sydney",
+      "protocol": "tfnsw_api",
+      "endpoint": "https://api.transport.nsw.gov.au/v1/gtfs/schedule/metro",
+      "format": "gtfs_zip",
+      "target_tables": ["routes", "trips", "stop_times", "stops", "shapes", "calendar"],
+      "default_destination": "data/lake/metro.parquet",
+      "description": "Sydney Metro automated rapid transit schedules"
+    },
+    "tfnsw_gtfs_buses_hunter": {
+      "agency_id": "HunterBuses",
+      "mode": "bus",
+      "region": "Hunter Valley & Newcastle",
+      "protocol": "tfnsw_api",
+      "endpoint": "https://api.transport.nsw.gov.au/v1/gtfs/schedule/buses/hunter",
+      "format": "gtfs_zip",
+      "target_tables": ["routes", "trips", "stop_times", "stops", "shapes", "calendar"],
+      "default_destination": "data/lake/hunter_buses.parquet",
+      "description": "Hunter Valley Buses, Rover Coaches, CDC Hunter bus schedules"
+    },
+    "tfnsw_gtfs_newcastle_transport": {
+      "agency_id": "NewcastleTransport",
+      "mode": "bus_lightrail_ferry",
+      "region": "Newcastle & Lake Macquarie",
+      "protocol": "tfnsw_api",
+      "endpoint": "https://api.transport.nsw.gov.au/v1/gtfs/schedule/newcastle",
+      "format": "gtfs_zip",
+      "target_tables": ["routes", "trips", "stop_times", "stops", "shapes", "calendar"],
+      "default_destination": "data/lake/newcastle_transport.parquet",
+      "description": "Keolis Downer Newcastle Transport bus, light rail, and ferry timetables"
+    },
+    "tfnsw_gtfs_buses_outermetro": {
+      "agency_id": "OuterMetroBuses",
+      "mode": "bus",
+      "region": "Outer Metropolitan NSW",
+      "protocol": "tfnsw_api",
+      "endpoint": "https://api.transport.nsw.gov.au/v1/gtfs/schedule/buses/outermetro",
+      "format": "gtfs_zip",
+      "target_tables": ["routes", "trips", "stop_times", "stops", "shapes", "calendar"],
+      "default_destination": "data/lake/outermetro_buses.parquet",
+      "description": "Outer Metropolitan bus services covering Central Coast, Blue Mountains, and Illawarra"
+    },
+    "tfnsw_gtfs_lightrail": {
+      "agency_id": "SydneyLightRail",
+      "mode": "light_rail",
+      "region": "Sydney CBD & South East / Inner West",
+      "protocol": "tfnsw_api",
+      "endpoint": "https://api.transport.nsw.gov.au/v1/gtfs/schedule/lightrail",
+      "format": "gtfs_zip",
+      "target_tables": ["routes", "trips", "stop_times", "stops", "shapes", "calendar"],
+      "default_destination": "data/lake/lightrail.parquet",
+      "description": "Sydney Light Rail L1 Dulwich Hill, L2 Randwick, L3 Kingsford network"
+    },
+    "tfnsw_gtfs_ferries": {
+      "agency_id": "SydneyFerries",
+      "mode": "ferry",
+      "region": "Sydney Harbour & Parramatta River",
+      "protocol": "tfnsw_api",
+      "endpoint": "https://api.transport.nsw.gov.au/v1/gtfs/schedule/ferries/sydneyferries",
+      "format": "gtfs_zip",
+      "target_tables": ["routes", "trips", "stop_times", "stops", "shapes", "calendar"],
+      "default_destination": "data/lake/sydneyferries.parquet",
+      "description": "Sydney Harbour and Parramatta River ferry timetables"
+    },
+    "tfnsw_opal_loadings_monthly": {
+      "agency_id": "TfNSW_Opal",
+      "mode": "multi_modal",
+      "region": "Statewide NSW",
+      "protocol": "tfnsw_api",
+      "endpoint": "https://api.transport.nsw.gov.au/v1/tp/opal/patronage/matrix",
+      "format": "csv",
+      "target_tables": ["opal_station_loadings", "opal_od_matrix"],
+      "default_destination": "data/lake/opal_loadings.parquet",
+      "description": "Authoritative Opal monthly tap-on/tap-off volumes and interchange patronage matrices"
+    }
+  }
+}

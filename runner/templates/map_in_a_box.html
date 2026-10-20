@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{REPORT_TITLE}} - NSW Transit Spatial Crafter</title>
+  <!-- Modern Typography & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <!-- AlaSQL Client-Side SQL Engine -->
+  <script src="https://cdn.jsdelivr.net/npm/alasql@4.1.0/dist/alasql.min.js"></script>
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <style>
+    :root {
+      --bg-primary: #0a0e17;
+      --bg-surface: #111827;
+      --bg-card: rgba(17, 24, 39, 0.85);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-focus: #3b82f6;
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --accent-blue: #3b82f6;
+      --accent-cyan: #06b6d4;
+      --accent-emerald: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-rose: #f43f5e;
+      --font-main: 'Outfit', -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: var(--font-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: linear-gradient(135deg, rgba(17,24,39,0.95), rgba(15,23,42,0.95));
+      border-bottom: 1px solid var(--border-color);
+      padding: 1.25rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .brand-logo {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #06b6d4, #3b82f6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.2rem;
+      color: #fff;
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+    }
+
+    .brand-text h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      background: linear-gradient(90deg, #f8fafc, #94a3b8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-text p {
+      font-size: 0.8rem;
+      color: var(--accent-cyan);
+      font-weight: 500;
+    }
+
+    .header-badges {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    .badge {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      padding: 0.4rem 0.8rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .badge.emerald { border-color: rgba(16, 185, 129, 0.3); color: var(--accent-emerald); }
+    .badge.cyan { border-color: rgba(6, 182, 212, 0.3); color: var(--accent-cyan); }
+    .badge.amber { border-color: rgba(245, 158, 11, 0.3); color: var(--accent-amber); }
+
+    .query-banner {
+      background: rgba(30, 41, 59, 0.5);
+      border-bottom: 1px solid var(--border-color);
+      padding: 0.75rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      font-size: 0.9rem;
+    }
+
+    .query-tag {
+      background: rgba(59, 130, 246, 0.15);
+      color: var(--accent-blue);
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .query-text {
+      color: #e2e8f0;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* Main Container */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      flex: 1;
+      height: calc(100vh - 120px);
+      overflow: hidden;
+    }
+
+    @media (max-width: 1024px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+        height: auto;
+      }
+    }
+
+    /* Left Column: Map & SQL Console */
+    .main-view {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      border-right: 1px solid var(--border-color);
+    }
+
+    #map {
+      flex: 1;
+      min-height: 400px;
+      background: #0f172a;
+      z-index: 10;
+    }
+
+    .sql-explorer {
+      height: 280px;
+      background: var(--bg-surface);
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      padding: 1rem;
+      z-index: 20;
+    }
+
+    .sql-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+
+    .sql-header h3 {
+      font-size: 0.9rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #e2e8f0;
+    }
+
+    .nl-search-box {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .nl-input {
+      flex: 1;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 0.6rem 0.9rem;
+      color: #fff;
+      font-size: 0.85rem;
+      font-family: var(--font-main);
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .nl-input:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+    }
+
+    .btn-query {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 0 1.2rem;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-query:hover {
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+    }
+
+    .sql-query-display {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--accent-cyan);
+      background: rgba(0,0,0,0.3);
+      padding: 0.4rem 0.6rem;
+      border-radius: 4px;
+      margin-bottom: 0.5rem;
+      white-space: nowrap;
+      overflow-x: auto;
+    }
+
+    .sql-table-container {
+      flex: 1;
+      overflow: auto;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      background: rgba(15, 23, 42, 0.6);
+    }
+
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.78rem;
+      font-family: var(--font-mono);
+    }
+
+    table.data-table th {
+      background: rgba(30, 41, 59, 0.9);
+      padding: 0.5rem 0.75rem;
+      text-align: left;
+      font-weight: 600;
+      color: var(--text-secondary);
+      border-bottom: 1px solid var(--border-color);
+      position: sticky;
+      top: 0;
+    }
+
+    table.data-table td {
+      padding: 0.4rem 0.75rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      color: #cbd5e1;
+    }
+
+    table.data-table tr:hover td {
+      background: rgba(59, 130, 246, 0.08);
+    }
+
+    /* Right Sidebar: KPIs & Schedule Comparison */
+    .sidebar {
+      background: var(--bg-surface);
+      overflow-y: auto;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .kpi-section-title {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      font-weight: 700;
+    }
+
+    .kpi-cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+    }
+
+    .kpi-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 0.9rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .kpi-card.highlight {
+      border-color: rgba(16, 185, 129, 0.3);
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(17, 24, 39, 0.9));
+    }
+
+    .kpi-label {
+      font-size: 0.7rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .kpi-value {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .kpi-value.emerald { color: var(--accent-emerald); }
+    .kpi-value.cyan { color: var(--accent-cyan); }
+    .kpi-value.amber { color: var(--accent-amber); }
+
+    .kpi-sub {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+    }
+
+    /* Comparison Card */
+    .comparison-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1rem;
+    }
+
+    .comparison-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.4rem 0;
+      font-size: 0.8rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .comparison-row:last-child { border-bottom: none; }
+
+    .comparison-label { color: var(--text-secondary); }
+    .comparison-val { font-weight: 600; font-family: var(--font-mono); }
+
+    /* Trip list */
+    .trips-container {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      max-height: 250px;
+      overflow-y: auto;
+    }
+
+    .trip-item {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 0.6rem 0.8rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.78rem;
+    }
+
+    .trip-item.optimized {
+      border-left: 3px solid var(--accent-emerald);
+    }
+
+    .time-badge {
+      font-family: var(--font-mono);
+      font-weight: 600;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+    }
+
+    .time-badge.opt { color: var(--accent-emerald); background: rgba(16, 185, 129, 0.15); }
+    .time-badge.base { color: var(--text-muted); text-decoration: line-through; }
+
+    .delta-tag {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--accent-cyan);
+    }
+
+    /* Map Layer Legend */
+    .map-legend {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      font-size: 0.75rem;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      backdrop-filter: blur(8px);
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .legend-color {
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="brand">
+      <div class="brand-logo">NSW</div>
+      <div class="brand-text">
+        <h1>NSW Transit Spatial Crafter</h1>
+        <p>Zero-Resource Multi-Modal Timetable Optimization</p>
+      </div>
+    </div>
+    <div class="header-badges">
+      <div class="badge emerald">
+        <span style="font-size: 1.1em;">âœ“</span> Zero Added Fleet Cost
+      </div>
+      <div class="badge cyan">
+        <span>âš¡</span> Valhalla Catchments
+      </div>
+      <div class="badge amber">
+        <span>ðŸ—‚ï¸ </span> In-Browser AlaSQL
+      </div>
+    </div>
+  </header>
+
+  <!-- Query Context Banner -->
+  <div class="query-banner">
+    <div class="query-tag">Autonomous Query</div>
+    <div class="query-text">{{QUERY_STRING}}</div>
+  </div>
+
+  <!-- Dashboard Main Grid -->
+  <div class="dashboard-grid">
+    <!-- Left Column: Interactive Map & AlaSQL Console -->
+    <div class="main-view">
+      <div id="map">
+        <!-- Floating Layer Legend -->
+        <div class="map-legend">
+          <div style="font-weight: 700; margin-bottom: 0.2rem; color: #f8fafc;">Transit Network</div>
+          <div class="legend-item"><div class="legend-color" style="background: #3b82f6;"></div> Trunk Rail Line</div>
+          <div class="legend-item"><div class="legend-color" style="background: #10b981;"></div> Optimized Feeder Bus</div>
+          <div class="legend-item"><div class="legend-color" style="background: #ef4444; border: 1px dashed #fff;"></div> Baseline Schedule</div>
+          <div class="legend-item"><div class="legend-color" style="background: rgba(6,182,212,0.3); border: 1px solid #06b6d4;"></div> 5-15m Pedestrian Isochrone</div>
+        </div>
+      </div>
+
+      <!-- In-Browser SQL Explorer -->
+      <div class="sql-explorer">
+        <div class="sql-header">
+          <h3><span>ðŸ”</span> Natural Language Transit SQL Engine (AlaSQL Client-Side)</h3>
+          <span style="font-size: 0.7rem; color: var(--text-muted);">Tables: trips, stops, transfers, opal_loadings</span>
+        </div>
+
+        <div class="nl-search-box">
+          <input type="text" id="nlQueryInput" class="nl-input" 
+                 placeholder="Ask in natural language (e.g. 'Show transfers with wait time > 10m' or 'List trips with optimal connections')" 
+                 value="Show transfers with wait time under 10 minutes">
+          <button id="btnRunQuery" class="btn-query">Run Query</button>
+        </div>
+
+        <div id="sqlQueryDisplay" class="sql-query-display">
+          SELECT * FROM transfers WHERE wait_time_minutes <= 10 ORDER BY wait_time_minutes ASC
+        </div>
+
+        <div class="sql-table-container">
+          <table id="dataTable" class="data-table">
+            <thead><tr id="tableHeaders"></tr></thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: KPIs, Resource Delta, and Schedule Diff -->
+    <div class="sidebar">
+      <div class="kpi-section-title">Zero-Resource Optimization Delta</div>
+      
+      <div class="kpi-cards">
+        <div class="kpi-card highlight">
+          <div class="kpi-label">Average Transfer Wait</div>
+          <div class="kpi-value emerald" id="kpiAvgWait">-- min</div>
+          <div class="kpi-sub" id="kpiWaitDelta">-- min from baseline</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-label">Sweet Spot Window (4-8m)</div>
+          <div class="kpi-value cyan" id="kpiOptimalPct">--%</div>
+          <div class="kpi-sub" id="kpiOptimalDelta">+--% increase</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-label">Peak Vehicles Required</div>
+          <div class="kpi-value amber" id="kpiVehicles">0</div>
+          <div class="kpi-sub">Strict Fleet Cap Enforced</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-label">Added Operating Budget</div>
+          <div class="kpi-value" style="color: #a855f7;">$0.00</div>
+          <div class="kpi-sub">Zero Operational Cost Delta</div>
+        </div>
+      </div>
+
+      <div class="kpi-section-title">Corridor & Fleet Invariants</div>
+      <div class="comparison-card">
+        <div class="comparison-row">
+          <span class="comparison-label">Origin âž” Destination</span>
+          <span class="comparison-val">{{ORIGIN_NAME}} âž” {{DESTINATION_NAME}}</span>
+        </div>
+        <div class="comparison-row">
+          <span class="comparison-label">Interchange Node</span>
+          <span class="comparison-val">{{INTERCHANGE_NAME}}</span>
+        </div>
+        <div class="comparison-row">
+          <span class="comparison-label">Baseline Fleet PVR</span>
+          <span class="comparison-val" id="compBasePvr">--</span>
+        </div>
+        <div class="comparison-row">
+          <span class="comparison-label">Optimized Fleet PVR</span>
+          <span class="comparison-val" id="compOptPvr" style="color: var(--accent-emerald);">--</span>
+        </div>
+        <div class="comparison-row">
+          <span class="comparison-label">Network Friction Penalty</span>
+          <span class="comparison-val" id="compPenaltyDelta" style="color: var(--accent-cyan);">--</span>
+        </div>
+      </div>
+
+      <div class="kpi-section-title">Departure Synchronization Diff</div>
+      <div class="trips-container" id="tripsList">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Embedded Data Payloads (Compiled via FunGIS MapInABox Pattern)
+    const METRICS_DATA = {{METRICS_JSON}};
+    const STOPS_GEOJSON = {{STOPS_GEOJSON}};
+    const ISOCHRONES_GEOJSON = {{ISOCHRONES_GEOJSON}};
+    const TRIPS_DATA = {{TRIPS_JSON}};
+    const BASELINE_TRANSFERS = {{BASELINE_TRANSFERS_JSON}};
+    const OPTIMIZED_TRANSFERS = {{OPTIMIZED_TRANSFERS_JSON}};
+    const OPAL_DATA = {{OPAL_LOADINGS_JSON}};
+
+    // 1. Initialize Map
+    const map = L.map('map', { zoomControl: true }).setView([-32.924, 151.745], 11);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+      subdomains: 'abcd',
+      maxZoom: 19
+    }).addTo(map);
+
+    // 2. Render Isochrones
+    if (ISOCHRONES_GEOJSON && ISOCHRONES_GEOJSON.features) {
+      L.geoJSON(ISOCHRONES_GEOJSON, {
+        style: function(feature) {
+          const m = feature.properties.contour_minutes || 10;
+          const color = m <= 5 ? '#10b981' : (m <= 10 ? '#f59e0b' : '#06b6d4');
+          return {
+            fillColor: color,
+            weight: 1.5,
+            opacity: 0.8,
+            color: color,
+            fillOpacity: 0.18
+          };
+        },
+        onEachFeature: function(feature, layer) {
+          layer.bindPopup(`<b>${feature.properties.stop_name}</b><br>${feature.properties.contour_minutes} min walking catchment (${feature.properties.distance_meters}m)`);
+        }
+      }).addTo(map);
+    }
+
+    // 3. Render Stops
+    const bounds = [];
+    if (STOPS_GEOJSON && STOPS_GEOJSON.features) {
+      L.geoJSON(STOPS_GEOJSON, {
+        pointToLayer: function(feature, latlng) {
+          bounds.push(latlng);
+          const isInterchange = feature.properties.stop_id === '230310' || feature.properties.stop_id === '207710';
+          return L.circleMarker(latlng, {
+            radius: isInterchange ? 9 : 5,
+            fillColor: isInterchange ? '#3b82f6' : '#94a3b8',
+            color: '#ffffff',
+            weight: isInterchange ? 2.5 : 1,
+            opacity: 1,
+            fillOpacity: 0.9
+          });
+        },
+        onEachFeature: function(feature, layer) {
+          layer.bindPopup(`<b>${feature.properties.stop_name}</b><br>Stop ID: ${feature.properties.stop_id}`);
+        }
+      }).addTo(map);
+    }
+
+    if (bounds.length > 0) {
+      map.fitBounds(L.latLngBounds(bounds), { padding: [50, 50] });
+    }
+
+    // 4. Populate Sidebar Metrics
+    if (METRICS_DATA) {
+      const opt = METRICS_DATA.optimized_metrics || {};
+      const base = METRICS_DATA.baseline_metrics || {};
+      const delta = METRICS_DATA.resource_delta || {};
+
+      document.getElementById('kpiAvgWait').textContent = `${opt.avg_wait_minutes || '--'} min`;
+      document.getElementById('kpiWaitDelta').textContent = `â†“ ${delta.wait_time_reduction_minutes || 0} min reduction`;
+
+      document.getElementById('kpiOptimalPct').textContent = `${opt.pct_optimal_window || '--'}%`;
+      document.getElementById('kpiOptimalDelta').textContent = `+${delta.optimal_transfer_increase_pct || 0}% increase`;
+
+      document.getElementById('kpiVehicles').textContent = `${opt.peak_vehicle_requirement || base.peak_vehicle_requirement || 0}`;
+
+      document.getElementById('compBasePvr').textContent = `${base.peak_vehicle_requirement || '--'} vehicles`;
+      document.getElementById('compOptPvr').textContent = `${opt.peak_vehicle_requirement || '--'} vehicles (Î” 0)`;
+      document.getElementById('compPenaltyDelta').textContent = `-${delta.penalty_reduction_pct || 0}% friction reduction`;
+    }
+
+    // 5. Render Trips Diff
+    const tripsContainer = document.getElementById('tripsList');
+    if (TRIPS_DATA && TRIPS_DATA.length > 0) {
+      TRIPS_DATA.forEach(t => {
+        const item = document.createElement('div');
+        item.className = 'trip-item optimized';
+        const shiftSign = t.shift_minutes > 0 ? `+${t.shift_minutes}` : `${t.shift_minutes}`;
+        item.innerHTML = `
+          <div>
+            <div style="font-weight:600; font-size:0.8rem; color:#fff;">${t.trip_id} (${t.vehicle_allocated})</div>
+            <div style="display:flex; gap:0.4rem; align-items:center; margin-top:0.2rem;">
+              <span class="time-badge base">${t.baseline_departure}</span>
+              <span style="color:var(--text-muted); font-size:0.7rem;">âž”</span>
+              <span class="time-badge opt">${t.optimized_departure}</span>
+            </div>
+          </div>
+          <div class="delta-tag">${shiftSign}m shift</div>
+        `;
+        tripsContainer.appendChild(item);
+      });
+    }
+
+    // 6. In-Browser AlaSQL Setup
+    alasql('CREATE TABLE trips');
+    alasql('CREATE TABLE transfers');
+    alasql('CREATE TABLE stops');
+    alasql('CREATE TABLE opal_loadings');
+
+    alasql.tables.trips.data = TRIPS_DATA || [];
+    alasql.tables.transfers.data = OPTIMIZED_TRANSFERS || [];
+    alasql.tables.stops.data = (STOPS_GEOJSON && STOPS_GEOJSON.features) ? STOPS_GEOJSON.features.map(f => f.properties) : [];
+    alasql.tables.opal_loadings.data = OPAL_DATA || [];
+
+    function renderTable(results) {
+      const headerRow = document.getElementById('tableHeaders');
+      const body = document.getElementById('tableBody');
+      headerRow.innerHTML = '';
+      body.innerHTML = '';
+
+      if (!results || results.length === 0) {
+        body.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:1.5rem; color:var(--text-muted);">No records found.</td></tr>';
+        return;
+      }
+
+      const keys = Object.keys(results[0]);
+      keys.forEach(k => {
+        const th = document.createElement('th');
+        th.textContent = k;
+        headerRow.appendChild(th);
+      });
+
+      results.forEach(row => {
+        const tr = document.createElement('tr');
+        keys.forEach(k => {
+          const td = document.createElement('td');
+          td.textContent = row[k] !== undefined ? row[k] : '';
+          tr.appendChild(td);
+        });
+        body.appendChild(tr);
+      });
+    }
+
+    function executeSql(sql) {
+      try {
+        document.getElementById('sqlQueryDisplay').textContent = sql;
+        const res = alasql(sql);
+        renderTable(res);
+      } catch (err) {
+        document.getElementById('sqlQueryDisplay').textContent = `SQL Error: ${err.message}`;
+      }
+    }
+
+    function translateNlToSql(nlText) {
+      const q = nlText.toLowerCase().trim();
+      if (q.includes('under') || q.includes('<') || q.includes('less than') || q.includes('optimal')) {
+        const match = q.match(/\d+/);
+        const mins = match ? match[0] : 10;
+        return `SELECT * FROM transfers WHERE wait_time_minutes <= ${mins} ORDER BY wait_time_minutes ASC`;
+      }
+      if (q.includes('over') || q.includes('>') || q.includes('more than') || q.includes('excessive')) {
+        const match = q.match(/\d+/);
+        const mins = match ? match[0] : 8;
+        return `SELECT * FROM transfers WHERE wait_time_minutes > ${mins} ORDER BY wait_time_minutes DESC`;
+      }
+      if (q.includes('stop') || q.includes('station')) {
+        return `SELECT stop_id, stop_name FROM stops LIMIT 15`;
+      }
+      if (q.includes('trip') || q.includes('shift') || q.includes('bus')) {
+        return `SELECT trip_id, baseline_departure, optimized_departure, shift_minutes, vehicle_allocated FROM trips`;
+      }
+      if (q.includes('opal') || q.includes('load') || q.includes('passenger') || q.includes('tap')) {
+        return `SELECT * FROM opal_loadings ORDER BY daily_tap_ons DESC`;
+      }
+      return `SELECT * FROM transfers ORDER BY wait_time_minutes ASC LIMIT 20`;
+    }
+
+    document.getElementById('btnRunQuery').addEventListener('click', () => {
+      const input = document.getElementById('nlQueryInput').value;
+      const sql = translateNlToSql(input);
+      executeSql(sql);
+    });
+
+    document.getElementById('nlQueryInput').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        const sql = translateNlToSql(e.target.value);
+        executeSql(sql);
+      }
+    });
+
+    // Initial query execution
+    executeSql("SELECT trunk_arrival, feeder_departure, wait_time_minutes, status, interchange_name FROM transfers WHERE wait_time_minutes <= 10 ORDER BY wait_time_minutes ASC");
+  </script>
+</body>
+</html>

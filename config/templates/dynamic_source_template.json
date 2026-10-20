@@ -1,0 +1,17 @@
+{
+  "source_id": "dynamic_source_${FEED_ID}",
+  "protocol": "tfnsw_api",
+  "endpoint": "${ENDPOINT}",
+  "headers": {
+    "Authorization": "apikey ${TFNSW_API_KEY}"
+  },
+  "format": "gtfs_zip",
+  "target_tables": ["routes", "trips", "stop_times", "stops", "shapes", "calendar"],
+  "filter_criteria": {
+    "route_ids": [],
+    "bounding_box": []
+  },
+  "output_crs": "EPSG:7856",
+  "export_format": "geoparquet",
+  "destination": "data/lake/${FEED_ID}.parquet"
+}
