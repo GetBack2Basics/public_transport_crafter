@@ -93,6 +93,9 @@ def build_standard_scenarios_catalog(
         ("parramatta_central", "With existing fleet capacity, optimize transfers from Parramatta to Central Station", "Parramatta", "Central"),
         ("newcastle_fassifern", "With zero additional buses, optimize transfers between Newcastle Interchange and Fassifern", "Newcastle", "Fassifern"),
         ("hornsby_chatswood", "How can feeder connections from Hornsby to Chatswood be synchronized with the same number of trains?", "Hornsby", "Chatswood"),
+        ("dubbo_lithgow", "With the same number of coaches, synchronize connections from Dubbo to Lithgow", "Dubbo", "Lithgow"),
+        ("tallawong_barangaroo", "With zero extra trains, maximize transfer sweet spots on Metro M1 Tallawong to Barangaroo", "Tallawong", "Barangaroo"),
+        ("wollongong_uow", "Optimize Gong Shuttle transfer connections from Wollongong to UOW", "Wollongong", "University of Wollongong"),
     ]
 
     for key, q_str, orig, dest in benchmark_corridors:
@@ -107,8 +110,14 @@ def build_standard_scenarios_catalog(
                 feeder_times = list(c_data["interchange_feeder_times"]["departure_time"])
                 feeder_ids = list(c_data["interchange_feeder_times"]["trip_id"])
                 traffic_var = c_data.get("traffic_variance_min", 4.0)
+                min_hw = 3 if ("metro" in key or "tallawong" in key) else 10
+                corridor_optimizer = ZeroResourceTimetableOptimizer(
+                    max_shift_minutes=15,
+                    min_headway_minutes=min_hw,
+                    trip_duration_minutes=38
+                )
 
-                opt_res = optimizer.solve(
+                opt_res = corridor_optimizer.solve(
                     trunk_arrival_times=trunk_times,
                     baseline_feeder_departures=feeder_times,
                     feeder_trip_ids=feeder_ids,

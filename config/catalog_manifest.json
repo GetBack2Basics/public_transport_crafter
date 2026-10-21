@@ -124,6 +124,61 @@
       "target_tables": ["street_segments", "corridor_speeds"],
       "default_destination": "data/lake/nsw_street_network.parquet",
       "description": "Authoritative NSW arterial road and street network with speed limits, road classification, and peak congestion indices"
+    },
+    "tfnsw_gtfs_coaches_regional": {
+      "agency_id": "NSWTrainLink_Coaches",
+      "mode": "regional_coach",
+      "region": "Regional NSW",
+      "protocol": "tfnsw_api",
+      "endpoint": "https://api.transport.nsw.gov.au/v1/gtfs/schedule/nswtrains/coaches",
+      "format": "gtfs_zip",
+      "target_tables": ["routes", "trips", "stop_times", "stops", "shapes", "calendar"],
+      "default_destination": "data/lake/regional_coaches.parquet",
+      "description": "NSW TrainLink long-distance and regional coach services connecting regional hubs (Dubbo, Bathurst, Orange, Lithgow, Tamworth) with intercity rail termini"
+    },
+    "tfnsw_gtfs_metro_city_southwest": {
+      "agency_id": "SydneyMetro_CitySouthwest",
+      "mode": "metro",
+      "region": "Greater Sydney",
+      "protocol": "tfnsw_api",
+      "endpoint": "https://api.transport.nsw.gov.au/v1/gtfs/schedule/metro/citysouthwest",
+      "format": "gtfs_zip",
+      "target_tables": ["routes", "trips", "stop_times", "stops", "shapes", "calendar"],
+      "default_destination": "data/lake/metro_city_southwest.parquet",
+      "description": "Sydney Metro M1 City & Southwest automated rapid transit schedules connecting Tallawong to Sydenham and Bankstown via Chatswood, Barangaroo, Martin Place, and Central"
+    },
+    "tfnsw_gtfs_buses_greater_sydney": {
+      "agency_id": "GreaterSydneyBuses",
+      "mode": "bus",
+      "region": "Metropolitan Sydney",
+      "protocol": "tfnsw_api",
+      "endpoint": "https://api.transport.nsw.gov.au/v1/gtfs/schedule/buses/sydney",
+      "format": "gtfs_zip",
+      "target_tables": ["routes", "trips", "stop_times", "stops", "shapes", "calendar"],
+      "default_destination": "data/lake/sydney_buses.parquet",
+      "description": "Sydney Metropolitan bus network timetables for contract regions 1-9 including B-Line, trunk corridors, and local feeders"
+    },
+    "tfnsw_gtfs_buses_bluemountains": {
+      "agency_id": "BlueMountainsBuses",
+      "mode": "bus",
+      "region": "Blue Mountains & Penrith",
+      "protocol": "tfnsw_api",
+      "endpoint": "https://api.transport.nsw.gov.au/v1/gtfs/schedule/buses/bluemountains",
+      "format": "gtfs_zip",
+      "target_tables": ["routes", "trips", "stop_times", "stops", "shapes", "calendar"],
+      "default_destination": "data/lake/bluemountains_buses.parquet",
+      "description": "Blue Mountains bus services connecting Katoomba, Springwood, and Penrith with the BMT intercity train line"
+    },
+    "tfnsw_gtfs_buses_illawarra": {
+      "agency_id": "PremierIllawarra",
+      "mode": "bus",
+      "region": "Wollongong & Illawarra",
+      "protocol": "tfnsw_api",
+      "endpoint": "https://api.transport.nsw.gov.au/v1/gtfs/schedule/buses/illawarra",
+      "format": "gtfs_zip",
+      "target_tables": ["routes", "trips", "stop_times", "stops", "shapes", "calendar"],
+      "default_destination": "data/lake/illawarra_buses.parquet",
+      "description": "Premier Illawarra bus timetables serving Wollongong, Shellharbour, and University of Wollongong connecting with South Coast rail line"
     }
   }
 }

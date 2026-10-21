@@ -41,6 +41,27 @@ NSW_GEOCODE_REGISTRY = {
     "parramatta": {"name": "Parramatta Station", "lat": -33.81770, "lon": 151.00510, "region": "sydney"},
     "morisset": {"name": "Morisset Station", "lat": -33.10980, "lon": 151.49120, "region": "hunter"},
     "fassifern": {"name": "Fassifern Station", "lat": -32.99840, "lon": 151.58910, "region": "hunter"},
+    "dubbo": {"name": "Dubbo Station", "lat": -32.24720, "lon": 148.60150, "region": "regional_west"},
+    "orange": {"name": "Orange Station", "lat": -33.28420, "lon": 149.10260, "region": "regional_west"},
+    "bathurst": {"name": "Bathurst Station", "lat": -33.42780, "lon": 149.58520, "region": "regional_west"},
+    "lithgow": {"name": "Lithgow Station", "lat": -33.48310, "lon": 150.15580, "region": "regional_west"},
+    "tamworth": {"name": "Tamworth Station", "lat": -31.09210, "lon": 150.92840, "region": "regional_north"},
+    "tallawong": {"name": "Tallawong Station", "lat": -33.69120, "lon": 150.90820, "region": "sydney_metro"},
+    "barangaroo": {"name": "Barangaroo Station", "lat": -33.86170, "lon": 151.20230, "region": "sydney_metro"},
+    "martin place": {"name": "Martin Place Station", "lat": -33.86810, "lon": 151.21040, "region": "sydney_metro"},
+    "gadigal": {"name": "Gadigal Station", "lat": -33.87450, "lon": 151.20780, "region": "sydney_metro"},
+    "sydenham": {"name": "Sydenham Station", "lat": -33.91520, "lon": 151.16610, "region": "sydney_metro"},
+    "crows nest": {"name": "Crows Nest Station", "lat": -33.82650, "lon": 151.20140, "region": "sydney_metro"},
+    "katoomba": {"name": "Katoomba Station", "lat": -33.71260, "lon": 150.31170, "region": "blue_mountains"},
+    "penrith": {"name": "Penrith Station", "lat": -33.75080, "lon": 150.69740, "region": "sydney_west"},
+    "springwood": {"name": "Springwood Station", "lat": -33.69880, "lon": 150.56470, "region": "blue_mountains"},
+    "wollongong": {"name": "Wollongong Station", "lat": -34.42620, "lon": 150.89310, "region": "illawarra"},
+    "uow": {"name": "University of Wollongong", "lat": -34.40520, "lon": 150.87840, "region": "illawarra"},
+    "university of wollongong": {"name": "University of Wollongong", "lat": -34.40520, "lon": 150.87840, "region": "illawarra"},
+    "shellharbour": {"name": "Shellharbour Junction", "lat": -34.57720, "lon": 150.84920, "region": "illawarra"},
+    "mona vale": {"name": "Mona Vale B-Line", "lat": -33.67650, "lon": 151.30600, "region": "northern_beaches"},
+    "dee why": {"name": "Dee Why B-Line", "lat": -33.75380, "lon": 151.28820, "region": "northern_beaches"},
+    "wynyard": {"name": "Wynyard Station, Sydney", "lat": -33.86590, "lon": 151.20610, "region": "sydney"},
 }
 
 
@@ -78,15 +99,73 @@ class CorridorExtractor:
         logger.info(f"Resolved Destination: {dest_geo['name']} ({dest_geo['lat']}, {dest_geo['lon']})")
 
         # Determine required datasets based on region
-        is_hunter = orig_geo["region"] == "hunter" or dest_geo["region"] == "hunter"
-        is_sydney_north = "sydney_north" in (orig_geo["region"], dest_geo["region"])
+        orig_reg = orig_geo["region"]
+        dest_reg = dest_geo["region"]
+        regions = {orig_reg, dest_reg}
 
-        if is_hunter:
+        is_hunter = "hunter" in regions
+        is_coach = any("regional" in r for r in regions)
+        is_metro = "sydney_metro" in regions
+        is_blue_mountains = "blue_mountains" in regions
+        is_illawarra = "illawarra" in regions
+        is_northern_beaches = "northern_beaches" in regions
+
+        if is_coach:
+            dataset_id = "tfnsw_gtfs_coaches_regional"
+            lake_prefix = "regional_coaches"
+            interchange_stop_id = "279010"  # Lithgow Station
+            interchange_name = "Lithgow Station Interchange"
+            interchange_coords = (-33.48310, 150.15580)
+            trunk_route_id = "591"
+            feeder_route_id = "592"
+        elif is_metro:
+            dataset_id = "tfnsw_gtfs_metro_city_southwest"
+            lake_prefix = "metro_city_southwest"
+            interchange_stop_id = "206710"  # Chatswood Station
+            interchange_name = "Chatswood Metro Interchange"
+            interchange_coords = (-33.79720, 151.18120)
+            trunk_route_id = "M1"
+            feeder_route_id = "M1"
+        elif is_blue_mountains:
+            dataset_id = "tfnsw_gtfs_buses_bluemountains"
+            lake_prefix = "bluemountains_buses"
+            interchange_stop_id = "278010"  # Katoomba Station
+            interchange_name = "Katoomba Station Interchange"
+            interchange_coords = (-33.71260, 150.31170)
+            trunk_route_id = "690"
+            feeder_route_id = "686"
+        elif is_illawarra:
+            dataset_id = "tfnsw_gtfs_buses_illawarra"
+            lake_prefix = "illawarra_buses"
+            interchange_stop_id = "250010"  # Wollongong Station
+            interchange_name = "Wollongong Station Interchange"
+            interchange_coords = (-34.42620, 150.89310)
+            trunk_route_id = "9"
+            feeder_route_id = "55A"
+        elif is_northern_beaches:
+            dataset_id = "tfnsw_gtfs_buses_greater_sydney"
+            lake_prefix = "sydney_buses"
+            interchange_stop_id = "200040"  # Wynyard Station
+            interchange_name = "Wynyard Station Interchange"
+            interchange_coords = (-33.86590, 151.20610)
+            trunk_route_id = "B1"
+            feeder_route_id = "M54"
+        elif is_hunter:
             dataset_id = "tfnsw_gtfs_buses_hunter"
-            train_dataset_id = "tfnsw_gtfs_nswtrains"
+            lake_prefix = "hunter_buses"
+            interchange_stop_id = "230310"  # Hamilton Station
+            interchange_name = "Hamilton Station Interchange"
+            interchange_coords = (-32.92410, 151.74530)
+            trunk_route_id = "HUN"
+            feeder_route_id = "11"
         else:
             dataset_id = "tfnsw_gtfs_sydneytrains"
-            train_dataset_id = "tfnsw_gtfs_nswtrains"
+            lake_prefix = "sydneytrains"
+            interchange_stop_id = "207710"  # Hornsby Station
+            interchange_name = "Hornsby Station Interchange"
+            interchange_coords = (-33.70320, 151.09840)
+            trunk_route_id = "CCN"
+            feeder_route_id = "T1"
 
         # Ensure datasets are present in data lake
         self.catalog_router.ensure_dataset(dataset_id)
@@ -95,7 +174,6 @@ class CorridorExtractor:
         self.catalog_router.ensure_dataset("tfnsw_live_traffic_hazards")
 
         # Load Parquet lake tables
-        lake_prefix = "hunter_buses" if is_hunter else "sydneytrains"
         stops_p = LAKE_DIR / f"{lake_prefix}_stops.parquet"
         routes_p = LAKE_DIR / f"{lake_prefix}_routes.parquet"
         trips_p = LAKE_DIR / f"{lake_prefix}_trips.parquet"
@@ -124,18 +202,6 @@ class CorridorExtractor:
 
         logger.info(f"Corridor Origin Stop: {orig_stop['stop_name']} ({orig_stop['stop_id']})")
         logger.info(f"Corridor Destination Stop: {dest_stop['stop_name']} ({dest_stop['dest_dest'] if 'dest_dest' in dest_stop else dest_stop['stop_id']})")
-
-        # Identify candidate transfer hubs (e.g. Hamilton, Warabrook, Hornsby)
-        if is_hunter:
-            interchange_stop_id = "230310"  # Hamilton Station
-            interchange_name = "Hamilton Station Interchange"
-            trunk_route_id = "HUN"
-            feeder_route_id = "11"
-        else:
-            interchange_stop_id = "207710"  # Hornsby Station
-            interchange_name = "Hornsby Station Interchange"
-            trunk_route_id = "CCN"
-            feeder_route_id = "T1"
 
         # Extract trunk trips arriving at interchange
         trunk_trips = trips_df[trips_df["route_id"] == trunk_route_id].copy()
@@ -235,7 +301,7 @@ class CorridorExtractor:
         return {
             "origin": orig_geo,
             "destination": dest_geo,
-            "interchange": {"stop_id": interchange_stop_id, "name": interchange_name, "lat": -32.92410 if is_hunter else -33.70320, "lon": 151.74530 if is_hunter else 151.09840},
+            "interchange": {"stop_id": interchange_stop_id, "name": interchange_name, "lat": interchange_coords[0], "lon": interchange_coords[1]},
             "trunk_route": trunk_route_id,
             "feeder_route": feeder_route_id,
             "stops": corridor_stops_gdf,
