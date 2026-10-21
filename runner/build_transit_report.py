@@ -64,6 +64,89 @@ def geodataframe_to_geojson_dict(gdf: Any) -> Dict[str, Any]:
     return json.loads(reproj.to_json())
 
 
+def build_standard_scenarios_catalog(
+    active_query: str,
+    active_corridor: Dict[str, Any],
+    active_opt_results: Dict[str, Any],
+    active_isochrones_gdf: Optional[gpd.GeoDataFrame] = None
+) -> Dict[str, Any]:
+    """
+    Builds pre-compiled scenarios for 5 authoritative NSW transit corridors:
+      1. maitland_uon: Maitland -> University of Newcastle (Hunter Line + Bus 11)
+      2. gosford_hornsby: Gosford -> Hornsby (CCN + T1)
+      3. parramatta_central: Parramatta -> Central (Sydney Western Trunk)
+      4. newcastle_fassifern: Newcastle Interchange -> Fassifern (Lake Macquarie Hub)
+      5. hornsby_chatswood: Hornsby -> Chatswood (North Shore Corridor)
+    """
+    from src.Routing.corridor_extractor import CorridorExtractor
+    from src.Analysis.optimizer import ZeroResourceTimetableOptimizer
+    from src.Routing.valhalla_client import ValhallaClient
+
+    scenarios = {}
+    extractor = CorridorExtractor()
+    valhalla = ValhallaClient()
+    optimizer = ZeroResourceTimetableOptimizer(max_shift_minutes=15, min_headway_minutes=12, trip_duration_minutes=38)
+
+    benchmark_corridors = [
+        ("maitland_uon", "With the same number of buses and trains, how can the route from Maitland to Newcastle University be optimized?", "Maitland", "Newcastle University"),
+        ("gosford_hornsby", "With no additional rolling stock, improve morning peak transfers from Gosford to Hornsby", "Gosford", "Hornsby"),
+        ("parramatta_central", "With existing fleet capacity, optimize transfers from Parramatta to Central Station", "Parramatta", "Central"),
+        ("newcastle_fassifern", "With zero additional buses, optimize transfers between Newcastle Interchange and Fassifern", "Newcastle", "Fassifern"),
+        ("hornsby_chatswood", "How can feeder connections from Hornsby to Chatswood be synchronized with the same number of trains?", "Hornsby", "Chatswood"),
+    ]
+
+    for key, q_str, orig, dest in benchmark_corridors:
+        if orig.lower() in active_corridor["origin"]["name"].lower() and dest.lower() in active_corridor["destination"]["name"].lower():
+            c_data = active_corridor
+            opt_res = active_opt_results
+            iso_gdf = active_isochrones_gdf
+        else:
+            try:
+                c_data = extractor.extract_corridor(orig, dest)
+                trunk_times = list(c_data["interchange_trunk_times"]["arrival_time"])
+                feeder_times = list(c_data["interchange_feeder_times"]["departure_time"])
+                feeder_ids = list(c_data["interchange_feeder_times"]["trip_id"])
+                traffic_var = c_data.get("traffic_variance_min", 4.0)
+
+                opt_res = optimizer.solve(
+                    trunk_arrival_times=trunk_times,
+                    baseline_feeder_departures=feeder_times,
+                    feeder_trip_ids=feeder_ids,
+                    interchange_stop_id=c_data["interchange"]["stop_id"],
+                    interchange_name=c_data["interchange"]["name"],
+                    traffic_variance_minutes=traffic_var
+                )
+                iso_p = valhalla.generate_corridor_isochrones(c_data["stops"], corridor_tag=key)
+                iso_gdf = gpd.read_parquet(iso_p) if iso_p.exists() else None
+            except Exception as e:
+                logger.warning(f"Could not build catalog scenario for {key}: {e}")
+                continue
+
+        scenarios[key] = {
+            "key": key,
+            "query": q_str,
+            "origin_name": c_data["origin"]["name"],
+            "dest_name": c_data["destination"]["name"],
+            "interchange_name": c_data["interchange"]["name"],
+            "metrics": {
+                "baseline_metrics": opt_res.get("baseline_metrics", {}),
+                "optimized_metrics": opt_res.get("optimized_metrics", {}),
+                "resource_delta": opt_res.get("resource_delta", {}),
+                "traffic_variance_minutes": c_data.get("traffic_variance_min", 4.0)
+            },
+            "stops_geojson": geodataframe_to_geojson_dict(c_data.get("stops")),
+            "isochrones_geojson": geodataframe_to_geojson_dict(iso_gdf),
+            "streets_geojson": geodataframe_to_geojson_dict(c_data.get("streets")),
+            "traffic_hazards": dataframe_to_clean_records(c_data.get("traffic_hazards")),
+            "trips": dataframe_to_clean_records(opt_res.get("optimized_trips_df")),
+            "transfers": dataframe_to_clean_records(opt_res.get("optimized_transfers_df")),
+            "baseline_transfers": dataframe_to_clean_records(opt_res.get("baseline_transfers_df")),
+            "traffic_variance": c_data.get("traffic_variance_min", 4.0)
+        }
+
+    return scenarios
+
+
 def compile_transit_report(
     query_string: str,
     corridor_data: Dict[str, Any],
@@ -91,6 +174,13 @@ def compile_transit_report(
     stops_geojson = geodataframe_to_geojson_dict(stops_gdf)
     isochrones_geojson = geodataframe_to_geojson_dict(isochrones_gdf)
 
+    streets_gdf = corridor_data.get("streets")
+    streets_geojson = geodataframe_to_geojson_dict(streets_gdf)
+
+    traffic_df = corridor_data.get("traffic_hazards")
+    traffic_records = dataframe_to_clean_records(traffic_df)
+    traffic_variance = corridor_data.get("traffic_variance_min", 4.0)
+
     trips_records = dataframe_to_clean_records(optimization_results.get("optimized_trips_df"))
     base_transfers_records = dataframe_to_clean_records(optimization_results.get("baseline_transfers_df"))
     opt_transfers_records = dataframe_to_clean_records(optimization_results.get("optimized_transfers_df"))
@@ -99,8 +189,14 @@ def compile_transit_report(
     metrics_payload = {
         "baseline_metrics": optimization_results.get("baseline_metrics", {}),
         "optimized_metrics": optimization_results.get("optimized_metrics", {}),
-        "resource_delta": optimization_results.get("resource_delta", {})
+        "resource_delta": optimization_results.get("resource_delta", {}),
+        "traffic_variance_minutes": traffic_variance
     }
+
+    # Pre-compile multi-scenario catalog
+    scenarios_catalog = build_standard_scenarios_catalog(
+        query_string, corridor_data, optimization_results, isochrones_gdf
+    )
 
     # Replace placeholders
     rendered = template_content
@@ -114,10 +210,13 @@ def compile_transit_report(
     rendered = rendered.replace("{{METRICS_JSON}}", json.dumps(metrics_payload))
     rendered = rendered.replace("{{STOPS_GEOJSON}}", json.dumps(stops_geojson))
     rendered = rendered.replace("{{ISOCHRONES_GEOJSON}}", json.dumps(isochrones_geojson))
+    rendered = rendered.replace("{{STREETS_GEOJSON}}", json.dumps(streets_geojson))
+    rendered = rendered.replace("{{TRAFFIC_HAZARDS_JSON}}", json.dumps(traffic_records))
     rendered = rendered.replace("{{TRIPS_JSON}}", json.dumps(trips_records))
     rendered = rendered.replace("{{BASELINE_TRANSFERS_JSON}}", json.dumps(base_transfers_records))
     rendered = rendered.replace("{{OPTIMIZED_TRANSFERS_JSON}}", json.dumps(opt_transfers_records))
     rendered = rendered.replace("{{OPAL_LOADINGS_JSON}}", json.dumps(opal_records))
+    rendered = rendered.replace("{{SCENARIOS_CATALOG_JSON}}", json.dumps(scenarios_catalog))
 
     # Assert no unreplaced template tokens remain (e.g. {{TOKEN}})
     import re
@@ -134,17 +233,17 @@ def compile_transit_report(
 
     logger.info(f"Successfully compiled Map-in-a-Box report: {output_path} ({file_size} bytes)")
 
-    # Automatically deploy to Google Cloud Storage for review
+    # Automatically deploy to Google Cloud Storage for review with explicit charset=utf-8
     gcs_review_url = upload_file_to_gcs(
         output_path,
         gcs_blob_path=f"reports/{output_filename}",
-        content_type="text/html",
+        content_type="text/html; charset=utf-8",
         cache_control="public, max-age=60"
     )
     upload_file_to_gcs(
         output_path,
         gcs_blob_path="transit_insight_report.html",
-        content_type="text/html",
+        content_type="text/html; charset=utf-8",
         cache_control="public, max-age=60"
     )
     logger.info(f"Published GCS review deliverable: {gcs_review_url}")

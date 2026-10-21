@@ -91,6 +91,8 @@ class CorridorExtractor:
         # Ensure datasets are present in data lake
         self.catalog_router.ensure_dataset(dataset_id)
         self.catalog_router.ensure_dataset("tfnsw_opal_loadings_monthly")
+        self.catalog_router.ensure_dataset("nsw_street_network")
+        self.catalog_router.ensure_dataset("tfnsw_live_traffic_hazards")
 
         # Load Parquet lake tables
         lake_prefix = "hunter_buses" if is_hunter else "sydneytrains"
@@ -103,6 +105,12 @@ class CorridorExtractor:
         routes_df = pd.read_parquet(routes_p)
         trips_df = pd.read_parquet(trips_p)
         stop_times_df = pd.read_parquet(stop_times_p)
+
+        # Load street network and active traffic hazards
+        streets_p = LAKE_DIR / "nsw_street_network.parquet"
+        traffic_p = LAKE_DIR / "live_traffic_hazards.parquet"
+        streets_gdf = gpd.read_parquet(streets_p) if streets_p.exists() else None
+        traffic_df = pd.read_parquet(traffic_p) if traffic_p.exists() else None
 
         # Identify nearest stops to origin and destination
         orig_pt = Point(orig_geo["lon"], orig_geo["lat"])
@@ -144,6 +152,35 @@ class CorridorExtractor:
             (stop_times_df["trip_id"].isin(feeder_trips["trip_id"]))
         ].copy()
 
+        from src.Analysis.transfer_friction_model import calculate_single_transfer_penalty
+
+        # Filter streets and traffic hazards for active corridor
+        if streets_gdf is not None and not streets_gdf.empty:
+            if is_hunter:
+                corridor_streets_gdf = streets_gdf[
+                    streets_gdf["corridor"].str.contains("Newcastle|Maitland|Callaghan|Hamilton", case=False, na=False)
+                ].copy()
+            else:
+                corridor_streets_gdf = streets_gdf[
+                    streets_gdf["corridor"].str.contains("Gosford|Hornsby", case=False, na=False)
+                ].copy()
+            traffic_variance_min = float(corridor_streets_gdf["traffic_variance_min"].mean()) if not corridor_streets_gdf.empty else 4.0
+        else:
+            corridor_streets_gdf = gpd.GeoDataFrame()
+            traffic_variance_min = 4.0
+
+        if traffic_df is not None and not traffic_df.empty:
+            if is_hunter:
+                corridor_traffic_df = traffic_df[
+                    traffic_df["corridor"].str.contains("Newcastle|Hunter|Callaghan|Hexham", case=False, na=False)
+                ].copy()
+            else:
+                corridor_traffic_df = traffic_df[
+                    traffic_df["corridor"].str.contains("Hornsby|Sydney", case=False, na=False)
+                ].copy()
+        else:
+            corridor_traffic_df = pd.DataFrame()
+
         # Build baseline transfer pairs: for each trunk trip arrival, find the earliest feeder departure
         transfers = []
         for _, tr in interchange_trunk_times.iterrows():
@@ -164,13 +201,16 @@ class CorridorExtractor:
             if candidates:
                 candidates.sort(key=lambda x: x[0])
                 wait_min, feeder_trip_id, feeder_dept = candidates[0]
-                status = "optimal" if 4 <= wait_min <= 8 else ("excessive_wait" if wait_min > 8 else "tight")
+                effective_wait = wait_min - (0.5 * traffic_variance_min)
+                status = "optimal (4-8m)" if 4.0 <= effective_wait <= 8.0 else ("excessive (>8m)" if effective_wait > 8.0 else "tight / traffic risk")
             else:
                 # Missed or outside window
-                wait_min = 28
+                wait_min = 28.0
                 feeder_trip_id = "N/A"
                 feeder_dept = "N/A"
-                status = "missed"
+                status = "missed connection"
+
+            penalty = calculate_single_transfer_penalty(wait_min, traffic_variance_minutes=traffic_variance_min)
 
             transfers.append({
                 "trunk_trip_id": tr["trip_id"],
@@ -181,7 +221,7 @@ class CorridorExtractor:
                 "interchange_name": interchange_name,
                 "wait_time_minutes": wait_min,
                 "status": status,
-                "transfer_penalty": 0 if (4 <= wait_min <= 8) else (wait_min - 8)**2 if wait_min > 8 else 1000
+                "transfer_penalty": round(penalty, 2)
             })
 
         transfers_df = pd.DataFrame(transfers)
@@ -199,6 +239,9 @@ class CorridorExtractor:
             "trunk_route": trunk_route_id,
             "feeder_route": feeder_route_id,
             "stops": corridor_stops_gdf,
+            "streets": corridor_streets_gdf,
+            "traffic_hazards": corridor_traffic_df,
+            "traffic_variance_min": traffic_variance_min,
             "trunk_trips": trunk_trips,
             "feeder_trips": feeder_trips,
             "interchange_trunk_times": interchange_trunk_times,

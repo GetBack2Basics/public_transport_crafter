@@ -10,20 +10,22 @@ import pandas as pd
 from typing import Dict, Any, List, Tuple
 
 
-def calculate_single_transfer_penalty(wait_time_minutes: float) -> float:
+def calculate_single_transfer_penalty(wait_time_minutes: float, traffic_variance_minutes: float = 0.0) -> float:
     """
-    Evaluates the piecewise transfer friction penalty:
+    Evaluates the piecewise transfer friction penalty with traffic delay variance:
+      - Effective wait considering traffic delay risk = wait_time_minutes - 0.5 * traffic_variance_minutes
       - Optimal (4 <= t <= 8 min): Penalty = 0
       - Excessive wait (t > 8 min): Penalty = (t - 8)^2
       - Missed / Tight connection (t < 4 min): Penalty = 10,000 + 100 * (4 - t)
     """
-    if 4.0 <= wait_time_minutes <= 8.0:
+    effective_wait = wait_time_minutes - (0.5 * traffic_variance_minutes)
+    if 4.0 <= effective_wait <= 8.0:
         return 0.0
-    elif wait_time_minutes > 8.0:
-        return float((wait_time_minutes - 8.0) ** 2)
+    elif effective_wait > 8.0:
+        return float((effective_wait - 8.0) ** 2)
     else:
-        # Missed or risk of missing connection due to minor variance
-        return float(10000.0 + 100.0 * (4.0 - wait_time_minutes))
+        # Missed or risk of missing connection due to road traffic congestion variance
+        return float(10000.0 + 100.0 * (4.0 - effective_wait))
 
 
 def evaluate_transfer_table(transfers_df: pd.DataFrame, opal_weights: Dict[str, float] = None) -> Dict[str, Any]:

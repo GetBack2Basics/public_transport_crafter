@@ -127,12 +127,14 @@ def execute_transit_pipeline(query: str, output_report_name: str = "transit_insi
     feeder_times = list(corridor_data["interchange_feeder_times"]["departure_time"])
     feeder_ids = list(corridor_data["interchange_feeder_times"]["trip_id"])
 
+    traffic_var = corridor_data.get("traffic_variance_min", 0.0)
     opt_results = optimizer.solve(
         trunk_arrival_times=trunk_times,
         baseline_feeder_departures=feeder_times,
         feeder_trip_ids=feeder_ids,
         interchange_stop_id=corridor_data["interchange"]["stop_id"],
-        interchange_name=corridor_data["interchange"]["name"]
+        interchange_name=corridor_data["interchange"]["name"],
+        traffic_variance_minutes=traffic_var
     )
 
     # Load Opal loadings for report

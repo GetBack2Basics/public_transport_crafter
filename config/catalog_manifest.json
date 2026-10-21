@@ -102,6 +102,28 @@
       "target_tables": ["opal_station_loadings", "opal_od_matrix"],
       "default_destination": "data/lake/opal_loadings.parquet",
       "description": "Authoritative Opal monthly tap-on/tap-off volumes and interchange patronage matrices"
+    },
+    "tfnsw_live_traffic_hazards": {
+      "agency_id": "TfNSW_LiveTraffic",
+      "mode": "road_traffic",
+      "region": "Statewide NSW",
+      "protocol": "tfnsw_api",
+      "endpoint": "https://api.transport.nsw.gov.au/v1/live-traffic/hazards",
+      "format": "json",
+      "target_tables": ["live_hazards", "incident_congestion"],
+      "default_destination": "data/lake/live_traffic_hazards.parquet",
+      "description": "Live traffic road incidents, congestion delays, lane closures, and construction hazards across NSW corridors"
+    },
+    "nsw_street_network": {
+      "agency_id": "NSW_Roads_OSM",
+      "mode": "road_network",
+      "region": "Statewide NSW",
+      "protocol": "tfnsw_api",
+      "endpoint": "https://api.transport.nsw.gov.au/v1/roads/network",
+      "format": "json",
+      "target_tables": ["street_segments", "corridor_speeds"],
+      "default_destination": "data/lake/nsw_street_network.parquet",
+      "description": "Authoritative NSW arterial road and street network with speed limits, road classification, and peak congestion indices"
     }
   }
 }

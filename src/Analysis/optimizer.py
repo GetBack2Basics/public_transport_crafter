@@ -81,11 +81,13 @@ class ZeroResourceTimetableOptimizer:
         baseline_feeder_departures: List[str],
         feeder_trip_ids: List[str],
         interchange_stop_id: str = "230310",
-        interchange_name: str = "Hamilton Station"
+        interchange_name: str = "Hamilton Station",
+        traffic_variance_minutes: float = 0.0
     ) -> Dict[str, Any]:
         """
         Executes optimization over feeder departures against trunk arrivals.
         Strictly satisfies zero-resource and headway constraints.
+        Factors in traffic_variance_minutes to absorb road congestion delays.
         """
         trunk_arr_min = [time_str_to_minutes(t) for t in trunk_arrival_times]
         base_dept_min = [time_str_to_minutes(t) for t in baseline_feeder_departures]
@@ -97,7 +99,7 @@ class ZeroResourceTimetableOptimizer:
         base_pvr = self.calculate_peak_vehicle_requirement(base_dept_min, self.trip_duration)
         base_duty_hours = (n_trips * self.trip_duration) / 60.0
 
-        logger.info(f"Baseline Fleet Metrics: PVR = {base_pvr} vehicles | Duty Hours = {base_duty_hours:.1f} hrs")
+        logger.info(f"Baseline Fleet Metrics: PVR = {base_pvr} vehicles | Duty Hours = {base_duty_hours:.1f} hrs | Traffic Variance = {traffic_variance_minutes:.1f}m")
 
         # Optimization decision variables: delta_t for each feeder trip i
         # Bounds: [-max_shift, +max_shift]
@@ -113,7 +115,7 @@ class ZeroResourceTimetableOptimizer:
                     wait = min(valid_feeder) - arr
                 else:
                     wait = 30.0  # Missed / outside service window
-                total_penalty += calculate_single_transfer_penalty(wait)
+                total_penalty += calculate_single_transfer_penalty(wait, traffic_variance_minutes=traffic_variance_minutes)
 
             # Headway penalty inside objective for smooth guidance
             for i in range(n_trips - 1):
@@ -177,11 +179,13 @@ class ZeroResourceTimetableOptimizer:
         # Build baseline and optimized transfer tables
         baseline_transfers = self._build_transfer_table(
             trunk_arr_min, trunk_arrival_times, base_dept_min, baseline_feeder_departures,
-            feeder_trip_ids, interchange_stop_id, interchange_name
+            feeder_trip_ids, interchange_stop_id, interchange_name,
+            traffic_variance_minutes=traffic_variance_minutes
         )
         optimized_transfers = self._build_transfer_table(
             trunk_arr_min, trunk_arrival_times, opt_dept_min, opt_dept_str,
-            feeder_trip_ids, interchange_stop_id, interchange_name
+            feeder_trip_ids, interchange_stop_id, interchange_name,
+            traffic_variance_minutes=traffic_variance_minutes
         )
 
         base_eval = evaluate_transfer_table(baseline_transfers)
@@ -231,7 +235,8 @@ class ZeroResourceTimetableOptimizer:
         feeder_dept_str: List[str],
         feeder_trip_ids: List[str],
         interchange_stop_id: str,
-        interchange_name: str
+        interchange_name: str,
+        traffic_variance_minutes: float = 0.0
     ) -> pd.DataFrame:
         transfers = []
         for idx, arr in enumerate(trunk_arr_min):
@@ -243,9 +248,10 @@ class ZeroResourceTimetableOptimizer:
             if candidates:
                 candidates.sort(key=lambda x: x[0])
                 wait, f_id, f_dept = candidates[0]
-                status = "optimal (4-8m)" if 4 <= wait <= 8 else ("excessive (>8m)" if wait > 8 else "tight (<4m)")
+                effective_wait = wait - (0.5 * traffic_variance_minutes)
+                status = "optimal (4-8m)" if 4.0 <= effective_wait <= 8.0 else ("excessive (>8m)" if effective_wait > 8.0 else "tight / traffic risk")
             else:
-                wait = 28
+                wait = 28.0
                 f_id = "N/A"
                 f_dept = "N/A"
                 status = "missed connection"

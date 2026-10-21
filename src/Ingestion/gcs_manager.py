@@ -22,7 +22,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(me
 logger = logging.getLogger("gcs_manager")
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
-DEFAULT_BUCKET = os.environ.get("GCS_BUCKET", "rathmines-interactive-map")
+DEFAULT_BUCKET = os.environ.get("GCS_BUCKET", "nsw-transit-spatial-crafter")
 DATA_DIR = BASE_DIR / "data"
 
 
@@ -53,19 +53,7 @@ def upload_file_to_gcs(
     bucket = bucket_name or get_active_gcs_bucket()
     target_uri = f"gs://{bucket}/{gcs_blob_path.lstrip('/')}"
 
-    # Try fast gcloud storage command first
-    try:
-        cmd = ["gcloud", "storage", "cp", str(local_path), target_uri, f"--cache-control={cache_control}"]
-        if content_type:
-            cmd.append(f"--content-type={content_type}")
-        res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=30)
-        if res.returncode == 0:
-            logger.info(f"Uploaded {local_path.name} to {target_uri} via gcloud")
-            return get_public_gcs_url(gcs_blob_path, bucket)
-    except Exception as e:
-        logger.warning(f"gcloud CLI upload fallback triggered: {e}")
-
-    # Fallback to Python SDK
+    # Use Python google.cloud.storage SDK directly
     try:
         from google.cloud import storage
         client = storage.Client()
@@ -75,11 +63,25 @@ def upload_file_to_gcs(
             blob.content_type = content_type
         blob.cache_control = cache_control
         blob.upload_from_filename(str(local_path))
-        logger.info(f"Uploaded {local_path.name} to {target_uri} via google.cloud.storage SDK")
+        logger.info(f"Uploaded {local_path.name} to {target_uri} via storage SDK")
         return get_public_gcs_url(gcs_blob_path, bucket)
+    except Exception as sdk_err:
+        logger.warning(f"Storage SDK upload failed ({sdk_err}), trying gcloud CLI...")
+
+    # Fallback to gcloud storage CLI
+    try:
+        cmd = ["gcloud", "storage", "cp", str(local_path), target_uri, f"--cache-control={cache_control}"]
+        if content_type:
+            cmd.append(f"--content-type={content_type}")
+        use_shell = sys.platform == "win32"
+        res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=30, shell=use_shell)
+        if res.returncode == 0:
+            logger.info(f"Uploaded {local_path.name} to {target_uri} via gcloud")
+            return get_public_gcs_url(gcs_blob_path, bucket)
     except Exception as e:
         logger.error(f"Failed to upload {local_path} to GCS: {e}")
-        return get_public_gcs_url(gcs_blob_path, bucket)
+
+    return get_public_gcs_url(gcs_blob_path, bucket)
 
 
 def upload_directory_to_gcs(
@@ -87,25 +89,40 @@ def upload_directory_to_gcs(
     gcs_prefix: str,
     bucket_name: Optional[str] = None
 ) -> None:
-    """Recursively uploads a local directory to a GCS prefix."""
+    """Recursively uploads a local directory to a GCS prefix via Python SDK."""
     bucket = bucket_name or get_active_gcs_bucket()
-    target_uri = f"gs://{bucket}/{gcs_prefix.strip('/')}/"
+    if not local_dir.exists():
+        return
 
     try:
-        cmd = ["gcloud", "storage", "rsync", "-r", str(local_dir), target_uri]
-        res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=60)
-        if res.returncode == 0:
-            logger.info(f"Synced {local_dir} to {target_uri}")
-            return
-    except Exception as e:
-        logger.warning(f"gcloud rsync failed ({e}), falling back to iterative upload")
-
-    if local_dir.exists():
+        from google.cloud import storage
+        client = storage.Client()
+        b = client.bucket(bucket)
         for item in local_dir.rglob("*"):
             if item.is_file():
                 rel = item.relative_to(local_dir).as_posix()
                 blob_name = f"{gcs_prefix.strip('/')}/{rel}"
-                upload_file_to_gcs(item, blob_name, bucket_name=bucket)
+                blob = b.blob(blob_name)
+                blob.cache_control = "public, max-age=60"
+                if item.suffix == ".html":
+                    blob.content_type = "text/html"
+                elif item.suffix == ".parquet":
+                    blob.content_type = "application/octet-stream"
+                blob.upload_from_filename(str(item))
+        logger.info(f"Uploaded directory {local_dir} to gs://{bucket}/{gcs_prefix.strip('/')}/")
+        return
+    except Exception as sdk_err:
+        logger.warning(f"Storage SDK directory upload failed ({sdk_err}), trying gcloud storage rsync...")
+
+    try:
+        target_uri = f"gs://{bucket}/{gcs_prefix.strip('/')}/"
+        cmd = ["gcloud", "storage", "rsync", "-r", str(local_dir), target_uri]
+        use_shell = sys.platform == "win32"
+        res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=60, shell=use_shell)
+        if res.returncode == 0:
+            logger.info(f"Synced {local_dir} to {target_uri}")
+    except Exception as e:
+        logger.warning(f"Directory upload failed: {e}")
 
 
 def download_blob_from_gcs(
@@ -115,16 +132,7 @@ def download_blob_from_gcs(
 ) -> bool:
     """Downloads a blob from GCS to local destination."""
     bucket = bucket_name or get_active_gcs_bucket()
-    source_uri = f"gs://{bucket}/{gcs_blob_path.lstrip('/')}"
     local_destination.parent.mkdir(parents=True, exist_ok=True)
-
-    try:
-        cmd = ["gcloud", "storage", "cp", source_uri, str(local_destination)]
-        res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=30)
-        if res.returncode == 0 and local_destination.exists():
-            return True
-    except Exception:
-        pass
 
     try:
         from google.cloud import storage
@@ -134,8 +142,18 @@ def download_blob_from_gcs(
         if blob.exists():
             blob.download_to_filename(str(local_destination))
             return True
-    except Exception as e:
-        logger.warning(f"GCS download failed for {gcs_blob_path}: {e}")
+    except Exception as sdk_err:
+        logger.warning(f"Storage SDK download failed ({sdk_err}), trying gcloud CLI...")
+
+    try:
+        source_uri = f"gs://{bucket}/{gcs_blob_path.lstrip('/')}"
+        cmd = ["gcloud", "storage", "cp", source_uri, str(local_destination)]
+        use_shell = sys.platform == "win32"
+        res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=30, shell=use_shell)
+        if res.returncode == 0 and local_destination.exists():
+            return True
+    except Exception:
+        pass
 
     return False
 

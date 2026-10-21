@@ -16,7 +16,7 @@ from datetime import datetime, timedelta
 from typing import Dict, Any, List, Optional
 import pandas as pd
 import geopandas as gpd
-from shapely.geometry import Point
+from shapely.geometry import Point, LineString
 from dotenv import load_dotenv
 
 from src.Ingestion.data_importer import (
@@ -346,6 +346,114 @@ class CatalogRouter:
             ]
             opal_df = pd.DataFrame(opal_data)
             opal_df.to_parquet(target_file, index=False, engine="pyarrow")
+            logger.info(f"Seeded authoritative {dataset_id} into {target_file}")
+            upload_directory_to_gcs(dest_dir, "lake")
+            return True
+
+        elif "street_network" in dataset_id:
+            streets_data = [
+                {
+                    "street_id": "NSW_RD_A15",
+                    "street_name": "New England Highway (A15)",
+                    "corridor": "Maitland - Newcastle",
+                    "road_class": "Arterial Highway",
+                    "speed_limit_kmh": 80,
+                    "length_km": 28.5,
+                    "am_peak_delay_pct": 22.0,
+                    "pm_peak_delay_pct": 28.0,
+                    "traffic_variance_min": 4.5,
+                    "geometry": LineString([(151.554, -32.736), (151.601, -32.753), (151.644, -32.784), (151.688, -32.825), (151.705, -32.894)])
+                },
+                {
+                    "street_id": "NSW_RD_A37",
+                    "street_name": "Newcastle Road / University Drive",
+                    "corridor": "Callaghan UON - Hamilton",
+                    "road_class": "Urban Arterial",
+                    "speed_limit_kmh": 60,
+                    "length_km": 6.8,
+                    "am_peak_delay_pct": 35.0,
+                    "pm_peak_delay_pct": 30.0,
+                    "traffic_variance_min": 5.2,
+                    "geometry": LineString([(151.698, -32.891), (151.703, -32.893), (151.722, -32.906), (151.745, -32.924)])
+                },
+                {
+                    "street_id": "NSW_RD_M1",
+                    "street_name": "Pacific Highway / M1 Pacific Motorway",
+                    "corridor": "Gosford - Hornsby",
+                    "road_class": "Motorway / Highway",
+                    "speed_limit_kmh": 110,
+                    "length_km": 42.1,
+                    "am_peak_delay_pct": 32.0,
+                    "pm_peak_delay_pct": 25.0,
+                    "traffic_variance_min": 6.0,
+                    "geometry": LineString([(151.341, -33.424), (151.324, -33.485), (151.150, -33.590), (151.098, -33.703)])
+                },
+                {
+                    "street_id": "NSW_RD_A28",
+                    "street_name": "Pennant Hills Road (A28)",
+                    "corridor": "Hornsby Interchange Area",
+                    "road_class": "Urban Arterial",
+                    "speed_limit_kmh": 60,
+                    "length_km": 5.4,
+                    "am_peak_delay_pct": 40.0,
+                    "pm_peak_delay_pct": 38.0,
+                    "traffic_variance_min": 5.8,
+                    "geometry": LineString([(151.098, -33.703), (151.102, -33.712), (151.115, -33.730)])
+                },
+                {
+                    "street_id": "NSW_RD_STEW",
+                    "street_name": "Stewart Avenue / Hunter Street",
+                    "corridor": "Hamilton - Newcastle Interchange",
+                    "road_class": "Urban Commercial Arterial",
+                    "speed_limit_kmh": 50,
+                    "length_km": 2.2,
+                    "am_peak_delay_pct": 25.0,
+                    "pm_peak_delay_pct": 20.0,
+                    "traffic_variance_min": 3.0,
+                    "geometry": LineString([(151.745, -32.924), (151.758, -32.923), (151.770, -32.925)])
+                }
+            ]
+            gdf_streets = gpd.GeoDataFrame(streets_data, geometry="geometry", crs="EPSG:4326")
+            gdf_streets.to_parquet(target_file, index=False)
+            logger.info(f"Seeded authoritative {dataset_id} into {target_file}")
+            upload_directory_to_gcs(dest_dir, "lake")
+            return True
+
+        elif "traffic_hazards" in dataset_id or "live_traffic" in dataset_id:
+            hazards_data = [
+                {
+                    "hazard_id": "HAZ_001",
+                    "headline": "Roadwork on University Drive approaching Newcastle Rd",
+                    "corridor": "Callaghan / University of Newcastle",
+                    "severity": "Medium",
+                    "delay_minutes": 8.0,
+                    "affected_mode": "Bus Routes 11, 23",
+                    "lat": -32.8931,
+                    "lon": 151.7032
+                },
+                {
+                    "hazard_id": "HAZ_002",
+                    "headline": "Peak Congestion on Pacific Highway approaching Hornsby",
+                    "corridor": "Hornsby CBD",
+                    "severity": "High",
+                    "delay_minutes": 12.0,
+                    "affected_mode": "Bus & Feeder Traffic",
+                    "lat": -33.7032,
+                    "lon": 151.0984
+                },
+                {
+                    "hazard_id": "HAZ_003",
+                    "headline": "Heavy Freight Queue at Hexham Bridge (New England Hwy)",
+                    "corridor": "Hexham / Hunter Corridor",
+                    "severity": "Moderate",
+                    "delay_minutes": 6.0,
+                    "affected_mode": "Intercity Coaches & Feeder 181",
+                    "lat": -32.8252,
+                    "lon": 151.6882
+                }
+            ]
+            hazards_df = pd.DataFrame(hazards_data)
+            hazards_df.to_parquet(target_file, index=False, engine="pyarrow")
             logger.info(f"Seeded authoritative {dataset_id} into {target_file}")
             upload_directory_to_gcs(dest_dir, "lake")
             return True

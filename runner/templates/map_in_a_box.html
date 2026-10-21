@@ -16,6 +16,12 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <style>
+    html {
+      font-size: 11px;
+      width: 100%;
+      max-width: 100vw;
+      overflow-x: hidden;
+    }
     :root {
       --bg-primary: #0a0e17;
       --bg-surface: #111827;
@@ -42,12 +48,19 @@
       min-height: 100vh;
       display: flex;
       flex-direction: column;
+      width: 100%;
+      max-width: 100vw;
+      overflow-x: hidden;
+      font-size: 1rem;
     }
 
     header {
       background: linear-gradient(135deg, rgba(17,24,39,0.95), rgba(15,23,42,0.95));
       border-bottom: 1px solid var(--border-color);
-      padding: 1.25rem 2rem;
+      padding: 0.6rem 1.25rem;
+      flex-wrap: wrap;
+      overflow-x: hidden;
+      max-width: 100vw;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -64,21 +77,21 @@
     }
 
     .brand-logo {
-      width: 42px;
-      height: 42px;
-      border-radius: 10px;
+      width: 30px;
+      height: 30px;
+      border-radius: 7px;
       background: linear-gradient(135deg, #06b6d4, #3b82f6);
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: 800;
-      font-size: 1.2rem;
+      font-size: 0.85rem;
       color: #fff;
       box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
     }
 
     .brand-text h1 {
-      font-size: 1.25rem;
+      font-size: 1.05rem;
       font-weight: 700;
       letter-spacing: -0.02em;
       background: linear-gradient(90deg, #f8fafc, #94a3b8);
@@ -87,7 +100,7 @@
     }
 
     .brand-text p {
-      font-size: 0.8rem;
+      font-size: 0.65rem;
       color: var(--accent-cyan);
       font-weight: 500;
     }
@@ -101,9 +114,9 @@
     .badge {
       background: rgba(255, 255, 255, 0.05);
       border: 1px solid var(--border-color);
-      padding: 0.4rem 0.8rem;
+      padding: 0.25rem 0.6rem;
       border-radius: 9999px;
-      font-size: 0.75rem;
+      font-size: 0.65rem;
       font-weight: 500;
       display: flex;
       align-items: center;
@@ -117,20 +130,22 @@
     .query-banner {
       background: rgba(30, 41, 59, 0.5);
       border-bottom: 1px solid var(--border-color);
-      padding: 0.75rem 2rem;
+      padding: 0.4rem 1.25rem;
       display: flex;
       align-items: center;
-      gap: 1rem;
-      font-size: 0.9rem;
+      gap: 0.75rem;
+      font-size: 0.7rem;
+      overflow-x: hidden;
+      max-width: 100vw;
     }
 
     .query-tag {
       background: rgba(59, 130, 246, 0.15);
       color: var(--accent-blue);
-      padding: 0.2rem 0.6rem;
+      padding: 0.15rem 0.45rem;
       border-radius: 4px;
       font-weight: 600;
-      font-size: 0.75rem;
+      font-size: 0.62rem;
       text-transform: uppercase;
       letter-spacing: 0.05em;
     }
@@ -138,7 +153,7 @@
     .query-text {
       color: #e2e8f0;
       font-family: var(--font-mono);
-      font-size: 0.85rem;
+      font-size: 0.7rem;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -147,10 +162,12 @@
     /* Main Container */
     .dashboard-grid {
       display: grid;
-      grid-template-columns: 1fr 380px;
+      grid-template-columns: minmax(0, 1fr) 300px;
       flex: 1;
-      height: calc(100vh - 120px);
-      overflow: hidden;
+      height: calc(100vh - 105px);
+      overflow-x: hidden;
+      width: 100%;
+      max-width: 100vw;
     }
 
     @media (max-width: 1024px) {
@@ -176,13 +193,15 @@
     }
 
     .sql-explorer {
-      height: 280px;
+      height: 240px;
       background: var(--bg-surface);
       border-top: 1px solid var(--border-color);
       display: flex;
       flex-direction: column;
-      padding: 1rem;
+      padding: 0.75rem;
       z-index: 20;
+      overflow-x: hidden;
+      max-width: 100%;
     }
 
     .sql-header {
@@ -193,7 +212,7 @@
     }
 
     .sql-header h3 {
-      font-size: 0.9rem;
+      font-size: 0.72rem;
       font-weight: 600;
       display: flex;
       align-items: center;
@@ -212,9 +231,9 @@
       background: rgba(15, 23, 42, 0.8);
       border: 1px solid var(--border-color);
       border-radius: 6px;
-      padding: 0.6rem 0.9rem;
+      padding: 0.35rem 0.7rem;
       color: #fff;
-      font-size: 0.85rem;
+      font-size: 0.68rem;
       font-family: var(--font-main);
       outline: none;
       transition: all 0.2s;
@@ -230,9 +249,9 @@
       color: #fff;
       border: none;
       border-radius: 6px;
-      padding: 0 1.2rem;
+      padding: 0 0.9rem;
       font-weight: 600;
-      font-size: 0.85rem;
+      font-size: 0.68rem;
       cursor: pointer;
       transition: all 0.2s;
     }
@@ -264,13 +283,13 @@
     table.data-table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 0.78rem;
+      font-size: 0.62rem;
       font-family: var(--font-mono);
     }
 
     table.data-table th {
       background: rgba(30, 41, 59, 0.9);
-      padding: 0.5rem 0.75rem;
+      padding: 0.3rem 0.5rem;
       text-align: left;
       font-weight: 600;
       color: var(--text-secondary);
@@ -280,7 +299,7 @@
     }
 
     table.data-table td {
-      padding: 0.4rem 0.75rem;
+      padding: 0.25rem 0.5rem;
       border-bottom: 1px solid rgba(255, 255, 255, 0.04);
       color: #cbd5e1;
     }
@@ -293,14 +312,17 @@
     .sidebar {
       background: var(--bg-surface);
       overflow-y: auto;
-      padding: 1.25rem;
+      overflow-x: hidden;
+      padding: 0.75rem;
       display: flex;
       flex-direction: column;
-      gap: 1.25rem;
+      gap: 0.75rem;
+      width: 100%;
+      max-width: 100%;
     }
 
     .kpi-section-title {
-      font-size: 0.75rem;
+      font-size: 0.62rem;
       text-transform: uppercase;
       letter-spacing: 0.08em;
       color: var(--text-muted);
@@ -310,14 +332,14 @@
     .kpi-cards {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 0.75rem;
+      gap: 0.5rem;
     }
 
     .kpi-card {
       background: var(--bg-card);
       border: 1px solid var(--border-color);
       border-radius: 8px;
-      padding: 0.9rem;
+      padding: 0.55rem;
       display: flex;
       flex-direction: column;
       gap: 0.25rem;
@@ -329,13 +351,13 @@
     }
 
     .kpi-label {
-      font-size: 0.7rem;
+      font-size: 0.58rem;
       color: var(--text-secondary);
       font-weight: 500;
     }
 
     .kpi-value {
-      font-size: 1.4rem;
+      font-size: 1.05rem;
       font-weight: 700;
       color: #fff;
     }
@@ -345,7 +367,7 @@
     .kpi-value.amber { color: var(--accent-amber); }
 
     .kpi-sub {
-      font-size: 0.65rem;
+      font-size: 0.52rem;
       color: var(--text-muted);
     }
 
@@ -354,15 +376,15 @@
       background: var(--bg-card);
       border: 1px solid var(--border-color);
       border-radius: 8px;
-      padding: 1rem;
+      padding: 0.65rem;
     }
 
     .comparison-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 0.4rem 0;
-      font-size: 0.8rem;
+      padding: 0.25rem 0;
+      font-size: 0.62rem;
       border-bottom: 1px solid rgba(255, 255, 255, 0.04);
     }
 
@@ -375,20 +397,21 @@
     .trips-container {
       display: flex;
       flex-direction: column;
-      gap: 0.5rem;
-      max-height: 250px;
+      gap: 0.35rem;
+      max-height: 200px;
       overflow-y: auto;
+      overflow-x: hidden;
     }
 
     .trip-item {
       background: rgba(15, 23, 42, 0.6);
       border: 1px solid var(--border-color);
       border-radius: 6px;
-      padding: 0.6rem 0.8rem;
+      padding: 0.4rem 0.6rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 0.78rem;
+      font-size: 0.62rem;
     }
 
     .trip-item.optimized {
@@ -440,6 +463,58 @@
       height: 14px;
       border-radius: 3px;
     }
+
+    /* Scenario Selector Buttons */
+    .scenario-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      color: #94a3b8;
+      font-size: 0.62rem;
+      font-weight: 500;
+      padding: 0.25rem 0.55rem;
+      border-radius: 4px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+      font-family: var(--font-main);
+    }
+    .scenario-btn:hover {
+      background: rgba(59, 130, 246, 0.15);
+      border-color: rgba(59, 130, 246, 0.4);
+      color: #fff;
+    }
+    .scenario-btn.active {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(6, 182, 212, 0.3));
+      border-color: var(--accent-blue);
+      color: #38bdf8;
+      font-weight: 600;
+      box-shadow: 0 0 12px rgba(59, 130, 246, 0.35);
+    }
+
+    /* Quick Query Filter Chips */
+    .chip {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      color: #94a3b8;
+      font-size: 0.58rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 9999px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+      font-family: var(--font-main);
+    }
+    .chip:hover {
+      background: rgba(59, 130, 246, 0.15);
+      border-color: rgba(59, 130, 246, 0.4);
+      color: #fff;
+    }
+    .chip.active {
+      background: rgba(59, 130, 246, 0.25);
+      border-color: var(--accent-blue);
+      color: #38bdf8;
+      font-weight: 600;
+    }
   </style>
 </head>
 <body>
@@ -453,52 +528,81 @@
         <p>Zero-Resource Multi-Modal Timetable Optimization</p>
       </div>
     </div>
-    <div class="header-badges">
+        <div class="header-badges">
       <div class="badge emerald">
-        <span style="font-size: 1.1em;">âœ“</span> Zero Added Fleet Cost
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -1px;"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        <span>Zero Added Fleet Cost</span>
       </div>
       <div class="badge cyan">
-        <span>âš¡</span> Valhalla Catchments
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -1px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+        <span>Valhalla Catchments</span>
       </div>
       <div class="badge amber">
-        <span>ðŸ—‚ï¸ </span> In-Browser AlaSQL
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -1px;"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
+        <span>In-Browser AlaSQL</span>
       </div>
     </div>
   </header>
 
+    <!-- Scenario & Example Corridor Selector -->
+  <div class="scenarios-bar" style="background: rgba(15, 23, 42, 0.95); border-bottom: 1px solid var(--border-color); padding: 0.4rem 1.25rem; display: flex; align-items: center; flex-wrap: wrap; gap: 0.35rem 0.5rem; width: 100%; max-width: 100vw; overflow-x: hidden;">
+    <span style="font-size: 0.65rem; font-weight: 700; color: var(--accent-cyan); text-transform: uppercase; white-space: nowrap; letter-spacing: 0.05em;">Corridor Scenarios:</span>
+    <button class="scenario-btn active" id="btnScenario1" onclick="switchCorridor('maitland_uon')">1. Maitland &rarr; Newcastle Uni (Hunter)</button>
+    <button class="scenario-btn" id="btnScenario2" onclick="switchCorridor('gosford_hornsby')">2. Gosford &rarr; Hornsby (Central Coast)</button>
+    <button class="scenario-btn" id="btnScenario3" onclick="switchCorridor('parramatta_central')">3. Parramatta &rarr; Central (Sydney West)</button>
+    <button class="scenario-btn" id="btnScenario4" onclick="switchCorridor('newcastle_fassifern')">4. Newcastle &rarr; Fassifern (Lake Macquarie)</button>
+    <button class="scenario-btn" id="btnScenario5" onclick="switchCorridor('hornsby_chatswood')">5. Hornsby &rarr; Chatswood (North Shore)</button>
+  </div>
+
   <!-- Query Context Banner -->
   <div class="query-banner">
     <div class="query-tag">Autonomous Query</div>
-    <div class="query-text">{{QUERY_STRING}}</div>
+    <div class="query-text" id="activeQueryDisplay">{{QUERY_STRING}}</div>
   </div>
 
   <!-- Dashboard Main Grid -->
   <div class="dashboard-grid">
     <!-- Left Column: Interactive Map & AlaSQL Console -->
     <div class="main-view">
-      <div id="map">
+      <div class="map-container" style="position: relative; flex: 1; min-height: 440px; width: 100%;">
+        <div id="map" style="position: absolute; top: 0; bottom: 0; left: 0; right: 0; width: 100%; height: 100%;"></div>
         <!-- Floating Layer Legend -->
         <div class="map-legend">
-          <div style="font-weight: 700; margin-bottom: 0.2rem; color: #f8fafc;">Transit Network</div>
-          <div class="legend-item"><div class="legend-color" style="background: #3b82f6;"></div> Trunk Rail Line</div>
-          <div class="legend-item"><div class="legend-color" style="background: #10b981;"></div> Optimized Feeder Bus</div>
-          <div class="legend-item"><div class="legend-color" style="background: #ef4444; border: 1px dashed #fff;"></div> Baseline Schedule</div>
+          <div style="font-weight: 700; margin-bottom: 0.2rem; color: #f8fafc;">Transit & Road Network</div>
+          <div class="legend-item"><div class="legend-color" style="background: #3b82f6;"></div> Trunk Rail / Interchange</div>
+          <div class="legend-item"><div class="legend-color" style="background: #10b981;"></div> Feeder Bus Stops</div>
+          <div class="legend-item"><div class="legend-color" style="background: #f59e0b; height: 3px; border-radius: 1px;"></div> Arterial Streets (Congestion)</div>
+          <div class="legend-item"><div class="legend-color" style="background: #ef4444; border-radius: 50%;"></div> Live Traffic Incidents</div>
           <div class="legend-item"><div class="legend-color" style="background: rgba(6,182,212,0.3); border: 1px solid #06b6d4;"></div> 5-15m Pedestrian Isochrone</div>
         </div>
       </div>
 
       <!-- In-Browser SQL Explorer -->
       <div class="sql-explorer">
-        <div class="sql-header">
-          <h3><span>ðŸ”</span> Natural Language Transit SQL Engine (AlaSQL Client-Side)</h3>
-          <span style="font-size: 0.7rem; color: var(--text-muted);">Tables: trips, stops, transfers, opal_loadings</span>
+                <div class="sql-header">
+          <h3>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -1px;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <span>Natural Language Transit SQL Engine (AlaSQL Client-Side)</span>
+          </h3>
+          <span style="font-size: 0.58rem; color: var(--text-muted);" id="sqlRowCount">Tables: trips, stops, transfers, opal_loadings, streets, traffic_hazards</span>
         </div>
 
         <div class="nl-search-box">
           <input type="text" id="nlQueryInput" class="nl-input" 
-                 placeholder="Ask in natural language (e.g. 'Show transfers with wait time > 10m' or 'List trips with optimal connections')" 
+                 placeholder="Type natural language or raw SQL (e.g. 'Show traffic hazards', 'Transfers under 8m', 'SELECT * FROM streets')" 
                  value="Show transfers with wait time under 10 minutes">
           <button id="btnRunQuery" class="btn-query">Run Query</button>
+        </div>
+
+                <!-- Interactive Query Filter Chips -->
+        <div class="query-chips" style="display: flex; gap: 0.35rem; flex-wrap: wrap; margin-bottom: 0.4rem; max-width: 100%;">
+          <button class="chip active" type="button" onclick="runPresetQuery('transfers_optimal')">Optimal Transfers (&le;8m)</button>
+          <button class="chip" type="button" onclick="runPresetQuery('transfers_excessive')">Excessive Wait (&gt;8m)</button>
+          <button class="chip" type="button" onclick="runPresetQuery('traffic_hazards')">Live Road Hazards</button>
+          <button class="chip" type="button" onclick="runPresetQuery('streets_congested')">Congested Arterials</button>
+          <button class="chip" type="button" onclick="runPresetQuery('trips_shifted')">Timetable Shifts</button>
+          <button class="chip" type="button" onclick="runPresetQuery('opal_loadings')">Opal Loadings</button>
+          <button class="chip" type="button" onclick="runPresetQuery('all_stops')">Corridor Stations</button>
         </div>
 
         <div id="sqlQueryDisplay" class="sql-query-display">
@@ -542,13 +646,19 @@
           <div class="kpi-value" style="color: #a855f7;">$0.00</div>
           <div class="kpi-sub">Zero Operational Cost Delta</div>
         </div>
+
+        <div class="kpi-card">
+          <div class="kpi-label">Traffic Delay Variance (&sigma;)</div>
+          <div class="kpi-value" style="color: #f59e0b;" id="kpiTrafficVar">&plusmn;-- min</div>
+          <div class="kpi-sub">Congestion Absorbed by Buffer</div>
+        </div>
       </div>
 
       <div class="kpi-section-title">Corridor & Fleet Invariants</div>
       <div class="comparison-card">
         <div class="comparison-row">
-          <span class="comparison-label">Origin âž” Destination</span>
-          <span class="comparison-val">{{ORIGIN_NAME}} âž” {{DESTINATION_NAME}}</span>
+          <span class="comparison-label">Origin &rarr; Destination</span>
+          <span class="comparison-val">{{ORIGIN_NAME}} &rarr; {{DESTINATION_NAME}}</span>
         </div>
         <div class="comparison-row">
           <span class="comparison-label">Interchange Node</span>
@@ -566,6 +676,12 @@
           <span class="comparison-label">Network Friction Penalty</span>
           <span class="comparison-val" id="compPenaltyDelta" style="color: var(--accent-cyan);">--</span>
         </div>
+        <div class="comparison-row">
+          <span class="comparison-label">Road Congestion Variance</span>
+          <span class="comparison-val" id="compTrafficVar" style="color: #f59e0b;">-- min buffer</span>
+        </div>
+      </div>
+        </div>
       </div>
 
       <div class="kpi-section-title">Departure Synchronization Diff</div>
@@ -580,117 +696,190 @@
     const METRICS_DATA = {{METRICS_JSON}};
     const STOPS_GEOJSON = {{STOPS_GEOJSON}};
     const ISOCHRONES_GEOJSON = {{ISOCHRONES_GEOJSON}};
+    const STREETS_GEOJSON = {{STREETS_GEOJSON}};
+    const TRAFFIC_HAZARDS = {{TRAFFIC_HAZARDS_JSON}};
     const TRIPS_DATA = {{TRIPS_JSON}};
     const BASELINE_TRANSFERS = {{BASELINE_TRANSFERS_JSON}};
     const OPTIMIZED_TRANSFERS = {{OPTIMIZED_TRANSFERS_JSON}};
     const OPAL_DATA = {{OPAL_LOADINGS_JSON}};
+    const SCENARIOS_CATALOG = {{SCENARIOS_CATALOG_JSON}};
 
-    // 1. Initialize Map
-    const map = L.map('map', { zoomControl: true }).setView([-32.924, 151.745], 11);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
-      subdomains: 'abcd',
-      maxZoom: 19
-    }).addTo(map);
+    // 1. Initialize Map & Base Tile Layers (OSM & Esri ONLY - No Carto)
+    let map = null;
+    let isochroneLayer = null;
+    let streetLayer = null;
+    let trafficHazardLayer = null;
+    let stopsLayer = null;
 
-    // 2. Render Isochrones
-    if (ISOCHRONES_GEOJSON && ISOCHRONES_GEOJSON.features) {
-      L.geoJSON(ISOCHRONES_GEOJSON, {
-        style: function(feature) {
-          const m = feature.properties.contour_minutes || 10;
-          const color = m <= 5 ? '#10b981' : (m <= 10 ? '#f59e0b' : '#06b6d4');
-          return {
-            fillColor: color,
-            weight: 1.5,
-            opacity: 0.8,
-            color: color,
-            fillOpacity: 0.18
-          };
-        },
-        onEachFeature: function(feature, layer) {
-          layer.bindPopup(`<b>${feature.properties.stop_name}</b><br>${feature.properties.contour_minutes} min walking catchment (${feature.properties.distance_meters}m)`);
-        }
-      }).addTo(map);
+    try {
+      const mapEl = document.getElementById('map');
+      if (mapEl) {
+        const esriDark = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+          attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ',
+          maxZoom: 16
+        });
+
+        const osmStandard = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+          maxZoom: 19
+        });
+
+        const esriStreets = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+          attribution: 'Tiles &copy; Esri &mdash; Source: Esri, TomTom',
+          maxZoom: 19
+        });
+
+        const esriSatellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+          attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA',
+          maxZoom: 18
+        });
+
+        map = L.map('map', { 
+          zoomControl: true,
+          layers: [esriDark]
+        }).setView([-32.924, 151.745], 11);
+
+        const baseMaps = {
+          "Esri Dark Canvas": esriDark,
+          "OpenStreetMap": osmStandard,
+          "Esri World Streets": esriStreets,
+          "Esri Satellite": esriSatellite
+        };
+
+        L.control.layers(baseMaps, {}, { position: 'topright' }).addTo(map);
+      }
+    } catch (err) {
+      console.warn("Leaflet Map init notice:", err);
     }
 
-    // 3. Render Stops
-    const bounds = [];
-    if (STOPS_GEOJSON && STOPS_GEOJSON.features) {
-      L.geoJSON(STOPS_GEOJSON, {
-        pointToLayer: function(feature, latlng) {
-          bounds.push(latlng);
-          const isInterchange = feature.properties.stop_id === '230310' || feature.properties.stop_id === '207710';
-          return L.circleMarker(latlng, {
-            radius: isInterchange ? 9 : 5,
-            fillColor: isInterchange ? '#3b82f6' : '#94a3b8',
+    // Function to render map layers for any corridor payload
+    function updateMapLayers(corridor) {
+      if (!map) return;
+      if (isochroneLayer) map.removeLayer(isochroneLayer);
+      if (streetLayer) map.removeLayer(streetLayer);
+      if (trafficHazardLayer) map.removeLayer(trafficHazardLayer);
+      if (stopsLayer) map.removeLayer(stopsLayer);
+
+      // Render Isochrones
+      if (corridor.isochrones_geojson && corridor.isochrones_geojson.features && corridor.isochrones_geojson.features.length) {
+        isochroneLayer = L.geoJSON(corridor.isochrones_geojson, {
+          style: function(feature) {
+            const m = feature.properties.contour_minutes || 10;
+            const color = m <= 5 ? '#10b981' : (m <= 10 ? '#f59e0b' : '#06b6d4');
+            return { fillColor: color, weight: 1.5, opacity: 0.8, color: color, fillOpacity: 0.18 };
+          },
+          onEachFeature: function(feature, layer) {
+            layer.bindPopup(`<b>${feature.properties.stop_name}</b><br>${feature.properties.contour_minutes} min walking catchment (${feature.properties.distance_meters}m)`);
+          }
+        }).addTo(map);
+      }
+
+      // Render Streets
+      if (corridor.streets_geojson && corridor.streets_geojson.features && corridor.streets_geojson.features.length) {
+        streetLayer = L.geoJSON(corridor.streets_geojson, {
+          style: function(feature) {
+            const delay = feature.properties.am_peak_delay_pct || 0;
+            const color = delay >= 35 ? '#ef4444' : (delay >= 25 ? '#f59e0b' : '#38bdf8');
+            return { color: color, weight: 4, opacity: 0.85 };
+          },
+          onEachFeature: function(feature, layer) {
+            const p = feature.properties;
+            layer.bindPopup(`
+              <div style="font-family: Inter, sans-serif; min-width: 210px; color: #1e293b;">
+                <strong style="color: #0284c7; font-size: 13px;">${p.street_name}</strong><br>
+                <span style="font-size: 11px; color: #64748b;">${p.road_class} &bull; ${p.speed_limit_kmh} km/h</span>
+                <hr style="margin: 6px 0; border: none; border-top: 1px solid #e2e8f0;">
+                <div><strong>AM Peak Delay:</strong> +${p.am_peak_delay_pct}%</div>
+                <div><strong>PM Peak Delay:</strong> +${p.pm_peak_delay_pct}%</div>
+                <div style="color: #d97706;"><strong>Traffic Delay Variance (&sigma;):</strong> &plusmn;${p.traffic_variance_min} min</div>
+              </div>
+            `);
+          }
+        }).addTo(map);
+      }
+
+      // Render Traffic Hazards
+      const hazardMarkers = [];
+      const hazards = corridor.traffic_hazards || [];
+      hazards.forEach(h => {
+        if (h.lat && h.lon) {
+          const m = L.circleMarker([h.lat, h.lon], {
+            radius: 8,
+            fillColor: '#ef4444',
             color: '#ffffff',
-            weight: isInterchange ? 2.5 : 1,
+            weight: 2,
             opacity: 1,
-            fillOpacity: 0.9
-          });
-        },
-        onEachFeature: function(feature, layer) {
-          layer.bindPopup(`<b>${feature.properties.stop_name}</b><br>Stop ID: ${feature.properties.stop_id}`);
-        }
-      }).addTo(map);
-    }
-
-    if (bounds.length > 0) {
-      map.fitBounds(L.latLngBounds(bounds), { padding: [50, 50] });
-    }
-
-    // 4. Populate Sidebar Metrics
-    if (METRICS_DATA) {
-      const opt = METRICS_DATA.optimized_metrics || {};
-      const base = METRICS_DATA.baseline_metrics || {};
-      const delta = METRICS_DATA.resource_delta || {};
-
-      document.getElementById('kpiAvgWait').textContent = `${opt.avg_wait_minutes || '--'} min`;
-      document.getElementById('kpiWaitDelta').textContent = `â†“ ${delta.wait_time_reduction_minutes || 0} min reduction`;
-
-      document.getElementById('kpiOptimalPct').textContent = `${opt.pct_optimal_window || '--'}%`;
-      document.getElementById('kpiOptimalDelta').textContent = `+${delta.optimal_transfer_increase_pct || 0}% increase`;
-
-      document.getElementById('kpiVehicles').textContent = `${opt.peak_vehicle_requirement || base.peak_vehicle_requirement || 0}`;
-
-      document.getElementById('compBasePvr').textContent = `${base.peak_vehicle_requirement || '--'} vehicles`;
-      document.getElementById('compOptPvr').textContent = `${opt.peak_vehicle_requirement || '--'} vehicles (Î” 0)`;
-      document.getElementById('compPenaltyDelta').textContent = `-${delta.penalty_reduction_pct || 0}% friction reduction`;
-    }
-
-    // 5. Render Trips Diff
-    const tripsContainer = document.getElementById('tripsList');
-    if (TRIPS_DATA && TRIPS_DATA.length > 0) {
-      TRIPS_DATA.forEach(t => {
-        const item = document.createElement('div');
-        item.className = 'trip-item optimized';
-        const shiftSign = t.shift_minutes > 0 ? `+${t.shift_minutes}` : `${t.shift_minutes}`;
-        item.innerHTML = `
-          <div>
-            <div style="font-weight:600; font-size:0.8rem; color:#fff;">${t.trip_id} (${t.vehicle_allocated})</div>
-            <div style="display:flex; gap:0.4rem; align-items:center; margin-top:0.2rem;">
-              <span class="time-badge base">${t.baseline_departure}</span>
-              <span style="color:var(--text-muted); font-size:0.7rem;">âž”</span>
-              <span class="time-badge opt">${t.optimized_departure}</span>
+            fillOpacity: 0.95
+          }).bindPopup(`
+            <div style="font-family: Inter, sans-serif; min-width: 230px; color: #1e293b;">
+              <span style="background: #fee2e2; color: #b91c1c; font-weight: 700; font-size: 10px; padding: 2px 6px; border-radius: 4px; text-transform: uppercase;">LIVE ROAD HAZARD</span>
+              <div style="font-weight: 700; font-size: 13px; margin: 6px 0 3px 0;">${h.headline}</div>
+              <div style="font-size: 11px; color: #64748b;">Severity: <strong>${h.severity}</strong> &bull; Corridor: ${h.corridor}</div>
+              <div style="font-size: 12px; color: #b91c1c; margin-top: 4px;"><strong>Estimated Delay:</strong> +${h.delay_minutes} min</div>
+              <div style="font-size: 11px; color: #475569; margin-top: 2px;"><strong>Impact:</strong> ${h.affected_mode}</div>
             </div>
-          </div>
-          <div class="delta-tag">${shiftSign}m shift</div>
-        `;
-        tripsContainer.appendChild(item);
+          `);
+          hazardMarkers.push(m);
+        }
       });
+      if (hazardMarkers.length) {
+        trafficHazardLayer = L.layerGroup(hazardMarkers).addTo(map);
+      }
+
+      // Render Stops
+      const bounds = [];
+      if (corridor.stops_geojson && corridor.stops_geojson.features && corridor.stops_geojson.features.length) {
+        stopsLayer = L.geoJSON(corridor.stops_geojson, {
+          pointToLayer: function(feature, latlng) {
+            bounds.push(latlng);
+            const isInterchange = feature.properties.stop_id === '230310' || feature.properties.stop_id === '207710' || feature.properties.stop_id === '213410' || feature.properties.stop_id === '228310';
+            return L.circleMarker(latlng, {
+              radius: isInterchange ? 9 : 5,
+              fillColor: isInterchange ? '#3b82f6' : '#10b981',
+              color: '#ffffff',
+              weight: isInterchange ? 2.5 : 1,
+              opacity: 1,
+              fillOpacity: 0.9
+            });
+          },
+          onEachFeature: function(feature, layer) {
+            layer.bindPopup(`<b>${feature.properties.stop_name}</b><br>Stop ID: ${feature.properties.stop_id}`);
+          }
+        }).addTo(map);
+      }
+
+      if (bounds.length > 0) {
+        map.fitBounds(L.latLngBounds(bounds), { padding: [50, 50] });
+      }
+      setTimeout(() => { if (map) map.invalidateSize(); }, 250);
     }
 
-    // 6. In-Browser AlaSQL Setup
-    alasql('CREATE TABLE trips');
-    alasql('CREATE TABLE transfers');
-    alasql('CREATE TABLE stops');
-    alasql('CREATE TABLE opal_loadings');
+    // 2. Client-side AlaSQL In-Browser Database Setup
+    try {
+      alasql('CREATE TABLE IF NOT EXISTS trips');
+      alasql('CREATE TABLE IF NOT EXISTS transfers');
+      alasql('CREATE TABLE IF NOT EXISTS stops');
+      alasql('CREATE TABLE IF NOT EXISTS opal_loadings');
+      alasql('CREATE TABLE IF NOT EXISTS streets');
+      alasql('CREATE TABLE IF NOT EXISTS traffic_hazards');
+    } catch (e) {
+      console.warn("AlaSQL initialization:", e);
+    }
 
-    alasql.tables.trips.data = TRIPS_DATA || [];
-    alasql.tables.transfers.data = OPTIMIZED_TRANSFERS || [];
-    alasql.tables.stops.data = (STOPS_GEOJSON && STOPS_GEOJSON.features) ? STOPS_GEOJSON.features.map(f => f.properties) : [];
-    alasql.tables.opal_loadings.data = OPAL_DATA || [];
+    function populateAlaSqlData(dataObj) {
+      try {
+        alasql.tables.trips.data = dataObj.trips || [];
+        alasql.tables.transfers.data = dataObj.transfers || [];
+        alasql.tables.stops.data = (dataObj.stops_geojson && dataObj.stops_geojson.features) ? dataObj.stops_geojson.features.map(f => f.properties) : [];
+        alasql.tables.opal_loadings.data = OPAL_DATA || [];
+        alasql.tables.streets.data = (dataObj.streets_geojson && dataObj.streets_geojson.features) ? dataObj.streets_geojson.features.map(f => f.properties) : [];
+        alasql.tables.traffic_hazards.data = dataObj.traffic_hazards || [];
+      } catch (err) {
+        console.error("Failed to populate AlaSQL data:", err);
+      }
+    }
 
+    // 3. Render Table
     function renderTable(results) {
       const headerRow = document.getElementById('tableHeaders');
       const body = document.getElementById('tableBody');
@@ -698,7 +887,7 @@
       body.innerHTML = '';
 
       if (!results || results.length === 0) {
-        body.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:1.5rem; color:var(--text-muted);">No records found.</td></tr>';
+        body.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:1.5rem; color:var(--text-muted);">No records found matching query criteria.</td></tr>';
         return;
       }
 
@@ -720,40 +909,158 @@
       });
     }
 
-    function executeSql(sql) {
+    // 4. SQL Execution Engine
+    window.executeSql = function(sql) {
       try {
         document.getElementById('sqlQueryDisplay').textContent = sql;
         const res = alasql(sql);
         renderTable(res);
+        const count = res ? res.length : 0;
+        document.getElementById('sqlRowCount').textContent = `Returned ${count} record(s) | Tables: transfers, trips, streets, traffic_hazards, opal_loadings, stops`;
       } catch (err) {
-        document.getElementById('sqlQueryDisplay').textContent = `SQL Error: ${err.message}`;
+        document.getElementById('sqlQueryDisplay').textContent = `SQL Syntax Error: ${err.message}`;
+        renderTable([]);
       }
-    }
+    };
 
-    function translateNlToSql(nlText) {
-      const q = nlText.toLowerCase().trim();
-      if (q.includes('under') || q.includes('<') || q.includes('less than') || q.includes('optimal')) {
-        const match = q.match(/\d+/);
-        const mins = match ? match[0] : 10;
-        return `SELECT * FROM transfers WHERE wait_time_minutes <= ${mins} ORDER BY wait_time_minutes ASC`;
+    // 5. Natural Language & Raw SQL Query Translator
+    window.translateNlToSql = function(inputText) {
+      const q = inputText.trim();
+      if (/^\s*SELECT\s+/i.test(q)) {
+        return q;
       }
-      if (q.includes('over') || q.includes('>') || q.includes('more than') || q.includes('excessive')) {
-        const match = q.match(/\d+/);
+      const lower = q.toLowerCase();
+      if (lower.includes('hazard') || lower.includes('traffic') || lower.includes('incident') || lower.includes('roadwork') || lower.includes('delay')) {
+        return "SELECT hazard_id, headline, corridor, severity, delay_minutes, affected_mode FROM traffic_hazards ORDER BY delay_minutes DESC";
+      }
+      if (lower.includes('street') || lower.includes('road') || lower.includes('arterial') || lower.includes('congest')) {
+        return "SELECT street_name, road_class, am_peak_delay_pct, pm_peak_delay_pct, traffic_variance_min, corridor FROM streets ORDER BY am_peak_delay_pct DESC";
+      }
+      if (lower.includes('shift') || lower.includes('trip') || lower.includes('schedule') || lower.includes('bus') || lower.includes('vehicle')) {
+        return "SELECT trip_id, baseline_departure, optimized_departure, shift_minutes, vehicle_allocated FROM trips";
+      }
+      if (lower.includes('opal') || lower.includes('tap') || lower.includes('passenger') || lower.includes('load') || lower.includes('busiest')) {
+        return "SELECT stop_name, daily_tap_ons, daily_tap_offs, peak_morning_load FROM opal_loadings ORDER BY daily_tap_ons DESC";
+      }
+      if (lower.includes('station') || lower.includes('stop')) {
+        return "SELECT stop_id, stop_name FROM stops LIMIT 25";
+      }
+      if (lower.includes('under') || lower.includes('<') || lower.includes('less than') || lower.includes('optimal')) {
+        const match = lower.match(/\d+/);
         const mins = match ? match[0] : 8;
-        return `SELECT * FROM transfers WHERE wait_time_minutes > ${mins} ORDER BY wait_time_minutes DESC`;
+        return `SELECT trunk_arrival, feeder_departure, wait_time_minutes, status, interchange_name FROM transfers WHERE wait_time_minutes <= ${mins} ORDER BY wait_time_minutes ASC`;
       }
-      if (q.includes('stop') || q.includes('station')) {
-        return `SELECT stop_id, stop_name FROM stops LIMIT 15`;
+      if (lower.includes('over') || lower.includes('>') || lower.includes('more than') || lower.includes('excessive')) {
+        const match = lower.match(/\d+/);
+        const mins = match ? match[0] : 8;
+        return `SELECT trunk_arrival, feeder_departure, wait_time_minutes, status, interchange_name FROM transfers WHERE wait_time_minutes > ${mins} ORDER BY wait_time_minutes DESC`;
       }
-      if (q.includes('trip') || q.includes('shift') || q.includes('bus')) {
-        return `SELECT trip_id, baseline_departure, optimized_departure, shift_minutes, vehicle_allocated FROM trips`;
-      }
-      if (q.includes('opal') || q.includes('load') || q.includes('passenger') || q.includes('tap')) {
-        return `SELECT * FROM opal_loadings ORDER BY daily_tap_ons DESC`;
-      }
-      return `SELECT * FROM transfers ORDER BY wait_time_minutes ASC LIMIT 20`;
-    }
+      return "SELECT trunk_arrival, feeder_departure, wait_time_minutes, status, interchange_name FROM transfers ORDER BY wait_time_minutes ASC LIMIT 25";
+    };
 
+    // 6. Preset Query Chips Click Handler
+    window.runPresetQuery = function(presetKey) {
+      document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      if (window.event && window.event.target && window.event.target.classList.contains('chip')) {
+        window.event.target.classList.add('active');
+      }
+
+      let sql = "";
+      let label = "";
+      switch (presetKey) {
+        case 'transfers_optimal':
+          sql = "SELECT trunk_arrival, feeder_departure, wait_time_minutes, status, interchange_name FROM transfers WHERE wait_time_minutes <= 8 ORDER BY wait_time_minutes ASC";
+          label = "Optimal connection window (wait time <= 8m)";
+          break;
+        case 'transfers_excessive':
+          sql = "SELECT trunk_arrival, feeder_departure, wait_time_minutes, status, interchange_name FROM transfers WHERE wait_time_minutes > 8 ORDER BY wait_time_minutes DESC";
+          label = "Excessive connection wait times (>8m)";
+          break;
+        case 'traffic_hazards':
+          sql = "SELECT hazard_id, headline, corridor, severity, delay_minutes, affected_mode FROM traffic_hazards ORDER BY delay_minutes DESC";
+          label = "Active TfNSW Live Traffic road hazards & delays";
+          break;
+        case 'streets_congested':
+          sql = "SELECT street_name, road_class, am_peak_delay_pct, pm_peak_delay_pct, traffic_variance_min, corridor FROM streets ORDER BY am_peak_delay_pct DESC";
+          label = "Arterial road congestion & delay variance";
+          break;
+        case 'trips_shifted':
+          sql = "SELECT trip_id, baseline_departure, optimized_departure, shift_minutes, vehicle_allocated FROM trips";
+          label = "Synchronized feeder departures and schedule shift offsets";
+          break;
+        case 'opal_loadings':
+          sql = "SELECT stop_name, daily_tap_ons, daily_tap_offs, peak_morning_load FROM opal_loadings ORDER BY daily_tap_ons DESC";
+          label = "Opal tap-on passenger volumes by station";
+          break;
+        case 'all_stops':
+          sql = "SELECT stop_id, stop_name FROM stops LIMIT 25";
+          label = "Corridor transit stations & stops";
+          break;
+        default:
+          sql = "SELECT * FROM transfers ORDER BY wait_time_minutes ASC LIMIT 20";
+          label = "All transfer connections";
+      }
+
+      document.getElementById('nlQueryInput').value = label;
+      executeSql(sql);
+    };
+
+    // 7. Multi-Corridor Scenario Switcher
+    window.switchCorridor = function(key) {
+      if (!SCENARIOS_CATALOG || !SCENARIOS_CATALOG[key]) return;
+      const s = SCENARIOS_CATALOG[key];
+
+      document.querySelectorAll('.scenario-btn').forEach(btn => btn.classList.remove('active'));
+      const activeBtn = document.querySelector(`button[onclick*="'${key}'"]`);
+      if (activeBtn) activeBtn.classList.add('active');
+
+      document.getElementById('activeQueryDisplay').textContent = s.query;
+
+      const opt = s.metrics.optimized_metrics || {};
+      const base = s.metrics.baseline_metrics || {};
+      const delta = s.metrics.resource_delta || {};
+      const trafficVar = s.traffic_variance || 4.0;
+
+      document.getElementById('kpiAvgWait').textContent = `${opt.avg_wait_minutes || '--'} min`;
+      document.getElementById('kpiWaitDelta').textContent = `&darr; ${delta.wait_time_reduction_minutes || 0} min reduction`;
+      document.getElementById('kpiOptimalPct').textContent = `${opt.pct_optimal_window || '--'}%`;
+      document.getElementById('kpiOptimalDelta').textContent = `+${delta.optimal_transfer_increase_pct || 0}% increase`;
+      document.getElementById('kpiVehicles').textContent = `${opt.peak_vehicle_requirement || base.peak_vehicle_requirement || 0}`;
+      document.getElementById('kpiTrafficVar').textContent = `&plusmn;${trafficVar.toFixed(1)} min`;
+
+      document.getElementById('compBasePvr').textContent = `${base.peak_vehicle_requirement || '--'} vehicles`;
+      document.getElementById('compOptPvr').textContent = `${opt.peak_vehicle_requirement || '--'} vehicles (&Delta; 0)`;
+      document.getElementById('compPenaltyDelta').textContent = `-${delta.penalty_reduction_pct || 0}% friction reduction`;
+      document.getElementById('compTrafficVar').textContent = `&plusmn;${trafficVar.toFixed(1)} min buffer`;
+
+      const tripsContainer = document.getElementById('tripsList');
+      tripsContainer.innerHTML = '';
+      if (s.trips && s.trips.length > 0) {
+        s.trips.forEach(t => {
+          const item = document.createElement('div');
+          item.className = 'trip-item optimized';
+          const shiftSign = t.shift_minutes > 0 ? `+${t.shift_minutes}` : `${t.shift_minutes}`;
+          item.innerHTML = `
+            <div>
+              <div style="font-weight:600; font-size:0.8rem; color:#fff;">${t.trip_id} (${t.vehicle_allocated})</div>
+              <div style="display:flex; gap:0.4rem; align-items:center; margin-top:0.2rem;">
+                <span class="time-badge base">${t.baseline_departure}</span>
+                <span style="color:var(--text-muted); font-size:0.7rem;">&rarr;</span>
+                <span class="time-badge opt">${t.optimized_departure}</span>
+              </div>
+            </div>
+            <div class="delta-tag">${shiftSign}m shift</div>
+          `;
+          tripsContainer.appendChild(item);
+        });
+      }
+
+      populateAlaSqlData(s);
+      updateMapLayers(s);
+      runPresetQuery('transfers_optimal');
+    };
+
+    // 8. Event Listeners for Search Input
     document.getElementById('btnRunQuery').addEventListener('click', () => {
       const input = document.getElementById('nlQueryInput').value;
       const sql = translateNlToSql(input);
@@ -767,8 +1074,22 @@
       }
     });
 
-    // Initial query execution
-    executeSql("SELECT trunk_arrival, feeder_departure, wait_time_minutes, status, interchange_name FROM transfers WHERE wait_time_minutes <= 10 ORDER BY wait_time_minutes ASC");
+    // 9. Initial Load on Page Startup
+    const defaultData = {
+      stops_geojson: STOPS_GEOJSON,
+      isochrones_geojson: ISOCHRONES_GEOJSON,
+      streets_geojson: STREETS_GEOJSON,
+      traffic_hazards: TRAFFIC_HAZARDS,
+      trips: TRIPS_DATA,
+      transfers: OPTIMIZED_TRANSFERS,
+      baseline_transfers: BASELINE_TRANSFERS,
+      metrics: METRICS_DATA,
+      traffic_variance: (METRICS_DATA && METRICS_DATA.traffic_variance_minutes) || 4.0
+    };
+
+    populateAlaSqlData(defaultData);
+    updateMapLayers(defaultData);
+    runPresetQuery('transfers_optimal');
   </script>
 </body>
 </html>

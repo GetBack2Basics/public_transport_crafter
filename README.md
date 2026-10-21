@@ -61,10 +61,10 @@ Forked and refactored from `hunter_spatial_crafter`, this engine **eliminates st
 
 ### B. Cloud-First GCS Processing & Review ($0.00 Idle Compute)
 - **Local Is Strictly Code**: The local filesystem contains only source code, configs, templates, and tests. All data artifacts (`data/`) are ephemeral and git-ignored.
-- **GCS Cloud Lakehouse**: Parquet datasets (GTFS slices, transit lines, Opal matrices) are staged in Google Cloud Storage (`gs://rathmines-interactive-map/lake/`).
-- **Processing on GCS**: Valhalla pedestrian catchments (`gs://rathmines-interactive-map/isochrones/`) are computed via ephemeral spot compute workers (`e2-custom-2-9216`) with dynamic NAT IP discovery and immediate VM termination.
+- **GCS Cloud Lakehouse**: Parquet datasets (GTFS slices, transit lines, Opal matrices) are staged in Google Cloud Storage (`gs://nsw-transit-spatial-crafter/lake/`).
+- **Processing on GCS**: Valhalla pedestrian catchments (`gs://nsw-transit-spatial-crafter/isochrones/`) are computed via ephemeral spot compute workers (`e2-custom-2-9216`) with dynamic NAT IP discovery and immediate VM termination.
 - **Review on GCS**: Compiled FunGIS Map-in-a-Box interactive HTML deliverables are automatically deployed to Google Cloud Storage with `Cache-Control: public, max-age=60` for instant global stakeholder review:
-  `https://storage.googleapis.com/rathmines-interactive-map/transit_insight_report.html`
+  `https://storage.googleapis.com/nsw-transit-spatial-crafter/transit_insight_report.html`
 
 ### C. Mandatory 3-Tier Anti-Mock Defense Model
 - **Tier 1 (Pre-Execution Contract Assertion)**: Asserts endpoint legitimacy (`https://api.transport.nsw.gov.au/`), API token presence, and strict configuration schema before any network call.
@@ -176,9 +176,9 @@ python -m src.Orchestration.query_orchestrator \
 ### 3. Review Deliverables on GCS (Zero Running Server)
 All reviews are hosted directly on Google Cloud Storage with instant global CDN distribution:
 * **Live Report Review**:
-  [https://storage.googleapis.com/rathmines-interactive-map/transit_insight_report.html](https://storage.googleapis.com/rathmines-interactive-map/transit_insight_report.html)
+  [https://storage.googleapis.com/nsw-transit-spatial-crafter/transit_insight_report.html](https://storage.googleapis.com/nsw-transit-spatial-crafter/transit_insight_report.html)
 * **Archived Run Review**:
-  `https://storage.googleapis.com/rathmines-interactive-map/reports/transit_insight_report.html`
+  `https://storage.googleapis.com/nsw-transit-spatial-crafter/reports/transit_insight_report.html`
 
 ---
 

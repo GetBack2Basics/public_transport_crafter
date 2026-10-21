@@ -6,7 +6,7 @@
 
 set -euo pipefail
 
-GCS_BUCKET="${GCS_BUCKET:-rathmines-interactive-map}"
+GCS_BUCKET="${GCS_BUCKET:-nsw-transit-spatial-crafter}"
 REPORT_FILE="${1:-data/reports/transit_insight_report.html}"
 
 echo "============================================================"
