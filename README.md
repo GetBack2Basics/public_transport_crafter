@@ -193,3 +193,5 @@ Tests include:
 - `tests/lint/test_no_mock_data.py`: Zero-mock AST scanner asserting absence of synthetic arrays.
 - `tests/test_data_importer.py`: Validates Tier 1 contract rejection, Tier 2 `b'PAR1'` magic bytes, and Tier 3 masked HTML rejection.
 - `tests/test_optimizer.py`: Asserts hard constraints ($\sum \text{Vehicles}_{\text{opt}} \le \sum \text{Vehicles}_{\text{base}}$), headway preservation, and wait time reduction.
+- `tests/test_extended_transit_catalog.py`: Asserts authoritative schema, Tier 2 magic bytes, and dynamic corridor routing across Regional Coaches, Sydney Metro M1, Greater Sydney B-Line, Blue Mountains, and Illawarra feeds.
+- `tests/test_street_and_traffic_pipeline.py`: Validates road network & live traffic delay variance injection, zero Carto compliance, and independent GCS bucket configuration.
