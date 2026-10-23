@@ -14,6 +14,8 @@
   <script src="https://cdn.jsdelivr.net/npm/alasql@4.1.0/dist/alasql.min.js"></script>
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Chart.js for Transit Analytics -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
   <style>
     html {
@@ -515,10 +517,308 @@
       color: #38bdf8;
       font-weight: 600;
     }
+  
+    /* Multi-Step Workflow Container */
+    .workflow-container {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      padding: 1.25rem;
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .step-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 1.1rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    }
+
+    .step-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      padding-bottom: 0.6rem;
+    }
+
+    .step-title-group {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .step-badge {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(6, 182, 212, 0.25));
+      border: 1px solid var(--accent-cyan);
+      color: #38bdf8;
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 0.2rem 0.55rem;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .step-badge.cyan { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+    .step-badge.emerald { border-color: var(--accent-emerald); color: var(--accent-emerald); }
+    .step-badge.amber { border-color: var(--accent-amber); color: var(--accent-amber); }
+    .step-badge.purple { border-color: #a855f7; color: #c084fc; }
+
+    .step-title {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: #f8fafc;
+      letter-spacing: -0.01em;
+    }
+
+    .step-hint {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+    }
+
+    /* Step 1: Natural Query Row */
+    .nl-query-row {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    .nl-input-wrapper {
+      flex: 1;
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .nl-input {
+      width: 100%;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 0.65rem 0.9rem;
+      color: #fff;
+      font-size: 0.82rem;
+      font-family: var(--font-main);
+      outline: none;
+      transition: all 0.2s ease;
+    }
+    .nl-input:focus {
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    }
+
+    .btn-create-sql {
+      background: linear-gradient(135deg, #0284c7, #2563eb);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 0.65rem 1.25rem;
+      font-weight: 700;
+      font-size: 0.78rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 10px rgba(37, 99, 235, 0.3);
+    }
+    .btn-create-sql:hover {
+      background: linear-gradient(135deg, #0369a1, #1d4ed8);
+      transform: translateY(-1px);
+    }
+
+    /* Step 2: SQL Query Row */
+    .sql-query-row {
+      display: flex;
+      gap: 0.75rem;
+      align-items: stretch;
+    }
+
+    .sql-editor-wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sql-textarea {
+      width: 100%;
+      min-height: 72px;
+      background: #060911;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      border-radius: 8px;
+      padding: 0.65rem 0.85rem;
+      color: #38bdf8;
+      font-size: 0.76rem;
+      font-family: var(--font-mono);
+      outline: none;
+      resize: vertical;
+      line-height: 1.45;
+    }
+    .sql-textarea:focus {
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.2);
+    }
+
+    .btn-run-sql {
+      background: linear-gradient(135deg, #059669, #10b981);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 0 1.4rem;
+      font-weight: 700;
+      font-size: 0.82rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 10px rgba(16, 185, 129, 0.3);
+    }
+    .btn-run-sql:hover {
+      background: linear-gradient(135deg, #047857, #059669);
+      transform: translateY(-1px);
+    }
+
+    .sql-status-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+
+    /* Step 3: Map and Table Side-by-Side */
+    .map-and-table-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      min-height: 460px;
+    }
+    @media (max-width: 1024px) {
+      .map-and-table-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .map-box {
+      position: relative;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+      min-height: 450px;
+      height: 100%;
+    }
+
+    .table-box {
+      display: flex;
+      flex-direction: column;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      background: rgba(15, 23, 42, 0.6);
+      overflow: hidden;
+      min-height: 450px;
+      height: 100%;
+    }
+
+    .table-header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.55rem 0.85rem;
+      background: rgba(30, 41, 59, 0.8);
+      border-bottom: 1px solid var(--border-color);
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: #e2e8f0;
+    }
+
+    .table-scroll-wrapper {
+      flex: 1;
+      overflow: auto;
+      max-height: 400px;
+    }
+
+    /* Step 4: Charts and Analytics */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .chart-card {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 0.85rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .chart-header {
+      font-size: 0.74rem;
+      font-weight: 700;
+      color: #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .chart-canvas-box {
+      height: 220px;
+      position: relative;
+      width: 100%;
+    }
+
+    .kpi-row-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .invariants-split-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    @media (max-width: 900px) {
+      .invariants-split-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .corridor-dropdown-select {
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid var(--border-color);
+      color: var(--accent-cyan);
+      font-family: var(--font-main);
+      font-size: 0.68rem;
+      font-weight: 600;
+      padding: 0.25rem 0.6rem;
+      border-radius: 6px;
+      outline: none;
+      cursor: pointer;
+    }
+
   </style>
 </head>
 <body>
 
+  <!-- Header -->
   <!-- Header -->
   <header>
     <div class="brand">
@@ -528,7 +828,7 @@
         <p>Zero-Resource Multi-Modal Timetable Optimization</p>
       </div>
     </div>
-        <div class="header-badges">
+    <div class="header-badges">
       <div class="badge emerald">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -1px;"><polyline points="20 6 9 17 4 12"></polyline></svg>
         <span>Zero Added Fleet Cost</span>
@@ -541,21 +841,20 @@
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -1px;"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
         <span>In-Browser AlaSQL</span>
       </div>
+      <!-- Subtle Corridor Selector Dropdown -->
+      <select id="corridorSelect" class="corridor-dropdown-select" onchange="switchCorridor(this.value)">
+        <option value="maitland_uon" selected>Hunter: Maitland &rarr; Newcastle Uni</option>
+        <option value="gosford_hornsby">Central Coast: Gosford &rarr; Hornsby</option>
+        <option value="parramatta_central">Sydney West: Parramatta &rarr; Central</option>
+        <option value="newcastle_fassifern">Lake Macquarie: Newcastle &rarr; Fassifern</option>
+        <option value="hornsby_chatswood">North Shore: Hornsby &rarr; Chatswood</option>
+        <option value="dubbo_lithgow">Regional Coach: Dubbo &rarr; Lithgow</option>
+        <option value="tallawong_barangaroo">Metro M1: Tallawong &rarr; Barangaroo</option>
+        <option value="wollongong_uow">Illawarra: Wollongong &rarr; UOW</option>
+      </select>
     </div>
   </header>
 
-    <!-- Scenario & Example Corridor Selector -->
-  <div class="scenarios-bar" style="background: rgba(15, 23, 42, 0.95); border-bottom: 1px solid var(--border-color); padding: 0.4rem 1.25rem; display: flex; align-items: center; flex-wrap: wrap; gap: 0.35rem 0.5rem; width: 100%; max-width: 100vw; overflow-x: hidden;">
-    <span style="font-size: 0.65rem; font-weight: 700; color: var(--accent-cyan); text-transform: uppercase; white-space: nowrap; letter-spacing: 0.05em;">Corridor Scenarios:</span>
-    <button class="scenario-btn active" id="btnScenario1" onclick="switchCorridor('maitland_uon')">1. Maitland &rarr; Newcastle Uni (Hunter)</button>
-    <button class="scenario-btn" id="btnScenario2" onclick="switchCorridor('gosford_hornsby')">2. Gosford &rarr; Hornsby (Central Coast)</button>
-    <button class="scenario-btn" id="btnScenario3" onclick="switchCorridor('parramatta_central')">3. Parramatta &rarr; Central (Sydney West)</button>
-    <button class="scenario-btn" id="btnScenario4" onclick="switchCorridor('newcastle_fassifern')">4. Newcastle &rarr; Fassifern (Lake Macquarie)</button>
-    <button class="scenario-btn" id="btnScenario5" onclick="switchCorridor('hornsby_chatswood')">5. Hornsby &rarr; Chatswood (North Shore)</button>
-    <button class="scenario-btn" id="btnScenario6" onclick="switchCorridor('dubbo_lithgow')">6. Dubbo &rarr; Lithgow (Regional Coach)</button>
-    <button class="scenario-btn" id="btnScenario7" onclick="switchCorridor('tallawong_barangaroo')">7. Tallawong &rarr; Barangaroo (Metro M1)</button>
-    <button class="scenario-btn" id="btnScenario8" onclick="switchCorridor('wollongong_uow')">8. Wollongong &rarr; UOW (Illawarra)</button>
-  </div>
 
   <!-- Query Context Banner -->
   <div class="query-banner">
@@ -563,22 +862,213 @@
     <div class="query-text" id="activeQueryDisplay">{{QUERY_STRING}}</div>
   </div>
 
-  <!-- Dashboard Main Grid -->
-  <div class="dashboard-grid">
-    <!-- Left Column: Interactive Map & AlaSQL Console -->
-    <div class="main-view">
-      <div class="map-container" style="position: relative; flex: 1; min-height: 440px; width: 100%;">
-        <div id="map" style="position: absolute; top: 0; bottom: 0; left: 0; right: 0; width: 100%; height: 100%;"></div>
-        <!-- Floating Layer Legend -->
-        <div class="map-legend">
-          <div style="font-weight: 700; margin-bottom: 0.2rem; color: #f8fafc;">Transit & Road Network</div>
-          <div class="legend-item"><div class="legend-color" style="background: #3b82f6;"></div> Trunk Rail / Interchange</div>
-          <div class="legend-item"><div class="legend-color" style="background: #10b981;"></div> Feeder Bus Stops</div>
-          <div class="legend-item"><div class="legend-color" style="background: #f59e0b; height: 3px; border-radius: 1px;"></div> Arterial Streets (Congestion)</div>
-          <div class="legend-item"><div class="legend-color" style="background: #ef4444; border-radius: 50%;"></div> Live Traffic Incidents</div>
-          <div class="legend-item"><div class="legend-color" style="background: rgba(6,182,212,0.3); border: 1px solid #06b6d4;"></div> 5-15m Pedestrian Isochrone</div>
+    <!-- Multi-Step Transit Optimization Workflow -->
+  <main class="workflow-container">
+
+    <!-- STEP 1: Natural Language Query -->
+    <section class="step-card" id="step1-card">
+      <div class="step-header">
+        <div class="step-title-group">
+          <span class="step-badge cyan">Step 1</span>
+          <h2 class="step-title">Natural Language Transit Query</h2>
+        </div>
+        <span class="step-hint">Type your transit question in plain English or select a suggested inquiry prompt</span>
+      </div>
+      <div class="nl-query-row">
+        <div class="nl-input-wrapper">
+          <input type="text" id="nlQueryInput" class="nl-input" 
+                 placeholder="e.g. 'Show transfers with wait time under 10 minutes', 'Live traffic hazards on arterials', 'Timetable shifts'..." 
+                 value="Show transfers with wait time under 10 minutes">
+        </div>
+        <button id="btnCreateSql" class="btn-create-sql" type="button">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72Z"/><path d="m14 7 3 3"/><path d="M5 6v4"/><path d="M19 14v4"/><path d="M10 2v2"/><path d="M7 8H3"/></svg>
+          <span>Create SQL</span>
+        </button>
+      </div>
+      <!-- Preset Query Chips -->
+      <div class="query-chips" style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
+        <button class="chip active" type="button" onclick="selectPreset('transfers_optimal')">Optimal Transfers (&le;8m)</button>
+        <button class="chip" type="button" onclick="selectPreset('transfers_excessive')">Excessive Wait (&gt;8m)</button>
+        <button class="chip" type="button" onclick="selectPreset('traffic_hazards')">Live Road Hazards</button>
+        <button class="chip" type="button" onclick="selectPreset('streets_congested')">Congested Arterials</button>
+        <button class="chip" type="button" onclick="selectPreset('trips_shifted')">Timetable Shifts</button>
+        <button class="chip" type="button" onclick="selectPreset('opal_loadings')">Opal Loadings</button>
+        <button class="chip" type="button" onclick="selectPreset('all_stops')">Corridor Stations</button>
+      </div>
+    </section>
+
+    <!-- STEP 2: SQL Query (Generated / Editable) -->
+    <section class="step-card" id="step2-card">
+      <div class="step-header">
+        <div class="step-title-group">
+          <span class="step-badge emerald">Step 2</span>
+          <h2 class="step-title">Generated SQL Query (In-Browser AlaSQL)</h2>
+        </div>
+        <span class="step-hint" id="sqlRowCount">Tables: transfers, trips, streets, traffic_hazards, opal_loadings, stops</span>
+      </div>
+      <div class="sql-query-row">
+        <div class="sql-editor-wrapper">
+          <textarea id="sqlQueryInput" class="sql-textarea" rows="2" spellcheck="false">SELECT trunk_arrival, feeder_departure, wait_time_minutes, status, interchange_name FROM transfers WHERE wait_time_minutes <= 10 ORDER BY wait_time_minutes ASC</textarea>
+        </div>
+        <button id="btnRunSql" class="btn-run-sql" type="button">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          <span>Run SQL</span>
+        </button>
+      </div>
+      <div class="sql-status-bar">
+        <span id="sqlExecutionStatus" style="color: var(--accent-emerald);">&bull; Ready to execute client-side query</span>
+        <span id="sqlQueryTime">Engine: AlaSQL (Offline-First)</span>
+      </div>
+    </section>
+
+    <!-- STEP 3: Map and Results Table -->
+    <section class="step-card" id="step3-card">
+      <div class="step-header">
+        <div class="step-title-group">
+          <span class="step-badge amber">Step 3</span>
+          <h2 class="step-title">Geospatial Map & Query Results Table</h2>
+        </div>
+        <span class="step-hint">Synchronized spatial visualization and tabular records</span>
+      </div>
+      <div class="map-and-table-grid">
+        <!-- Map Column -->
+        <div class="map-box">
+          <div id="map" style="position: absolute; top: 0; bottom: 0; left: 0; right: 0; width: 100%; height: 100%;"></div>
+          <!-- Floating Legend -->
+          <div class="map-legend">
+            <div style="font-weight: 700; margin-bottom: 0.2rem; color: #f8fafc;">Transit & Road Network</div>
+            <div class="legend-item"><div class="legend-color" style="background: #3b82f6;"></div> Trunk Rail / Interchange</div>
+            <div class="legend-item"><div class="legend-color" style="background: #10b981;"></div> Feeder Bus Stops</div>
+            <div class="legend-item"><div class="legend-color" style="background: #f59e0b; height: 3px; border-radius: 1px;"></div> Arterial Streets (Congestion)</div>
+            <div class="legend-item"><div class="legend-color" style="background: #ef4444; border-radius: 50%;"></div> Live Traffic Incidents</div>
+            <div class="legend-item"><div class="legend-color" style="background: rgba(6,182,212,0.3); border: 1px solid #06b6d4;"></div> 5-15m Pedestrian Isochrone</div>
+          </div>
+        </div>
+
+        <!-- Table Column -->
+        <div class="table-box">
+          <div class="table-header-bar">
+            <span>Query Results</span>
+            <span id="tableRecordSummary" style="color: var(--accent-cyan); font-family: var(--font-mono);">Loading...</span>
+          </div>
+          <div class="table-scroll-wrapper">
+            <table id="dataTable" class="data-table">
+              <thead><tr id="tableHeaders"></tr></thead>
+              <tbody id="tableBody"></tbody>
+            </table>
+          </div>
         </div>
       </div>
+    </section>
+
+    <!-- STEP 4: Performance Charts, KPIs & Highlights -->
+    <section class="step-card" id="step4-card">
+      <div class="step-header">
+        <div class="step-title-group">
+          <span class="step-badge purple">Step 4</span>
+          <h2 class="step-title">Performance Analytics, Charts & Fleet Invariants</h2>
+        </div>
+        <span class="step-hint">Optimization impact and zero added resource verification</span>
+      </div>
+
+      <!-- Interactive Charts Grid -->
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-header">
+            <span>Transfer Wait Time Distribution</span>
+            <span style="font-size:0.65rem; color:var(--accent-emerald);">Sweet Spot (4-8m)</span>
+          </div>
+          <div class="chart-canvas-box">
+            <canvas id="waitDistChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-header">
+            <span>Arterial Street Congestion Delays</span>
+            <span style="font-size:0.65rem; color:#f59e0b;">AM vs PM Peak Delay %</span>
+          </div>
+          <div class="chart-canvas-box">
+            <canvas id="trafficDelayChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-header">
+            <span>Station Passenger Loadings</span>
+            <span style="font-size:0.65rem; color:var(--accent-cyan);">Daily Opal Tap-Ons</span>
+          </div>
+          <div class="chart-canvas-box">
+            <canvas id="opalChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- KPI Summary Cards -->
+      <div class="kpi-row-grid">
+        <div class="kpi-card highlight">
+          <div class="kpi-label">Average Transfer Wait</div>
+          <div class="kpi-value emerald" id="kpiAvgWait">-- min</div>
+          <div class="kpi-sub" id="kpiWaitDelta">-- min from baseline</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Sweet Spot Window (4-8m)</div>
+          <div class="kpi-value cyan" id="kpiOptimalPct">--%</div>
+          <div class="kpi-sub" id="kpiOptimalDelta">+--% increase</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Peak Vehicles Required</div>
+          <div class="kpi-value amber" id="kpiVehicles">0</div>
+          <div class="kpi-sub">Strict Fleet Cap Enforced</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Added Operating Budget</div>
+          <div class="kpi-value" style="color: #a855f7;">$0.00</div>
+          <div class="kpi-sub">Zero Operational Cost Delta</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Traffic Delay Variance (&sigma;)</div>
+          <div class="kpi-value" style="color: #f59e0b;" id="kpiTrafficVar">&plusmn;-- min</div>
+          <div class="kpi-sub">Congestion Absorbed by Buffer</div>
+        </div>
+      </div>
+
+      <!-- Fleet Invariants & Trip Diffs -->
+      <div class="invariants-split-grid">
+        <div class="comparison-card">
+          <div style="font-size: 0.68rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.5rem;">Corridor & Fleet Invariants</div>
+          <div class="comparison-row">
+            <span class="comparison-label">Origin &rarr; Destination</span>
+            <span class="comparison-val">{{ORIGIN_NAME}} &rarr; {{DESTINATION_NAME}}</span>
+          </div>
+          <div class="comparison-row">
+            <span class="comparison-label">Interchange Node</span>
+            <span class="comparison-val">{{INTERCHANGE_NAME}}</span>
+          </div>
+          <div class="comparison-row">
+            <span class="comparison-label">Baseline Fleet PVR</span>
+            <span class="comparison-val" id="compBasePvr">--</span>
+          </div>
+          <div class="comparison-row">
+            <span class="comparison-label">Optimized Fleet PVR</span>
+            <span class="comparison-val" id="compOptPvr" style="color: var(--accent-emerald);">--</span>
+          </div>
+          <div class="comparison-row">
+            <span class="comparison-label">Network Friction Penalty</span>
+            <span class="comparison-val" id="compPenaltyDelta" style="color: var(--accent-cyan);">--</span>
+          </div>
+          <div class="comparison-row">
+            <span class="comparison-label">Road Congestion Variance</span>
+            <span class="comparison-val" id="compTrafficVar" style="color: #f59e0b;">-- min buffer</span>
+          </div>
+        </div>
+
+        <div class="comparison-card">
+          <div style="font-size: 0.68rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.5rem;">Departure Synchronization Diff</div>
+          <div class="trips-container" id="tripsList" style="max-height: 220px; overflow-y: auto;"></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
 
       <!-- In-Browser SQL Explorer -->
       <div class="sql-explorer">
@@ -886,13 +1376,17 @@
     function renderTable(results) {
       const headerRow = document.getElementById('tableHeaders');
       const body = document.getElementById('tableBody');
+      const summaryEl = document.getElementById('tableRecordSummary');
       headerRow.innerHTML = '';
       body.innerHTML = '';
 
       if (!results || results.length === 0) {
         body.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:1.5rem; color:var(--text-muted);">No records found matching query criteria.</td></tr>';
+        if (summaryEl) summaryEl.textContent = '0 records';
         return;
       }
+
+      if (summaryEl) summaryEl.textContent = `${results.length} record(s) returned`;
 
       const keys = Object.keys(results[0]);
       keys.forEach(k => {
@@ -915,20 +1409,29 @@
     // 4. SQL Execution Engine
     window.executeSql = function(sql) {
       try {
-        document.getElementById('sqlQueryDisplay').textContent = sql;
+        const sqlInput = document.getElementById('sqlQueryInput');
+        if (sqlInput) sqlInput.value = sql;
         const res = alasql(sql);
         renderTable(res);
         const count = res ? res.length : 0;
-        document.getElementById('sqlRowCount').textContent = `Returned ${count} record(s) | Tables: transfers, trips, streets, traffic_hazards, opal_loadings, stops`;
+        const statusEl = document.getElementById('sqlExecutionStatus');
+        if (statusEl) {
+          statusEl.style.color = 'var(--accent-emerald)';
+          statusEl.textContent = `Returned ${count} row(s) successfully via AlaSQL`;
+        }
       } catch (err) {
-        document.getElementById('sqlQueryDisplay').textContent = `SQL Syntax Error: ${err.message}`;
         renderTable([]);
+        const statusEl = document.getElementById('sqlExecutionStatus');
+        if (statusEl) {
+          statusEl.style.color = '#ef4444';
+          statusEl.textContent = `SQL Syntax Error: ${err.message}`;
+        }
       }
     };
 
     // 5. Natural Language & Raw SQL Query Translator
     window.translateNlToSql = function(inputText) {
-      const q = inputText.trim();
+      const q = (inputText || '').trim();
       if (/^\s*SELECT\s+/i.test(q)) {
         return q;
       }
@@ -961,8 +1464,8 @@
       return "SELECT trunk_arrival, feeder_departure, wait_time_minutes, status, interchange_name FROM transfers ORDER BY wait_time_minutes ASC LIMIT 25";
     };
 
-    // 6. Preset Query Chips Click Handler
-    window.runPresetQuery = function(presetKey) {
+    // 6. Preset Query Chips & Create/Run Actions
+    window.selectPreset = function(presetKey) {
       document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
       if (window.event && window.event.target && window.event.target.classList.contains('chip')) {
         window.event.target.classList.add('active');
@@ -1004,78 +1507,299 @@
           label = "All transfer connections";
       }
 
-      document.getElementById('nlQueryInput').value = label;
+      const nlInput = document.getElementById('nlQueryInput');
+      if (nlInput) nlInput.value = label;
+      const sqlInput = document.getElementById('sqlQueryInput');
+      if (sqlInput) sqlInput.value = sql;
       executeSql(sql);
     };
 
-    // 7. Multi-Corridor Scenario Switcher
+    // 7. Corridor Switcher (Linked with Header Dropdown)
     window.switchCorridor = function(key) {
       if (!SCENARIOS_CATALOG || !SCENARIOS_CATALOG[key]) return;
       const s = SCENARIOS_CATALOG[key];
 
-      document.querySelectorAll('.scenario-btn').forEach(btn => btn.classList.remove('active'));
-      const activeBtn = document.querySelector(`button[onclick*="'${key}'"]`);
-      if (activeBtn) activeBtn.classList.add('active');
-
-      document.getElementById('activeQueryDisplay').textContent = s.query;
+      const selectEl = document.getElementById('corridorSelect');
+      if (selectEl) selectEl.value = key;
 
       const opt = s.metrics.optimized_metrics || {};
       const base = s.metrics.baseline_metrics || {};
       const delta = s.metrics.resource_delta || {};
       const trafficVar = s.traffic_variance || 4.0;
 
-      document.getElementById('kpiAvgWait').textContent = `${opt.avg_wait_minutes || '--'} min`;
-      document.getElementById('kpiWaitDelta').textContent = `&darr; ${delta.wait_time_reduction_minutes || 0} min reduction`;
-      document.getElementById('kpiOptimalPct').textContent = `${opt.pct_optimal_window || '--'}%`;
-      document.getElementById('kpiOptimalDelta').textContent = `+${delta.optimal_transfer_increase_pct || 0}% increase`;
-      document.getElementById('kpiVehicles').textContent = `${opt.peak_vehicle_requirement || base.peak_vehicle_requirement || 0}`;
-      document.getElementById('kpiTrafficVar').textContent = `&plusmn;${trafficVar.toFixed(1)} min`;
+      const avgWaitEl = document.getElementById('kpiAvgWait');
+      if (avgWaitEl) avgWaitEl.textContent = `${opt.avg_wait_minutes || '--'} min`;
+      const waitDeltaEl = document.getElementById('kpiWaitDelta');
+      if (waitDeltaEl) waitDeltaEl.textContent = `&darr; ${delta.wait_time_reduction_minutes || 0} min reduction`;
+      const optPctEl = document.getElementById('kpiOptimalPct');
+      if (optPctEl) optPctEl.textContent = `${opt.pct_optimal_window || '--'}%`;
+      const optDeltaEl = document.getElementById('kpiOptimalDelta');
+      if (optDeltaEl) optDeltaEl.textContent = `+${delta.optimal_transfer_increase_pct || 0}% increase`;
+      const vehEl = document.getElementById('kpiVehicles');
+      if (vehEl) vehEl.textContent = `${opt.peak_vehicle_requirement || base.peak_vehicle_requirement || 0}`;
+      const trafEl = document.getElementById('kpiTrafficVar');
+      if (trafEl) trafEl.textContent = `&plusmn;${trafficVar.toFixed(1)} min`;
 
-      document.getElementById('compBasePvr').textContent = `${base.peak_vehicle_requirement || '--'} vehicles`;
-      document.getElementById('compOptPvr').textContent = `${opt.peak_vehicle_requirement || '--'} vehicles (&Delta; 0)`;
-      document.getElementById('compPenaltyDelta').textContent = `-${delta.penalty_reduction_pct || 0}% friction reduction`;
-      document.getElementById('compTrafficVar').textContent = `&plusmn;${trafficVar.toFixed(1)} min buffer`;
+      const compBase = document.getElementById('compBasePvr');
+      if (compBase) compBase.textContent = `${base.peak_vehicle_requirement || '--'} vehicles`;
+      const compOpt = document.getElementById('compOptPvr');
+      if (compOpt) compOpt.textContent = `${opt.peak_vehicle_requirement || '--'} vehicles (&Delta; 0)`;
+      const compPen = document.getElementById('compPenaltyDelta');
+      if (compPen) compPen.textContent = `-${delta.penalty_reduction_pct || 0}% friction reduction`;
+      const compTraf = document.getElementById('compTrafficVar');
+      if (compTraf) compTraf.textContent = `&plusmn;${trafficVar.toFixed(1)} min buffer`;
 
       const tripsContainer = document.getElementById('tripsList');
-      tripsContainer.innerHTML = '';
-      if (s.trips && s.trips.length > 0) {
-        s.trips.forEach(t => {
-          const item = document.createElement('div');
-          item.className = 'trip-item optimized';
-          const shiftSign = t.shift_minutes > 0 ? `+${t.shift_minutes}` : `${t.shift_minutes}`;
-          item.innerHTML = `
-            <div>
-              <div style="font-weight:600; font-size:0.8rem; color:#fff;">${t.trip_id} (${t.vehicle_allocated})</div>
-              <div style="display:flex; gap:0.4rem; align-items:center; margin-top:0.2rem;">
-                <span class="time-badge base">${t.baseline_departure}</span>
-                <span style="color:var(--text-muted); font-size:0.7rem;">&rarr;</span>
-                <span class="time-badge opt">${t.optimized_departure}</span>
+      if (tripsContainer) {
+        tripsContainer.innerHTML = '';
+        if (s.trips && s.trips.length > 0) {
+          s.trips.forEach(t => {
+            const item = document.createElement('div');
+            item.className = 'trip-item optimized';
+            const shiftSign = t.shift_minutes > 0 ? `+${t.shift_minutes}` : `${t.shift_minutes}`;
+            item.innerHTML = `
+              <div>
+                <div style="font-weight:600; font-size:0.8rem; color:#fff;">${t.trip_id} (${t.vehicle_allocated})</div>
+                <div style="display:flex; gap:0.4rem; align-items:center; margin-top:0.2rem;">
+                  <span class="time-badge base">${t.baseline_departure}</span>
+                  <span style="color:var(--text-muted); font-size:0.7rem;">&rarr;</span>
+                  <span class="time-badge opt">${t.optimized_departure}</span>
+                </div>
               </div>
-            </div>
-            <div class="delta-tag">${shiftSign}m shift</div>
-          `;
-          tripsContainer.appendChild(item);
-        });
+              <div class="delta-tag">${shiftSign}m shift</div>
+            `;
+            tripsContainer.appendChild(item);
+          });
+        }
       }
 
       populateAlaSqlData(s);
       updateMapLayers(s);
-      runPresetQuery('transfers_optimal');
+      selectPreset('transfers_optimal');
+      renderAnalyticsCharts(s);
     };
 
-    // 8. Event Listeners for Search Input
-    document.getElementById('btnRunQuery').addEventListener('click', () => {
-      const input = document.getElementById('nlQueryInput').value;
-      const sql = translateNlToSql(input);
-      executeSql(sql);
-    });
+    // 8. Event Listeners for Workflow Buttons
+    const btnCreate = document.getElementById('btnCreateSql');
+    if (btnCreate) {
+      btnCreate.addEventListener('click', () => {
+        const input = document.getElementById('nlQueryInput').value;
+        const sql = translateNlToSql(input);
+        const sqlInput = document.getElementById('sqlQueryInput');
+        if (sqlInput) sqlInput.value = sql;
+        const statusEl = document.getElementById('sqlExecutionStatus');
+        if (statusEl) {
+          statusEl.style.color = 'var(--accent-cyan)';
+          statusEl.textContent = 'SQL Generated. Click Run SQL or press enter to execute.';
+        }
+      });
+    }
 
-    document.getElementById('nlQueryInput').addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
-        const sql = translateNlToSql(e.target.value);
-        executeSql(sql);
+    const btnRun = document.getElementById('btnRunSql');
+    if (btnRun) {
+      btnRun.addEventListener('click', () => {
+        const sqlInput = document.getElementById('sqlQueryInput');
+        if (sqlInput) executeSql(sqlInput.value);
+      });
+    }
+
+    const nlQueryInputEl = document.getElementById('nlQueryInput');
+    if (nlQueryInputEl) {
+      nlQueryInputEl.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          const sql = translateNlToSql(e.target.value);
+          const sqlInput = document.getElementById('sqlQueryInput');
+          if (sqlInput) sqlInput.value = sql;
+          executeSql(sql);
+        }
+      });
+    }
+
+
+    // 10. Chart.js Interactive Performance Visualizations
+    let waitChartInstance = null;
+    let delayChartInstance = null;
+    let opalChartInstance = null;
+
+    function renderAnalyticsCharts(data) {
+      if (typeof Chart === 'undefined') {
+        console.warn('Chart.js not loaded');
+        return;
       }
-    });
+
+      // Chart 1: Transfer Wait Time Distribution
+      const baseTransfers = data.baseline_transfers || [];
+      const optTransfers = data.transfers || [];
+
+      function bucketTransfers(list) {
+        let tight = 0, optimal = 0, moderate = 0, excessive = 0;
+        list.forEach(t => {
+          const w = parseFloat(t.wait_time_minutes) || 0;
+          if (w < 4) tight++;
+          else if (w <= 8) optimal++;
+          else if (w <= 12) moderate++;
+          else excessive++;
+        });
+        return [tight, optimal, moderate, excessive];
+      }
+
+      const baseBuckets = bucketTransfers(baseTransfers);
+      const optBuckets = bucketTransfers(optTransfers);
+
+      const ctxWait = document.getElementById('waitDistChart');
+      if (ctxWait) {
+        if (waitChartInstance) waitChartInstance.destroy();
+        waitChartInstance = new Chart(ctxWait, {
+          type: 'bar',
+          data: {
+            labels: ['Tight (<4m)', 'Optimal (4-8m)', 'Moderate (8-12m)', 'Excessive (>12m)'],
+            datasets: [
+              {
+                label: 'Baseline Schedule',
+                data: baseBuckets,
+                backgroundColor: 'rgba(100, 116, 139, 0.65)',
+                borderColor: '#64748b',
+                borderWidth: 1,
+                borderRadius: 4
+              },
+              {
+                label: 'Zero-Resource Optimized',
+                data: optBuckets,
+                backgroundColor: 'rgba(16, 185, 129, 0.75)',
+                borderColor: '#10b981',
+                borderWidth: 1,
+                borderRadius: 4
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                labels: { color: '#94a3b8', font: { size: 10, family: 'Outfit' } }
+              }
+            },
+            scales: {
+              x: {
+                ticks: { color: '#94a3b8', font: { size: 9 } },
+                grid: { color: 'rgba(255, 255, 255, 0.05)' }
+              },
+              y: {
+                beginAtZero: true,
+                ticks: { color: '#94a3b8', font: { size: 9 }, stepSize: 1 },
+                grid: { color: 'rgba(255, 255, 255, 0.05)' }
+              }
+            }
+          }
+        });
+      }
+
+      // Chart 2: Arterial Street Congestion Delays
+      const streets = (data.streets_geojson && data.streets_geojson.features) 
+        ? data.streets_geojson.features.map(f => f.properties).slice(0, 6)
+        : [];
+
+      const streetLabels = streets.map(s => s.street_name || 'Arterial');
+      const amDelays = streets.map(s => s.am_peak_delay_pct || 0);
+      const pmDelays = streets.map(s => s.pm_peak_delay_pct || 0);
+
+      const ctxDelay = document.getElementById('trafficDelayChart');
+      if (ctxDelay) {
+        if (delayChartInstance) delayChartInstance.destroy();
+        delayChartInstance = new Chart(ctxDelay, {
+          type: 'bar',
+          data: {
+            labels: streetLabels.length ? streetLabels : ['Corridor Arterials'],
+            datasets: [
+              {
+                label: 'AM Peak Delay %',
+                data: amDelays.length ? amDelays : [25],
+                backgroundColor: 'rgba(239, 68, 68, 0.7)',
+                borderColor: '#ef4444',
+                borderWidth: 1,
+                borderRadius: 4
+              },
+              {
+                label: 'PM Peak Delay %',
+                data: pmDelays.length ? pmDelays : [18],
+                backgroundColor: 'rgba(245, 158, 11, 0.7)',
+                borderColor: '#f59e0b',
+                borderWidth: 1,
+                borderRadius: 4
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                labels: { color: '#94a3b8', font: { size: 10, family: 'Outfit' } }
+              }
+            },
+            scales: {
+              x: {
+                ticks: { color: '#94a3b8', font: { size: 9 } },
+                grid: { color: 'rgba(255, 255, 255, 0.05)' }
+              },
+              y: {
+                beginAtZero: true,
+                ticks: { color: '#94a3b8', font: { size: 9 }, callback: v => v + '%' },
+                grid: { color: 'rgba(255, 255, 255, 0.05)' }
+              }
+            }
+          }
+        });
+      }
+
+      // Chart 3: Opal Passenger Loadings
+      const opalList = (OPAL_DATA || []).slice(0, 6);
+      const opalLabels = opalList.map(o => o.stop_name || 'Station');
+      const tapOns = opalList.map(o => o.daily_tap_ons || 0);
+
+      const ctxOpal = document.getElementById('opalChart');
+      if (ctxOpal) {
+        if (opalChartInstance) opalChartInstance.destroy();
+        opalChartInstance = new Chart(ctxOpal, {
+          type: 'bar',
+          data: {
+            labels: opalLabels.length ? opalLabels : ['Station A', 'Station B'],
+            datasets: [
+              {
+                label: 'Daily Opal Tap-Ons',
+                data: tapOns.length ? tapOns : [1200, 850],
+                backgroundColor: 'rgba(6, 182, 212, 0.75)',
+                borderColor: '#06b6d4',
+                borderWidth: 1,
+                borderRadius: 4
+              }
+            ]
+          },
+          options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: false
+              }
+            },
+            scales: {
+              x: {
+                beginAtZero: true,
+                ticks: { color: '#94a3b8', font: { size: 9 } },
+                grid: { color: 'rgba(255, 255, 255, 0.05)' }
+              },
+              y: {
+                ticks: { color: '#94a3b8', font: { size: 9 } },
+                grid: { color: 'rgba(255, 255, 255, 0.05)' }
+              }
+            }
+          }
+        });
+      }
+    }
 
     // 9. Initial Load on Page Startup
     const defaultData = {
@@ -1092,7 +1816,8 @@
 
     populateAlaSqlData(defaultData);
     updateMapLayers(defaultData);
-    runPresetQuery('transfers_optimal');
+    selectPreset('transfers_optimal');
+
   </script>
 </body>
 </html>
