@@ -92,6 +92,7 @@ def build_standard_scenarios_catalog(
         ("gosford_hornsby", "With no additional rolling stock, improve morning peak transfers from Gosford to Hornsby", "Gosford", "Hornsby"),
         ("parramatta_central", "With existing fleet capacity, optimize transfers from Parramatta to Central Station", "Parramatta", "Central"),
         ("newcastle_fassifern", "With zero additional buses, optimize transfers between Newcastle Interchange and Fassifern", "Newcastle", "Fassifern"),
+        ("morisset_fassifern", "Optimize Route 275 bus service to connect to Morisset and Fassifern train schedules", "Morisset", "Fassifern"),
         ("hornsby_chatswood", "How can feeder connections from Hornsby to Chatswood be synchronized with the same number of trains?", "Hornsby", "Chatswood"),
         ("dubbo_lithgow", "With the same number of coaches, synchronize connections from Dubbo to Lithgow", "Dubbo", "Lithgow"),
         ("tallawong_barangaroo", "With zero extra trains, maximize transfer sweet spots on Metro M1 Tallawong to Barangaroo", "Tallawong", "Barangaroo"),

@@ -153,11 +153,20 @@ class CorridorExtractor:
         elif is_hunter:
             dataset_id = "tfnsw_gtfs_buses_hunter"
             lake_prefix = "hunter_buses"
-            interchange_stop_id = "230310"  # Hamilton Station
-            interchange_name = "Hamilton Station Interchange"
-            interchange_coords = (-32.92410, 151.74530)
-            trunk_route_id = "HUN"
-            feeder_route_id = "11"
+            norm_orig = orig_geo["name"].lower()
+            norm_dest = dest_geo["name"].lower()
+            if any(k in norm_orig or k in norm_dest for k in ["fassifern", "morisset", "lake macquarie", "toronto"]):
+                interchange_stop_id = "228310"  # Fassifern Station
+                interchange_name = "Fassifern Station Interchange"
+                interchange_coords = (-32.99840, 151.58910)
+                trunk_route_id = "CCN"
+                feeder_route_id = "275"
+            else:
+                interchange_stop_id = "230310"  # Hamilton Station
+                interchange_name = "Hamilton Station Interchange"
+                interchange_coords = (-32.92410, 151.74530)
+                trunk_route_id = "HUN"
+                feeder_route_id = "11"
         else:
             dataset_id = "tfnsw_gtfs_sydneytrains"
             lake_prefix = "sydneytrains"

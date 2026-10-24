@@ -844,9 +844,10 @@
       <!-- Subtle Corridor Selector Dropdown -->
       <select id="corridorSelect" class="corridor-dropdown-select" onchange="switchCorridor(this.value)">
         <option value="maitland_uon" selected>Hunter: Maitland &rarr; Newcastle Uni</option>
+        <option value="morisset_fassifern">Lake Macquarie: Morisset &rarr; Fassifern (Route 275)</option>
         <option value="gosford_hornsby">Central Coast: Gosford &rarr; Hornsby</option>
         <option value="parramatta_central">Sydney West: Parramatta &rarr; Central</option>
-        <option value="newcastle_fassifern">Lake Macquarie: Newcastle &rarr; Fassifern</option>
+        <option value="newcastle_fassifern">Newcastle &rarr; Fassifern</option>
         <option value="hornsby_chatswood">North Shore: Hornsby &rarr; Chatswood</option>
         <option value="dubbo_lithgow">Regional Coach: Dubbo &rarr; Lithgow</option>
         <option value="tallawong_barangaroo">Metro M1: Tallawong &rarr; Barangaroo</option>
@@ -884,6 +885,11 @@
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72Z"/><path d="m14 7 3 3"/><path d="M5 6v4"/><path d="M19 14v4"/><path d="M10 2v2"/><path d="M7 8H3"/></svg>
           <span>Create SQL</span>
         </button>
+      </div>
+      <!-- Open Tool Public Notice -->
+      <div style="font-size: 0.65rem; color: #38bdf8; display: flex; align-items: center; gap: 0.4rem; background: rgba(6, 182, 212, 0.08); border: 1px solid rgba(6, 182, 212, 0.2); border-radius: 6px; padding: 0.35rem 0.65rem;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <span><strong>Open Public Transit Planning Engine:</strong> Query any bus, train, or metro corridor across Hunter, Lake Macquarie & Sydney. Live feeds from TfNSW Open Data, OpenStreetMap, and Live Traffic NSW.</span>
       </div>
       <!-- Preset Query Chips -->
       <div class="query-chips" style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
@@ -1429,28 +1435,76 @@
       }
     };
 
-    // 5. Natural Language & Raw SQL Query Translator
+    // 5. Intelligent Entity & Intent Natural Language Query Translator
     window.translateNlToSql = function(inputText) {
       const q = (inputText || '').trim();
       if (/^\s*SELECT\s+/i.test(q)) {
         return q;
       }
       const lower = q.toLowerCase();
-      if (lower.includes('hazard') || lower.includes('traffic') || lower.includes('incident') || lower.includes('roadwork') || lower.includes('delay')) {
+
+      // Entity Recognition: Auto-Corridor Matching
+      let targetCorridor = null;
+      let assistantMessage = "";
+
+      if (lower.includes('morisset') || lower.includes('fassifern') || lower.includes('275') || lower.includes('lake macquarie') || lower.includes('toronto')) {
+        targetCorridor = (SCENARIOS_CATALOG && SCENARIOS_CATALOG['morisset_fassifern']) ? 'morisset_fassifern' : 'newcastle_fassifern';
+        assistantMessage = "📍 Auto-routed to Lake Macquarie Corridor (Route 275 & CCN Train). Feed: TfNSW Open Data (buses/hunter).";
+      } else if (lower.includes('parramatta') || lower.includes('central') || lower.includes('sydney west')) {
+        targetCorridor = 'parramatta_central';
+        assistantMessage = "📍 Auto-routed to Sydney Western Trunk Corridor (Parramatta to Central).";
+      } else if (lower.includes('gosford') || lower.includes('central coast')) {
+        targetCorridor = 'gosford_hornsby';
+        assistantMessage = "📍 Auto-routed to Central Coast Line (Gosford to Hornsby).";
+      } else if (lower.includes('chatswood') || lower.includes('north shore')) {
+        targetCorridor = 'hornsby_chatswood';
+        assistantMessage = "📍 Auto-routed to North Shore Corridor (Hornsby to Chatswood).";
+      } else if (lower.includes('dubbo') || lower.includes('lithgow') || lower.includes('coach')) {
+        targetCorridor = 'dubbo_lithgow';
+        assistantMessage = "📍 Auto-routed to Regional Coach Corridor (Dubbo to Lithgow).";
+      } else if (lower.includes('tallawong') || lower.includes('barangaroo') || lower.includes('metro') || lower.includes('m1')) {
+        targetCorridor = 'tallawong_barangaroo';
+        assistantMessage = "📍 Auto-routed to Sydney Metro City & Southwest (M1).";
+      } else if (lower.includes('wollongong') || lower.includes('uow') || lower.includes('illawarra')) {
+        targetCorridor = 'wollongong_uow';
+        assistantMessage = "📍 Auto-routed to Illawarra Corridor (Wollongong to UOW).";
+      } else if (lower.includes('maitland') || lower.includes('hunter line') || lower.includes('uon')) {
+        targetCorridor = 'maitland_uon';
+        assistantMessage = "📍 Auto-routed to Hunter Line & University Corridor (Maitland to UON).";
+      }
+
+      // Automatically switch corridor context in memory if not already active
+      if (targetCorridor && typeof switchCorridor === 'function') {
+        const selectEl = document.getElementById('corridorSelect');
+        if (selectEl && selectEl.value !== targetCorridor) {
+          switchCorridor(targetCorridor);
+        }
+      }
+
+      const statusEl = document.getElementById('sqlExecutionStatus');
+      if (statusEl && assistantMessage) {
+        statusEl.textContent = assistantMessage;
+        statusEl.style.color = 'var(--accent-cyan)';
+      }
+
+      // Intent Evaluation
+      if (lower.includes('hazard') || lower.includes('traffic') || lower.includes('incident') || lower.includes('roadwork')) {
         return "SELECT hazard_id, headline, corridor, severity, delay_minutes, affected_mode FROM traffic_hazards ORDER BY delay_minutes DESC";
       }
       if (lower.includes('street') || lower.includes('road') || lower.includes('arterial') || lower.includes('congest')) {
         return "SELECT street_name, road_class, am_peak_delay_pct, pm_peak_delay_pct, traffic_variance_min, corridor FROM streets ORDER BY am_peak_delay_pct DESC";
       }
-      if (lower.includes('shift') || lower.includes('trip') || lower.includes('schedule') || lower.includes('bus') || lower.includes('vehicle')) {
+      if (lower.includes('shift') || lower.includes('fleet') || lower.includes('vehicle allocation')) {
         return "SELECT trip_id, baseline_departure, optimized_departure, shift_minutes, vehicle_allocated FROM trips";
       }
-      if (lower.includes('opal') || lower.includes('tap') || lower.includes('passenger') || lower.includes('load') || lower.includes('busiest')) {
+      if (lower.includes('opal') || lower.includes('tap') || lower.includes('passenger') || lower.includes('patronage')) {
         return "SELECT stop_name, daily_tap_ons, daily_tap_offs, peak_morning_load FROM opal_loadings ORDER BY daily_tap_ons DESC";
       }
-      if (lower.includes('station') || lower.includes('stop')) {
+      if (lower.includes('station') || lower.includes('stop list')) {
         return "SELECT stop_id, stop_name FROM stops LIMIT 25";
       }
+
+      // Multi-modal connection & timetable optimization query
       if (lower.includes('under') || lower.includes('<') || lower.includes('less than') || lower.includes('optimal')) {
         const match = lower.match(/\d+/);
         const mins = match ? match[0] : 8;
@@ -1461,7 +1515,9 @@
         const mins = match ? match[0] : 8;
         return `SELECT trunk_arrival, feeder_departure, wait_time_minutes, status, interchange_name FROM transfers WHERE wait_time_minutes > ${mins} ORDER BY wait_time_minutes DESC`;
       }
-      return "SELECT trunk_arrival, feeder_departure, wait_time_minutes, status, interchange_name FROM transfers ORDER BY wait_time_minutes ASC LIMIT 25";
+
+      // Default: Multi-modal connection transfer table for active hub
+      return "SELECT trunk_arrival, feeder_departure, wait_time_minutes, status, interchange_name FROM transfers ORDER BY wait_time_minutes ASC";
     };
 
     // 6. Preset Query Chips & Create/Run Actions
