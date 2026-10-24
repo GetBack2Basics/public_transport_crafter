@@ -31,6 +31,9 @@
     <div class="header-badges">
       <div class="badge badge-live">● GCS Lakehouse Live</div>
       <div class="badge">10,266 Routes</div>
+      <a href="data_qa.html" class="badge" style="text-decoration: none; color: var(--accent-cyan); border-color: rgba(0, 229, 255, 0.4); display: flex; align-items: center; gap: 0.35rem; font-weight: 600;">
+        🔍 Data QA Hub (10,266 Routes)
+      </a>
       <div class="badge">DuckDB Cloud Streaming</div>
     </div>
   </header>
@@ -52,7 +55,7 @@
           type="text" 
           id="nlInput" 
           class="query-input" 
-          placeholder="e.g. How can we optimize route 275 to connect with the train?" 
+          placeholder="e.g. How can we optimize route 99 to connect with the train?" 
           value=""
         />
         <button id="btnAnalyze" class="btn">
@@ -63,7 +66,8 @@
       <!-- Quick Chips -->
       <div class="quick-chips">
         <span class="chips-label">Try Scenarios:</span>
-        <button class="chip" data-q="how can we optimize route 275 to connect with the train">Route 275 Corridor (Triggers Clarification)</button>
+        <button class="chip" data-q="how can we optimize route 99 to connect with the train">Route 99 Corridor (Helensburgh & Lake Haven)</button>
+        <button class="chip" data-q="how can we optimize route 275 to connect with the train">Route 275 Corridor (Hunter & Sydney)</button>
         <button class="chip" data-q="connect Carnes Hill bus to Liverpool Interchange trains">Carnes Hill to Liverpool Interchange</button>
         <button class="chip" data-q="connect route 275 to route 270 at Toronto Interchange">Route 275 to 270 at Toronto</button>
         <button class="chip" data-q="connect Maitland bus 181 to Hunter train line">Maitland 181 to Hunter Train</button>

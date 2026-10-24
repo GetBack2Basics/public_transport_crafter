@@ -91,6 +91,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   bindEvents();
   await loadGcsData();
   console.log("NSW Public Transport Crafter initialized. Ready for user query.");
+
+  // Check URL query string parameter (e.g. from Data QA Hub)
+  const urlParams = new URLSearchParams(window.location.search);
+  const qParam = urlParams.get("q");
+  if (qParam && nlInput) {
+    nlInput.value = qParam;
+    await analyzeQuery(qParam);
+  }
 });
 
 // Initialize Leaflet Map (Statewide Overview)
@@ -233,6 +241,22 @@ async function analyzeQuery(queryText) {
   try {
     const text = queryText.toLowerCase().trim();
 
+    // Check if query is explicitly about Route 99 (Helensburgh or Central Coast)
+    if (text.includes("99")) {
+      renderRoute99ClarificationPrompt();
+      clarificationBox.style.display = "flex";
+      sqlInput.value = "-- Select an option above to generate the targeted GCS SQL query for Route 99 review...";
+      recTableBody.innerHTML = `
+        <tr>
+          <td colspan="9" style="text-align: center; color: var(--accent-amber); padding: 2rem;">
+            ⚡ Clarification needed: Select which Route 99 corridor above to build the SQL query for your review.
+          </td>
+        </tr>
+      `;
+      btnRunQuery.classList.remove("btn-pulse");
+      return;
+    }
+
     // Check if query is explicitly about Carnes Hill / Liverpool
     if (text.includes("carnes hill") || text.includes("liverpool")) {
       clarificationBox.style.display = "none";
@@ -271,8 +295,8 @@ async function analyzeQuery(queryText) {
       return;
     }
 
-    // Generic query triggers clarification
-    renderClarificationPrompt();
+    // Generic query triggers multi-corridor selection
+    renderGenericClarificationPrompt();
     clarificationBox.style.display = "flex";
   } finally {
     btnAnalyze.innerHTML = "<span>Analyze Query</span>";
@@ -280,7 +304,56 @@ async function analyzeQuery(queryText) {
   }
 }
 
-// Render Clarification Prompt with Genuine Distinct Options
+// Render Route 99 Clarification Prompt (Resolves User Inquiry)
+function renderRoute99ClarificationPrompt() {
+  clarificationQuestions.innerHTML = "";
+
+  const qDiv = document.createElement("div");
+  qDiv.className = "clarification-question";
+
+  const label = document.createElement("span");
+  label.className = "clarification-label";
+  label.textContent = "Multiple Route 99 services operate in NSW. Which corridor do you want to plan?";
+  qDiv.appendChild(label);
+
+  const optsGroup = document.createElement("div");
+  optsGroup.className = "options-group";
+
+  const options = [
+    {
+      id: "opt-route-99-helensburgh",
+      key: "99_premier_illawarra_helensburgh",
+      label: "Premier Illawarra: Thirroul to Helensburgh Station via Stanwell Park (South Coast)",
+      desc: "Connects Route 99 bus with South Coast Line (SCO) heavy rail at Helensburgh Railway Station Interchange (87 daily trips)."
+    },
+    {
+      id: "opt-route-99-lakehaven",
+      key: "99_busways_lake_haven",
+      label: "Busways Central Coast: Charlestown to Lake Haven via Swansea, Gwandalan & Blue Haven",
+      desc: "Connects Route 99 bus with Central Coast & Newcastle rail feeder network at Lake Haven Centre."
+    }
+  ];
+
+  options.forEach((opt) => {
+    const optBtn = document.createElement("button");
+    optBtn.className = "option-btn";
+    optBtn.id = opt.id;
+    optBtn.innerHTML = `<b>${opt.label}</b><br><span style="font-size: 0.72rem; color: var(--text-dim);">${opt.desc}</span>`;
+
+    optBtn.addEventListener("click", () => {
+      optsGroup.querySelectorAll(".option-btn").forEach((b) => b.classList.remove("selected"));
+      optBtn.classList.add("selected");
+      prepareScenarioSql(opt.key);
+    });
+
+    optsGroup.appendChild(optBtn);
+  });
+
+  qDiv.appendChild(optsGroup);
+  clarificationQuestions.appendChild(qDiv);
+}
+
+// Render Route 275 Clarification Prompt
 function renderClarificationPrompt() {
   clarificationQuestions.innerHTML = "";
 
@@ -325,8 +398,6 @@ function renderClarificationPrompt() {
     optBtn.addEventListener("click", () => {
       optsGroup.querySelectorAll(".option-btn").forEach((b) => b.classList.remove("selected"));
       optBtn.classList.add("selected");
-
-      // CRITICAL: ONLY GENERATE THE SQL QUERY FOR USER REVIEW (DO NOT RUN OUTPUTS YET!)
       prepareScenarioSql(opt.key);
     });
 
@@ -334,6 +405,77 @@ function renderClarificationPrompt() {
   });
 
   qDiv.appendChild(optsGroup);
+  clarificationQuestions.appendChild(qDiv);
+}
+
+// Render Generic Multi-Corridor Prompt
+function renderGenericClarificationPrompt() {
+  clarificationQuestions.innerHTML = "";
+
+  const qDiv = document.createElement("div");
+  qDiv.className = "clarification-question";
+
+  const label = document.createElement("span");
+  label.className = "clarification-label";
+  label.textContent = "Which NSW transit corridor would you like to build the SQL query for?";
+  qDiv.appendChild(label);
+
+  const optsGroup = document.createElement("div");
+  optsGroup.className = "options-group";
+
+  const options = [
+    {
+      id: "opt-gen-99",
+      key: "99_premier_illawarra_helensburgh",
+      label: "Route 99: Thirroul to Helensburgh Station (South Coast Line Train)",
+      desc: "Premier Illawarra connecting with SCO rail at Helensburgh Station."
+    },
+    {
+      id: "opt-gen-275",
+      key: "275_cdc_hunter_morisset",
+      label: "Route 275: Toronto to Morisset via Wangi Wangi (CCN Rail)",
+      desc: "CDC Hunter connecting with Central Coast & Newcastle rail at Morisset."
+    },
+    {
+      id: "opt-gen-852",
+      key: "275_interline_liverpool",
+      label: "Route 852: Carnes Hill to Liverpool Interchange (T2/T3/T5 Trains)",
+      desc: "Interline Bus feeder to Sydney Trains suburban rail hub."
+    },
+    {
+      id: "opt-gen-181",
+      key: "181_hun_maitland",
+      label: "Route 181: Woodberry to Maitland Railway Station (Hunter Train Line)",
+      desc: "Hunter Valley Buses feeder connecting with Hunter regional rail."
+    }
+  ];
+
+  options.forEach((opt) => {
+    const optBtn = document.createElement("button");
+    optBtn.className = "option-btn";
+    optBtn.id = opt.id;
+    optBtn.innerHTML = `<b>${opt.label}</b><br><span style="font-size: 0.72rem; color: var(--text-dim);">${opt.desc}</span>`;
+
+    optBtn.addEventListener("click", () => {
+      optsGroup.querySelectorAll(".option-btn").forEach((b) => b.classList.remove("selected"));
+      optBtn.classList.add("selected");
+      prepareScenarioSql(opt.key);
+    });
+
+    optsGroup.appendChild(optBtn);
+  });
+
+  const exploreDiv = document.createElement("div");
+  exploreDiv.style.marginTop = "0.75rem";
+  exploreDiv.style.textAlign = "right";
+  exploreDiv.innerHTML = `
+    <a href="data_qa.html" style="font-size: 0.8rem; color: var(--accent-cyan); text-decoration: none; font-weight: 600;">
+      🔍 Want a different corridor? Explore all 10,266 routes in the Data QA Hub →
+    </a>
+  `;
+
+  qDiv.appendChild(optsGroup);
+  qDiv.appendChild(exploreDiv);
   clarificationQuestions.appendChild(qDiv);
 }
 

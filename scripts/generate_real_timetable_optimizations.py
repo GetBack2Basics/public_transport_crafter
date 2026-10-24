@@ -330,6 +330,42 @@ def generate_all_real_optimizations():
             "buf_adj": 2,
             "station_label": "Maitland Railway Station",
             "rep_trip_id": "2711467"
+        },
+        # Route 99 Premier Illawarra: Helensburgh to Thirroul via Stanwell Park (Connecting with South Coast Line SCO Trains)
+        {
+            "key": "99_premier_illawarra_helensburgh",
+            "aliases": ["99_helensburgh", "route_99_helensburgh", "99_thirroul", "opt-route-99-helensburgh"],
+            "route_a": "99",
+            "route_b": "SCO",
+            "interchange": "Helensburgh",
+            "agency_a": "2455",
+            "agency_b": None,
+            "min_buf": 5,
+            "max_buf": 15,
+            "coords": [-34.1771, 150.9936],
+            "corridor_name": "Lawrence Hargrave Dr / Old Station Rd",
+            "traffic_variance": 3.0,
+            "buf_adj": 2,
+            "station_label": "Helensburgh Railway Station Interchange",
+            "rep_trip_id": "2768090"
+        },
+        # Route 99 Busways: Charlestown to Lake Haven via Swansea, Gwandalan & Blue Haven
+        {
+            "key": "99_busways_lake_haven",
+            "aliases": ["99_lake_haven", "route_99_lake_haven", "opt-route-99-lakehaven"],
+            "route_a": "99",
+            "route_b": "CCN",
+            "interchange": "Lake Haven",
+            "agency_a": "2606",
+            "agency_b": None,
+            "min_buf": 5,
+            "max_buf": 15,
+            "coords": [-33.2418, 151.5051],
+            "corridor_name": "Pacific Hwy / Lake Haven Dr",
+            "traffic_variance": 4.0,
+            "buf_adj": 2,
+            "station_label": "Lake Haven Centre Interchange",
+            "rep_trip_id": "2754402"
         }
     ]
 
@@ -351,6 +387,10 @@ def generate_all_real_optimizations():
             patronage = {"clean_station_name": "Morisset Station", "total_monthly_trips": 36022, "daily_avg_patronage": 1184, "statewide_rank": 214}
         elif not patronage and stn.lower() == "chatswood":
             patronage = {"clean_station_name": "Chatswood Station", "total_monthly_trips": 1845200, "daily_avg_patronage": 60664, "statewide_rank": 4}
+        elif not patronage and "helensburgh" in stn.lower():
+            patronage = {"clean_station_name": "Helensburgh Station", "total_monthly_trips": 18450, "daily_avg_patronage": 607, "statewide_rank": 242}
+        elif not patronage and "lake haven" in stn.lower():
+            patronage = {"clean_station_name": "Lake Haven Centre", "total_monthly_trips": 22100, "daily_avg_patronage": 727, "statewide_rank": 220}
 
         # 2. Congestion
         congestion = {
@@ -639,6 +679,44 @@ ORDER BY b.bus_dep_dt ASC;"""
                     "tag": "Infrastructure",
                     "desc": "Analyze pedestrian transfer distance between bus stands on Railway St and underground Metro M1 platforms.",
                     "prompt": "Inspect transfer walking distance at Chatswood Interchange between bus and metro"
+                }
+            ]
+        elif "helensburgh" in key or "99" in r_a or "helensburgh" in stn.lower():
+            ai_steps = [
+                {
+                    "title": "Coordinate South Coast Line (SCO) Express Connections",
+                    "badge": "Rail Coordination",
+                    "tag": "SCO Intercity",
+                    "desc": "Synchronize Route 99 bus arrivals from Thirroul and Stanwell Park to connect with peak Northbound South Coast trains to Central.",
+                    "prompt": "Coordinate Route 99 bus with South Coast Line morning express trains at Helensburgh Station"
+                },
+                {
+                    "title": "Model Lawrence Hargrave Dr Tourist & Weekend Congestion",
+                    "badge": "Grand Pacific Drive",
+                    "tag": "Scenic Variance",
+                    "desc": "Apply dynamic +4m buffer variance on Lawrence Hargrave Dr around Sea Cliff Bridge during weekend tourism influx.",
+                    "prompt": "Simulate weekend coastal traffic delays for Route 99 via Sea Cliff Bridge to Helensburgh"
+                },
+                {
+                    "title": "Intermodal Transfer to Thirroul & Coalcliff Stations",
+                    "badge": "Multi-Station Rail",
+                    "tag": "Intermodal",
+                    "desc": "Evaluate secondary rail transfer synchronization at Coalcliff and Thirroul stations along Route 99.",
+                    "prompt": "Analyze Route 99 transfers at Coalcliff and Thirroul rail stations"
+                },
+                {
+                    "title": "Active Transport & Park & Ride Catchment (1km Buffer)",
+                    "badge": "Active Mobility",
+                    "tag": "Access Buffer",
+                    "desc": "Inspect 1km walking and cycling infrastructure connecting residential Helensburgh to the station interchange.",
+                    "prompt": "Expand Helensburgh Station active transport buffer to 1km"
+                },
+                {
+                    "title": "Export Route 99 GTFS Timetable Delta (.csv)",
+                    "badge": "Dispatch Ready",
+                    "tag": "GTFS Export",
+                    "desc": "Export synchronized trip departure deltas for Premier Illawarra dispatch systems.",
+                    "prompt": "Export timetable delta CSV for Route 99"
                 }
             ]
         else:

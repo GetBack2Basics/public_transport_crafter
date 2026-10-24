@@ -37,8 +37,28 @@ def deploy_portal():
     upload_file_to_gcs(js_file, "static/app.js", content_type="application/javascript; charset=utf-8", cache_control="public, max-age=60")
     upload_file_to_gcs(js_file, "app.js", content_type="application/javascript; charset=utf-8", cache_control="public, max-age=60")
 
+    # Upload data_qa.html
+    qa_file = STATIC_DIR / "data_qa.html"
+    upload_file_to_gcs(qa_file, "data_qa.html", content_type="text/html; charset=utf-8", cache_control="public, max-age=60")
+    upload_file_to_gcs(qa_file, "qa.html", content_type="text/html; charset=utf-8", cache_control="public, max-age=60")
+
+    # Upload data_qa.js
+    qa_js_file = STATIC_DIR / "data_qa.js"
+    upload_file_to_gcs(qa_js_file, "data_qa.js", content_type="application/javascript; charset=utf-8", cache_control="public, max-age=60")
+    upload_file_to_gcs(qa_js_file, "static/data_qa.js", content_type="application/javascript; charset=utf-8", cache_control="public, max-age=60")
+
+    # Upload Data QA Manifest & Routes Catalog
+    manifest_file = BASE_DIR / "data" / "lake" / "nsw_data_qa_manifest.json"
+    if manifest_file.exists():
+        upload_file_to_gcs(manifest_file, "lake/nsw_data_qa_manifest.json", content_type="application/json", cache_control="public, max-age=120")
+
+    catalog_file = BASE_DIR / "data" / "lake" / "nsw_routes_catalog.json"
+    if catalog_file.exists():
+        upload_file_to_gcs(catalog_file, "lake/nsw_routes_catalog.json", content_type="application/json", cache_control="public, max-age=300")
+
     print(f"\nSuccessfully deployed to GCS!")
-    print(f"Public URL: https://storage.googleapis.com/{bucket}/index.html")
+    print(f"Planning Portal URL: https://storage.googleapis.com/{bucket}/index.html")
+    print(f"Data QA Hub URL:     https://storage.googleapis.com/{bucket}/data_qa.html")
     return url1
 
 
