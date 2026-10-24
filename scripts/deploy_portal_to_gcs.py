@@ -1,0 +1,46 @@
+#!/usr/bin/env python3
+"""
+scripts/deploy_portal_to_gcs.py
+Deploys the NSW Public Transport Planning Portal to Google Cloud Storage.
+Ensures the web interface, styles, and logic are hosted on GCS:
+https://storage.googleapis.com/nsw-transit-spatial-crafter/index.html
+"""
+
+import sys
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+if str(BASE_DIR) not in sys.path:
+    sys.path.insert(0, str(BASE_DIR))
+
+from src.Ingestion.gcs_manager import upload_file_to_gcs, get_active_gcs_bucket
+
+STATIC_DIR = BASE_DIR / "src" / "Web" / "static"
+
+
+def deploy_portal():
+    bucket = get_active_gcs_bucket()
+    print(f"Deploying NSW Transit Planning Portal to gs://{bucket}...")
+
+    # Upload index.html at root of bucket and /index.html
+    index_file = STATIC_DIR / "index.html"
+    url1 = upload_file_to_gcs(index_file, "index.html", content_type="text/html; charset=utf-8", cache_control="public, max-age=60")
+    upload_file_to_gcs(index_file, "planning_portal.html", content_type="text/html; charset=utf-8", cache_control="public, max-age=60")
+
+    # Upload static/style.css
+    css_file = STATIC_DIR / "style.css"
+    upload_file_to_gcs(css_file, "static/style.css", content_type="text/css; charset=utf-8", cache_control="public, max-age=60")
+    upload_file_to_gcs(css_file, "style.css", content_type="text/css; charset=utf-8", cache_control="public, max-age=60")
+
+    # Upload static/app.js
+    js_file = STATIC_DIR / "app.js"
+    upload_file_to_gcs(js_file, "static/app.js", content_type="application/javascript; charset=utf-8", cache_control="public, max-age=60")
+    upload_file_to_gcs(js_file, "app.js", content_type="application/javascript; charset=utf-8", cache_control="public, max-age=60")
+
+    print(f"\nSuccessfully deployed to GCS!")
+    print(f"Public URL: https://storage.googleapis.com/{bucket}/index.html")
+    return url1
+
+
+if __name__ == "__main__":
+    deploy_portal()

@@ -169,3 +169,35 @@ def clean_local_data_artifacts() -> None:
             if p.exists():
                 shutil.rmtree(p, ignore_errors=True)
                 logger.info(f"Cleaned local ephemeral directory: {p}")
+
+
+def list_gcs_files(prefix: str = "", bucket_name: Optional[str] = None) -> List[str]:
+    """Lists blob names in the active GCS bucket matching an optional prefix."""
+    bucket = bucket_name or get_active_gcs_bucket()
+    try:
+        from google.cloud import storage
+        client = storage.Client()
+        b = client.bucket(bucket)
+        blobs = b.list_blobs(prefix=prefix)
+        return [blob.name for blob in blobs]
+    except Exception as e:
+        logger.warning(f"Storage SDK list failed ({e}), falling back to gcloud CLI...")
+
+    try:
+        target_uri = f"gs://{bucket}/{prefix}*"
+        cmd = ["gcloud", "storage", "ls", target_uri]
+        use_shell = sys.platform == "win32"
+        res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=30, shell=use_shell)
+        if res.returncode == 0:
+            lines = res.stdout.strip().splitlines()
+            names = []
+            prefix_strip = f"gs://{bucket}/"
+            for line in lines:
+                clean = line.strip()
+                if clean.startswith(prefix_strip):
+                    names.append(clean[len(prefix_strip):])
+            return names
+    except Exception as cmd_err:
+        logger.error(f"Failed to list GCS files: {cmd_err}")
+    return []
+

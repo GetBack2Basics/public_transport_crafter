@@ -210,6 +210,23 @@ header {
   transform: translateY(0);
 }
 
+.btn-pulse {
+  animation: pulse-glow 1.8s infinite;
+  border: 1px solid rgba(255, 255, 255, 0.8) !important;
+}
+
+@keyframes pulse-glow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 229, 255, 0.75);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(0, 229, 255, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 229, 255, 0);
+  }
+}
+
 .btn-secondary {
   background: rgba(255, 255, 255, 0.08);
   color: var(--text-main);
@@ -399,6 +416,117 @@ header {
   border-radius: 10px;
   border: 1px solid var(--border-subtle);
   z-index: 10;
+}
+
+/* Step 2: SQL & Context Grid */
+.step-grid {
+  display: grid;
+  grid-template-columns: 1.8fr 1.2fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  .step-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sql-editor-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.sql-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.35rem 0.75rem;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border-subtle);
+  border-bottom: none;
+  border-radius: 10px 10px 0 0;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+
+.sql-editor {
+  width: 100%;
+  min-height: 290px;
+  background: #060d17;
+  color: #67e8f9;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  line-height: 1.55;
+  padding: 1rem;
+  border-radius: 0 0 10px 10px;
+  border: 1px solid var(--border-subtle);
+  resize: vertical;
+  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.6);
+  white-space: pre;
+  tab-size: 2;
+}
+
+.sql-editor:focus {
+  outline: none;
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 12px rgba(0, 229, 255, 0.25), inset 0 2px 10px rgba(0, 0, 0, 0.6);
+}
+
+.context-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.context-card {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  border-left: 4px solid var(--accent-indigo);
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.context-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-glow);
+}
+
+.context-card.opal {
+  border-left-color: var(--accent-cyan);
+}
+
+.context-card.traffic {
+  border-left-color: var(--accent-amber);
+}
+
+.context-card.fleet {
+  border-left-color: var(--accent-emerald);
+}
+
+.context-title {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.context-value {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #fff;
+  font-family: var(--font-heading);
+}
+
+.context-sub {
+  font-size: 0.8rem;
+  color: var(--text-dim);
 }
 
 /* Step 4: Tables & KPIs */
