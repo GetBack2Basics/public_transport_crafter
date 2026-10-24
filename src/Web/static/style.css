@@ -827,3 +827,208 @@ tr:hover td {
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+/* Selected Transit Node / Route Inspector Banner */
+.inspector-banner {
+  background: linear-gradient(135deg, rgba(11, 19, 43, 0.95), rgba(15, 23, 42, 0.95));
+  border: 1px solid var(--accent-cyan);
+  border-left: 4px solid var(--accent-cyan);
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 8px 24px rgba(0, 229, 255, 0.15);
+  animation: fadeInDown 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.inspector-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.inspector-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.inspector-name {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #fff;
+  font-family: var(--font-heading);
+  margin: 0;
+}
+
+.inspector-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.25rem;
+}
+
+.inspector-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.inspector-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-dim);
+  font-weight: 700;
+}
+
+.inspector-val {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+/* Step 5: Charts Grid */
+.charts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 960px) {
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.chart-card {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+  gap: 0.5rem;
+}
+
+.chart-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.chart-subtitle {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.2rem;
+}
+
+.chart-canvas-container {
+  position: relative;
+  width: 100%;
+  height: 260px;
+}
+
+/* Step 6: AI Suggested Next Steps */
+.ai-steps-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+  gap: 1.25rem;
+}
+
+.ai-step-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1rem;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ai-step-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--accent-cyan);
+  box-shadow: 0 10px 24px rgba(0, 229, 255, 0.14);
+}
+
+.ai-step-top {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.ai-step-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ai-step-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  background: rgba(99, 102, 241, 0.2);
+  color: #a5b4fc;
+  border: 1px solid rgba(99, 102, 241, 0.4);
+}
+
+.ai-step-tag {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--accent-cyan);
+}
+
+.ai-step-title {
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.35;
+}
+
+.ai-step-desc {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.ai-step-btn {
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 0.55rem 1rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  transition: all 0.15s ease;
+}
+
+.ai-step-btn:hover {
+  background: linear-gradient(135deg, var(--accent-cyan), #00b4d8);
+  color: #05101e;
+  border-color: var(--accent-cyan);
+  box-shadow: 0 4px 14px rgba(0, 229, 255, 0.35);
+}

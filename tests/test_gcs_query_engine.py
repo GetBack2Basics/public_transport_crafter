@@ -104,7 +104,7 @@ def test_spatial_route_geometry_and_1km_infrastructure():
         assert "map" in sc
         m = sc["map"]
         assert "route_geometry" in m
-        assert len(m["route_geometry"]) > 10, f"{key} route_geometry must have real coordinates"
+        assert len(m["route_geometry"]) >= 400, f"{key} route_geometry must follow actual road network (>400 pts), got {len(m['route_geometry'])}"
         assert "infrastructure" in m
         assert len(m["infrastructure"]) > 0, f"{key} must have detected infrastructure within 1km"
         
@@ -115,4 +115,18 @@ def test_spatial_route_geometry_and_1km_infrastructure():
             assert len(infra["name"]) > 0
             assert -38.0 <= infra["lat"] <= -28.0
             assert 140.0 <= infra["lon"] <= 155.0
+
+        # Verify analytics and AI suggested next steps
+        assert "analytics" in sc
+        assert "buffer_distribution" in sc["analytics"]
+        assert "hourly_frequency" in sc["analytics"]
+        assert "performance_metrics" in sc["analytics"]
+
+        assert "ai_suggested_steps" in sc
+        assert len(sc["ai_suggested_steps"]) >= 3
+        for step in sc["ai_suggested_steps"]:
+            assert "title" in step
+            assert "prompt" in step
+            assert len(step["title"]) > 0
+            assert len(step["prompt"]) > 0
 
