@@ -130,3 +130,47 @@ def test_spatial_route_geometry_and_1km_infrastructure():
             assert len(step["title"]) > 0
             assert len(step["prompt"]) > 0
 
+
+def test_universal_route_parsing_and_nearest_options():
+    """
+    Requirement 2.1:
+    Verify that route parsing works universally for any route number (not hardcoded to 275 or 99),
+    and if a route does not exist (e.g. 9999, 7777), it explicitly reports that route X doesn't exist
+    and returns nearest options Y.
+    """
+    clarifier = IntentClarifier("data/lake/nsw_route_lookup_index.json")
+    assert len(clarifier.route_index) >= 5000, f"Expected >= 5000 routes in lookup index, got {len(clarifier.route_index)}"
+
+    # 1. Test existing routes across NSW
+    for r in ["99", "275", "852", "181", "333", "B1", "T1", "CCN"]:
+        res = clarifier.analyze_intent(f"how can we optimize route {r} to connect with the train")
+        assert r in res["detected_routes"], f"Route {r} was not detected"
+        status = res["route_status"].get(r)
+        assert status is not None, f"Status missing for {r}"
+        assert status["exists"] is True, f"Route {r} should exist in NSW catalog"
+        assert len(status["corridors"]) >= 1, f"Route {r} should have at least 1 corridor"
+
+    # Specific check for route 99 having 2 operators (Premier Illawarra & Busways Central Coast)
+    r99_status = clarifier.route_status = clarifier.analyze_intent("optimize route 99")["route_status"]["99"]
+    agencies_99 = [c["agency_name"] for c in r99_status["corridors"]]
+    assert any("Premier" in a for a in agencies_99)
+    assert any("Busways" in a for a in agencies_99)
+
+    # 2. Test non-existent route numbers (e.g. 9999, 7777)
+    res_9999 = clarifier.analyze_intent("how can we optimize route 9999 to connect with the train")
+    assert "9999" in res_9999["detected_routes"]
+    status_9999 = res_9999["route_status"]["9999"]
+    assert status_9999["exists"] is False, "Route 9999 should NOT exist in NSW GTFS"
+    assert "does not exist in the NSW transit lakehouse" in status_9999["message"]
+    assert len(status_9999["nearest_options"]) >= 3
+    # Nearest options for 9999 must include 99
+    assert "99" in status_9999["nearest_options"], f"Expected '99' in nearest options for 9999, got {status_9999['nearest_options']}"
+
+    # Route 7777 check
+    res_7777 = clarifier.analyze_intent("check service 7777 at interchange")
+    assert "7777" in res_7777["detected_routes"]
+    status_7777 = res_7777["route_status"]["7777"]
+    assert status_7777["exists"] is False
+    assert any("77" in opt or "7" in opt for opt in status_7777["nearest_options"])
+
+

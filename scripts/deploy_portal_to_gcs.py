@@ -56,6 +56,10 @@ def deploy_portal():
     if catalog_file.exists():
         upload_file_to_gcs(catalog_file, "lake/nsw_routes_catalog.json", content_type="application/json", cache_control="public, max-age=300")
 
+    index_file = BASE_DIR / "data" / "lake" / "nsw_route_lookup_index.json"
+    if index_file.exists():
+        upload_file_to_gcs(index_file, "lake/nsw_route_lookup_index.json", content_type="application/json", cache_control="public, max-age=300")
+
     print(f"\nSuccessfully deployed to GCS!")
     print(f"Planning Portal URL: https://storage.googleapis.com/{bucket}/index.html")
     print(f"Data QA Hub URL:     https://storage.googleapis.com/{bucket}/data_qa.html")
