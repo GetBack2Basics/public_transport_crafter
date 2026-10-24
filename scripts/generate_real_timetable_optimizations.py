@@ -3,24 +3,23 @@
 scripts/generate_real_timetable_optimizations.py
 Executes DuckDB against the real GCS Parquet tables (gs://nsw-transit-spatial-crafter/lake/nsw_*.parquet)
 to compute 100% REAL full-day multi-modal timetable optimization matrices.
-Covers:
-1. 275_cdc_hunter_morisset (Route 275 CDC Hunter to CCN Train at Morisset Station)
-2. 275_interline_liverpool (Route 852 Interline Carnes Hill to T2/T3/T5 Trains at Liverpool Interchange)
-3. 275_forest_chatswood (Route 275 Forest Coach Lines Castlecrag to Metro M1 / T1 at Chatswood)
-4. 275_270_toronto (Route 275 to Route 270 at Toronto Town Centre)
-5. 270_ccn_fassifern (Route 270 to CCN Train at Fassifern Station)
-6. 181_hun_maitland (Route 181 to Hunter Train at Maitland Station)
 
-Strictly ZERO mock or made-up data:
-- Official TfNSW trip IDs
-- Official scheduled departure and arrival timestamps
-- Official Opal station loadings and rankings
-- Official arterial road traffic congestion variance
+Extracts:
+1. Full-day bidirectional timetable recommendations (trip IDs, departure times, shifts, buffers)
+2. Exact bus route alignment polyline (ordered sequence of stop coordinates)
+3. 1km corridor catchment bounds
+4. All public transport infrastructure within 1km of the route corridor:
+   - Heavy Rail / Suburban / Intercity Train Stations
+   - Sydney Metro Stations
+   - Ferry Wharves & Jetties
+   - Bus Interchanges & Key Transitway Terminals
+
 Uploads to gs://nsw-transit-spatial-crafter/lake/nsw_timetable_optimizations.json
 """
 
 import os
 import sys
+import math
 import json
 import logging
 from pathlib import Path
@@ -35,6 +34,131 @@ from src.Ingestion.gcs_manager import upload_file_to_gcs, get_active_gcs_bucket
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("generate_real_timetable_optimizations")
+
+
+def haversine_m(lat1, lon1, lat2, lon2):
+    R = 6371000
+    p1, p2 = math.radians(lat1), math.radians(lat2)
+    dp = math.radians(lat2 - lat1)
+    dl = math.radians(lon2 - lon1)
+    a = math.sin(dp / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dl / 2) ** 2
+    return 2 * R * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+
+def extract_corridor_spatial_data(engine, trip_id, route_name, station_keyword):
+    """
+    Extracts the ordered route geometry and all public transport infrastructure
+    within 1km of the route alignment.
+    """
+    # 1. Extract ordered route points
+    q_route = f"""
+    SELECT st.stop_sequence, s.stop_id, s.stop_name, s.stop_lat, s.stop_lon
+    FROM stop_times st
+    JOIN stops s ON st.stop_id = s.stop_id
+    WHERE st.trip_id = '{trip_id}'
+    ORDER BY st.stop_sequence
+    """
+    df_route = engine.con.execute(q_route).df()
+    if df_route.empty:
+        # Fallback to any trip on this route
+        q_alt = f"""
+        SELECT st.stop_sequence, s.stop_id, s.stop_name, s.stop_lat, s.stop_lon
+        FROM stop_times st
+        JOIN trips t ON st.trip_id = t.trip_id
+        JOIN routes r ON t.route_id = r.route_id
+        JOIN stops s ON st.stop_id = s.stop_id
+        WHERE r.route_short_name = '{route_name}'
+        LIMIT 60
+        """
+        df_route = engine.con.execute(q_alt).df()
+
+    route_geometry = df_route[['stop_lat', 'stop_lon']].values.tolist()
+    if not route_geometry:
+        return {"bounds": [], "route_geometry": [], "infrastructure": []}
+
+    route_pts = list(zip(df_route['stop_lat'], df_route['stop_lon']))
+    min_lat = float(df_route['stop_lat'].min()) - 0.012
+    max_lat = float(df_route['stop_lat'].max()) + 0.012
+    min_lon = float(df_route['stop_lon'].min()) - 0.012
+    max_lon = float(df_route['stop_lon'].max()) + 0.012
+
+    bounds = [[min_lat, min_lon], [max_lat, max_lon]]
+
+    # 2. Extract candidate infrastructure stops in bounding box
+    q_cand = f"""
+    SELECT DISTINCT s.stop_id, s.stop_name, s.stop_lat, s.stop_lon
+    FROM stops s
+    WHERE s.stop_lat BETWEEN {min_lat} AND {max_lat}
+      AND s.stop_lon BETWEEN {min_lon} AND {max_lon}
+      AND (
+          s.stop_name ILIKE '%Station%'
+          OR s.stop_name ILIKE '%Interchange%'
+          OR s.stop_name ILIKE '%Wharf%'
+          OR s.stop_name ILIKE '%Ferry%'
+          OR s.stop_name ILIKE '%Jetty%'
+          OR s.stop_name ILIKE '%Metro%'
+          OR s.stop_name ILIKE '%Stand%'
+      )
+    """
+    df_cand = engine.con.execute(q_cand).df()
+
+    # 3. Calculate distance to polyline and filter within 1km (1000m)
+    infrastructure = []
+    seen_names = set()
+
+    for _, row in df_cand.iterrows():
+        s_name = row['stop_name']
+        s_lat = float(row['stop_lat'])
+        s_lon = float(row['stop_lon'])
+
+        # Skip generic intermediate street stops if not a hub
+        if "Stand" in s_name and "Station" not in s_name and "Interchange" not in s_name:
+            continue
+
+        min_d = min(haversine_m(s_lat, s_lon, r_lat, r_lon) for r_lat, r_lon in route_pts)
+        if min_d <= 1000:
+            # Mode detection
+            clean_name = s_name.strip()
+            if clean_name in seen_names:
+                continue
+            seen_names.add(clean_name)
+
+            if "Metro" in s_name:
+                mode = "metro"
+                badge = "Metro Station"
+                services = "Sydney Metro M1 Automated Rapid Transit"
+            elif "Wharf" in s_name or "Ferry" in s_name or "Jetty" in s_name:
+                mode = "ferry"
+                badge = "Ferry Wharf"
+                services = "Public Passenger Ferry & Lake Vessel Service"
+            elif "Platform" in s_name or ("Station" in s_name and "Stand" not in s_name):
+                mode = "train"
+                badge = "Train Station"
+                services = "Heavy Rail Suburban & Intercity Trains"
+            else:
+                mode = "bus"
+                badge = "Bus Interchange"
+                services = "Key Bus Feeder & Arterial Interchange"
+
+            infrastructure.append({
+                "name": clean_name,
+                "mode": mode,
+                "badge": badge,
+                "lat": s_lat,
+                "lon": s_lon,
+                "distance_m": int(min_d),
+                "connecting_services": services
+            })
+
+    # Sort infrastructure by mode and distance
+    infrastructure.sort(key=lambda x: (0 if x['mode'] in ('train', 'metro') else 1 if x['mode'] == 'ferry' else 2, x['distance_m']))
+
+    logger.info(f"Corridor {route_name}: {len(route_geometry)} route pts, {len(infrastructure)} infrastructure nodes within 1km")
+    return {
+        "bounds": bounds,
+        "route_geometry": route_geometry,
+        "infrastructure": infrastructure
+    }
 
 
 def generate_all_real_optimizations():
@@ -58,7 +182,8 @@ def generate_all_real_optimizations():
             "corridor_name": "Awaba Rd / Wangi Rd",
             "traffic_variance": 4.0,
             "buf_adj": 3,
-            "station_label": "Morisset Transport Interchange"
+            "station_label": "Morisset Transport Interchange",
+            "rep_trip_id": "2711984"
         },
         # Option B: Interline Bus Carnes Hill to Liverpool Interchange
         {
@@ -75,7 +200,8 @@ def generate_all_real_optimizations():
             "corridor_name": "Hoxton Park Rd / Hume Hwy",
             "traffic_variance": 5.0,
             "buf_adj": 3,
-            "station_label": "Liverpool Transport Interchange"
+            "station_label": "Liverpool Transport Interchange",
+            "rep_trip_id": "2684920"
         },
         # Option C: Forest Coach Lines 275 Castlecrag to Chatswood
         {
@@ -92,7 +218,8 @@ def generate_all_real_optimizations():
             "corridor_name": "Pacific Hwy / Victoria Ave",
             "traffic_variance": 5.5,
             "buf_adj": 4,
-            "station_label": "Chatswood Transport Interchange"
+            "station_label": "Chatswood Transport Interchange",
+            "rep_trip_id": "2230858"
         },
         # Toronto 275 to 270
         {
@@ -109,7 +236,8 @@ def generate_all_real_optimizations():
             "corridor_name": "Cary St / Bay St",
             "traffic_variance": 3.5,
             "buf_adj": 2,
-            "station_label": "Toronto Town Centre Interchange"
+            "station_label": "Toronto Town Centre Interchange",
+            "rep_trip_id": "2711984"
         },
         # Fassifern 270 to CCN
         {
@@ -126,7 +254,8 @@ def generate_all_real_optimizations():
             "corridor_name": "Fassifern Rd / South Pde",
             "traffic_variance": 3.0,
             "buf_adj": 2,
-            "station_label": "Fassifern Railway Station"
+            "station_label": "Fassifern Railway Station",
+            "rep_trip_id": "2711680"
         },
         # Maitland 181 to HUN
         {
@@ -143,7 +272,8 @@ def generate_all_real_optimizations():
             "corridor_name": "High St / New England Hwy",
             "traffic_variance": 3.0,
             "buf_adj": 2,
-            "station_label": "Maitland Railway Station"
+            "station_label": "Maitland Railway Station",
+            "rep_trip_id": "2711467"
         }
     ]
 
@@ -176,11 +306,16 @@ def generate_all_real_optimizations():
         eff_min = sc["min_buf"] + buf_adj
         eff_max = sc["max_buf"] + buf_adj
 
-        # 3. Build & Execute real DuckDB SQL against GCS Parquet
-        # Construct specific SQL for this scenario
+        # 3. Spatial Route Geometry and 1km Transit Infrastructure
+        spatial_data = extract_corridor_spatial_data(
+            engine=engine,
+            trip_id=sc["rep_trip_id"],
+            route_name=r_a,
+            station_keyword=stn
+        )
+
+        # 4. Build & Execute real DuckDB SQL against GCS Parquet
         agency_clause = f"AND r.agency_id = '{sc['agency_a']}'" if sc.get("agency_a") else ""
-        
-        # Determine Route B filtering
         if "T2" in r_b:
             route_b_filter = "(r.route_short_name IN ('T2', 'T3', 'T5') OR r.route_long_name ILIKE '%Inner West%' OR r.route_long_name ILIKE '%Leppington%')"
         elif "Metro" in r_b or "M1" in r_b:
@@ -250,8 +385,6 @@ ORDER BY b.bus_dep_dt ASC;"""
 
         try:
             df_res = engine.con.execute(sql.replace(f"read_parquet('gs://{bucket}/lake/", "read_parquet('data/lake/")).df()
-            logger.info(f"Query returned {len(df_res)} connection rows for {key}")
-
             recommendations = []
             seen_trips = set()
 
@@ -264,13 +397,10 @@ ORDER BY b.bus_dep_dt ASC;"""
                 base_dep = str(row["base_dep"])
                 buf = int(row["buffer_min"])
 
-                # Calculate optimal shift
                 target = (eff_min + eff_max) // 2
                 shift = buf - target
-                # Keep shift reasonable [-15, +15]
                 shift = max(-15, min(15, shift))
 
-                # Adjusted dep
                 dep_parts = list(map(int, base_dep.split(":")[:2]))
                 new_mins = dep_parts[0] * 60 + dep_parts[1] - shift
                 new_mins = (new_mins + 24 * 60) % (24 * 60)
@@ -315,12 +445,9 @@ ORDER BY b.bus_dep_dt ASC;"""
             },
             "map": {
                 "center": coords,
-                "stops": [
-                    {"name": f"{sc['station_label']} Stand A", "lat": coords[0] + 0.0012, "lon": coords[1] + 0.0012},
-                    {"name": f"{sc['station_label']} Stand B", "lat": coords[0] - 0.0012, "lon": coords[1] - 0.0012},
-                    {"name": f"{sc['station_label']} Platform 1", "lat": coords[0] + 0.0004, "lon": coords[1] + 0.0015},
-                    {"name": f"{sc['station_label']} Platform 2", "lat": coords[0] - 0.0004, "lon": coords[1] - 0.0015}
-                ]
+                "bounds": spatial_data["bounds"],
+                "route_geometry": spatial_data["route_geometry"],
+                "infrastructure": spatial_data["infrastructure"]
             },
             "recommendations": recommendations
         }
@@ -333,7 +460,7 @@ ORDER BY b.bus_dep_dt ASC;"""
     with open(out_file, "w", encoding="utf-8") as f:
         json.dump(lake_output, f, indent=2)
 
-    logger.info(f"Wrote {len(lake_output)} real optimization mappings to {out_file} ({out_file.stat().st_size} bytes)")
+    logger.info(f"Wrote {len(lake_output)} real optimization mappings with spatial layers to {out_file} ({out_file.stat().st_size} bytes)")
 
     upload_file_to_gcs(
         out_file,
@@ -341,7 +468,7 @@ ORDER BY b.bus_dep_dt ASC;"""
         content_type="application/json; charset=utf-8",
         cache_control="public, max-age=300"
     )
-    logger.info("Successfully uploaded real optimization matrices to GCS.")
+    logger.info("Successfully uploaded real optimization matrices with 1km infrastructure to GCS.")
 
 
 if __name__ == "__main__":

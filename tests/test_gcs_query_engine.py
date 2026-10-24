@@ -84,3 +84,35 @@ def test_bidirectional_shift_optimizer():
     assert opt_df.iloc[0]["status"] == "OPTIMAL"
     assert "inbound_buffer" in opt_df.columns
     assert "outbound_buffer" in opt_df.columns
+
+
+def test_spatial_route_geometry_and_1km_infrastructure():
+    import json
+    from pathlib import Path
+    opts_file = Path("data/lake/nsw_timetable_optimizations.json")
+    assert opts_file.exists(), "nsw_timetable_optimizations.json must exist"
+
+    with open(opts_file, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    assert "275_cdc_hunter_morisset" in data
+    assert "275_interline_liverpool" in data
+    assert "275_forest_chatswood" in data
+
+    for key in ["275_cdc_hunter_morisset", "275_interline_liverpool", "275_forest_chatswood"]:
+        sc = data[key]
+        assert "map" in sc
+        m = sc["map"]
+        assert "route_geometry" in m
+        assert len(m["route_geometry"]) > 10, f"{key} route_geometry must have real coordinates"
+        assert "infrastructure" in m
+        assert len(m["infrastructure"]) > 0, f"{key} must have detected infrastructure within 1km"
+        
+        # Verify distance constraint (all within 1000m)
+        for infra in m["infrastructure"]:
+            assert infra["distance_m"] <= 1000, f"Infrastructure {infra['name']} exceeds 1000m: {infra['distance_m']}"
+            assert infra["mode"] in ["train", "metro", "ferry", "bus"]
+            assert len(infra["name"]) > 0
+            assert -38.0 <= infra["lat"] <= -28.0
+            assert 140.0 <= infra["lon"] <= 155.0
+

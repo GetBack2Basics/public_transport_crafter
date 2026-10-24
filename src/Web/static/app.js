@@ -21,8 +21,13 @@ const state = {
   sql: "",
   map: null,
   mapLayers: {
-    markers: null,
-    isochrones: null
+    buffer: null,
+    route: null,
+    train: null,
+    metro: null,
+    ferry: null,
+    bus: null,
+    hubs: null
   },
   gcsData: {
     optimizations: {},
@@ -49,6 +54,7 @@ const opalSub = document.getElementById("opalSub");
 const trafficVariance = document.getElementById("trafficVariance");
 const trafficSub = document.getElementById("trafficSub");
 
+const mapInfraCountBadge = document.getElementById("mapInfraCountBadge");
 const kpiTotalTrips = document.getElementById("kpiTotalTrips");
 const kpiOptimalPct = document.getElementById("kpiOptimalPct");
 const kpiPvr = document.getElementById("kpiPvr");
@@ -84,13 +90,31 @@ function initMap() {
 
   osm.addTo(state.map);
 
-  L.control.layers({
+  // Initialize Multi-Modal Layer Groups
+  state.mapLayers.buffer = L.layerGroup().addTo(state.map);
+  state.mapLayers.route = L.layerGroup().addTo(state.map);
+  state.mapLayers.train = L.layerGroup().addTo(state.map);
+  state.mapLayers.metro = L.layerGroup().addTo(state.map);
+  state.mapLayers.ferry = L.layerGroup().addTo(state.map);
+  state.mapLayers.bus = L.layerGroup().addTo(state.map);
+  state.mapLayers.hubs = L.layerGroup().addTo(state.map);
+
+  const baseMaps = {
     "OpenStreetMap (Arterial)": osm,
     "Esri Satellite (High-Res)": esriSat
-  }).addTo(state.map);
+  };
 
-  state.mapLayers.markers = L.layerGroup().addTo(state.map);
-  state.mapLayers.isochrones = L.layerGroup().addTo(state.map);
+  const overlayMaps = {
+    "🚌 Bus Route Alignment": state.mapLayers.route,
+    "░ 1km Corridor Buffer": state.mapLayers.buffer,
+    "🚆 Heavy Rail Stations": state.mapLayers.train,
+    "🚇 Sydney Metro Stations": state.mapLayers.metro,
+    "⛴️ Ferry Wharves": state.mapLayers.ferry,
+    "🚏 Bus Interchanges": state.mapLayers.bus,
+    "🎯 Selected Interchange": state.mapLayers.hubs
+  };
+
+  L.control.layers(baseMaps, overlayMaps, { collapsed: true }).addTo(state.map);
 }
 
 // Load Authoritative Real GCS Data Layers
@@ -393,58 +417,163 @@ function executeScenarioQuery() {
   }, 400);
 }
 
-// Update Map with Centering, Glowing Marker, and Pedestrian Isochrones
+// Update Map with Real Bus Route Alignment, 1km Catchment Buffer, and Multi-Modal Transit Infrastructure
 function updateMap(mapData, label) {
   if (!mapData || !state.map) return;
 
-  state.mapLayers.markers.clearLayers();
-  state.mapLayers.isochrones.clearLayers();
-
-  const [lat, lon] = mapData.center;
-  state.map.setView([lat, lon], 14);
-
-  // Station Icon
-  const stationIcon = L.divIcon({
-    className: "custom-station-icon",
-    html: `<div style="background: var(--accent-cyan); width: 22px; height: 22px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 14px rgba(0,229,255,0.95);"></div>`,
-    iconSize: [22, 22],
-    iconAnchor: [11, 11]
+  // Clear all previous layer groups
+  Object.values(state.mapLayers).forEach((lg) => {
+    if (lg && typeof lg.clearLayers === "function") lg.clearLayers();
   });
 
-  const marker = L.marker([lat, lon], { icon: stationIcon }).addTo(state.mapLayers.markers);
-  marker.bindPopup(`<b>${label}</b><br>Statewide multi-modal transit coordination hub`).openPopup();
+  // 1. Render 1km Corridor Catchment Buffer & Route Geometry
+  const routeGeom = mapData.route_geometry || [];
+  if (routeGeom.length > 0) {
+    // 1km Corridor Buffer (Polylines with wide stroke + translucent fill)
+    L.polyline(routeGeom, {
+      color: "#6366f1",
+      weight: 42,
+      opacity: 0.16,
+      lineCap: "round",
+      lineJoin: "round"
+    }).addTo(state.mapLayers.buffer).bindTooltip("1km Catchment Buffer along Route Corridor");
 
-  // 5-minute (400m) pedestrian catchment
-  L.circle([lat, lon], {
-    radius: 400,
-    color: "#00e5ff",
-    fillColor: "#00e5ff",
-    fillOpacity: 0.14,
-    weight: 2,
-    dashArray: "4, 6"
-  }).addTo(state.mapLayers.isochrones).bindTooltip("5-minute Walk Catchment (400m)");
+    // Outer dashed boundary guideline
+    L.polyline(routeGeom, {
+      color: "#818cf8",
+      weight: 44,
+      opacity: 0.35,
+      dashArray: "2, 8",
+      lineCap: "round",
+      lineJoin: "round"
+    }).addTo(state.mapLayers.buffer);
 
-  // 10-minute (800m) pedestrian catchment
-  L.circle([lat, lon], {
-    radius: 800,
-    color: "#6366f1",
-    fillColor: "#6366f1",
-    fillOpacity: 0.07,
-    weight: 1.5,
-    dashArray: "4, 6"
-  }).addTo(state.mapLayers.isochrones).bindTooltip("10-minute Walk Catchment (800m)");
+    // Glowing casing line for main route
+    L.polyline(routeGeom, {
+      color: "#05162a",
+      weight: 8,
+      opacity: 0.75,
+      lineCap: "round",
+      lineJoin: "round"
+    }).addTo(state.mapLayers.route);
 
-  // Add platform & bay stops
-  if (mapData.stops) {
-    mapData.stops.forEach((s) => {
-      L.circleMarker([s.lat, s.lon], {
-        radius: 6,
-        color: "#10b981",
-        fillColor: "#10b981",
-        fillOpacity: 0.85,
-        weight: 1.5
-      }).addTo(state.mapLayers.markers).bindTooltip(s.name);
+    // Vibrant main route polyline
+    const routeLine = L.polyline(routeGeom, {
+      color: "#00e5ff",
+      weight: 4.5,
+      opacity: 0.95,
+      lineCap: "round",
+      lineJoin: "round"
+    }).addTo(state.mapLayers.route);
+
+    routeLine.bindTooltip(`<b>${label || "Selected Main Bus Route"}</b><br>${routeGeom.length} GTFS Stop Coordinates`, {
+      sticky: true
     });
+
+    // Terminus Origin (Stop 1)
+    const startPt = routeGeom[0];
+    const originIcon = L.divIcon({
+      className: "custom-terminus-div",
+      html: `<div class="infra-pin pin-terminus-origin" style="width: 26px; height: 26px; font-size: 13px; font-weight: 800;">A</div>`,
+      iconSize: [26, 26],
+      iconAnchor: [13, 13]
+    });
+    L.marker(startPt, { icon: originIcon })
+      .addTo(state.mapLayers.route)
+      .bindPopup(`<b>Route Origin Terminus</b><br>Stop 1 of ${routeGeom.length}`);
+
+    // Terminus Destination (Last Stop)
+    const endPt = routeGeom[routeGeom.length - 1];
+    const destIcon = L.divIcon({
+      className: "custom-terminus-div",
+      html: `<div class="infra-pin pin-terminus-dest" style="width: 26px; height: 26px; font-size: 13px; font-weight: 800;">B</div>`,
+      iconSize: [26, 26],
+      iconAnchor: [13, 13]
+    });
+    L.marker(endPt, { icon: destIcon })
+      .addTo(state.mapLayers.route)
+      .bindPopup(`<b>Route Destination Terminus</b><br>Stop ${routeGeom.length} of ${routeGeom.length}`);
+  }
+
+  // 2. Render Public Transport Infrastructure Nodes within 1km
+  const infraList = mapData.infrastructure || [];
+  infraList.forEach((node) => {
+    let modeClass = "pin-bus";
+    let iconEmoji = "🚏";
+    let targetLayer = state.mapLayers.bus;
+
+    if (node.mode === "train") {
+      modeClass = "pin-train";
+      iconEmoji = "🚆";
+      targetLayer = state.mapLayers.train;
+    } else if (node.mode === "metro") {
+      modeClass = "pin-metro";
+      iconEmoji = "🚇";
+      targetLayer = state.mapLayers.metro;
+    } else if (node.mode === "ferry") {
+      modeClass = "pin-ferry";
+      iconEmoji = "⛴️";
+      targetLayer = state.mapLayers.ferry;
+    }
+
+    const pinIcon = L.divIcon({
+      className: "custom-infra-div",
+      html: `<div class="infra-pin ${modeClass}" style="width: 28px; height: 28px; font-size: 14px;">${iconEmoji}</div>`,
+      iconSize: [28, 28],
+      iconAnchor: [14, 14]
+    });
+
+    const popupContent = `
+      <div class="infra-popup">
+        <span class="infra-popup-badge mode-${node.mode}">${iconEmoji} ${node.badge}</span>
+        <div class="infra-popup-name">${node.name}</div>
+        <div class="infra-popup-dist">📏 ${node.distance_m}m from selected route</div>
+        <div class="infra-popup-services">${node.connecting_services || "Public Transport Node"}</div>
+      </div>
+    `;
+
+    L.marker([node.lat, node.lon], { icon: pinIcon })
+      .addTo(targetLayer)
+      .bindPopup(popupContent);
+  });
+
+  // 3. Highlight Selected Interchange Hub (Center)
+  if (mapData.center) {
+    const [cLat, cLon] = mapData.center;
+    const hubIcon = L.divIcon({
+      className: "custom-hub-div",
+      html: `<div class="infra-pin pin-hub" style="width: 34px; height: 34px; font-size: 18px; border: 3px solid #fff;">🎯</div>`,
+      iconSize: [34, 34],
+      iconAnchor: [17, 17]
+    });
+
+    L.marker([cLat, cLon], { icon: hubIcon, zIndexOffset: 1000 })
+      .addTo(state.mapLayers.hubs)
+      .bindPopup(`<b>${label}</b><br><span style="color: var(--accent-cyan); font-weight: 600;">Selected Transit Interchange</span>`)
+      .openPopup();
+
+    // 1km circular catchment buffer at interchange
+    L.circle([cLat, cLon], {
+      radius: 1000,
+      color: "#6366f1",
+      fillColor: "#6366f1",
+      fillOpacity: 0.05,
+      weight: 1.5,
+      dashArray: "4, 8"
+    }).addTo(state.mapLayers.buffer).bindTooltip("1km Catchment Radius around Interchange");
+  }
+
+  // 4. Update Infrastructure Count Badge in Header
+  if (mapInfraCountBadge) {
+    mapInfraCountBadge.textContent = `${infraList.length} Multi-Modal Nodes (<1km)`;
+    mapInfraCountBadge.style.display = "inline-block";
+  }
+
+  // 5. Fit Map View to Route / Corridor Bounding Box
+  if (mapData.bounds && mapData.bounds.length === 2) {
+    state.map.fitBounds(mapData.bounds, { padding: [40, 40], maxZoom: 15 });
+  } else if (mapData.center) {
+    state.map.setView(mapData.center, 13);
   }
 }
 

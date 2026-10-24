@@ -409,13 +409,211 @@ header {
   color: var(--text-muted);
 }
 
-/* Step 3: Map */
+/* Step 3: Map & 1km Multi-Modal Infrastructure */
+.map-wrapper {
+  position: relative;
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+}
+
 #map {
   width: 100%;
-  height: 380px;
-  border-radius: 10px;
-  border: 1px solid var(--border-subtle);
+  height: 520px;
+  background: #090e17;
   z-index: 10;
+}
+
+/* Map HUD Legend */
+.map-legend {
+  position: absolute;
+  bottom: 18px;
+  right: 18px;
+  background: rgba(11, 19, 43, 0.88);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  z-index: 400;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  pointer-events: auto;
+  max-width: 260px;
+}
+
+.legend-header {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--accent-cyan);
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.legend-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.78rem;
+  color: var(--text-main);
+}
+
+.legend-line.route-line {
+  width: 20px;
+  height: 4px;
+  background: var(--accent-cyan);
+  border-radius: 2px;
+  box-shadow: 0 0 8px rgba(0, 229, 255, 0.7);
+}
+
+.legend-swatch.buffer-swatch {
+  width: 20px;
+  height: 10px;
+  background: rgba(99, 102, 241, 0.25);
+  border: 1px dashed rgba(99, 102, 241, 0.8);
+  border-radius: 2px;
+}
+
+.legend-pin {
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  border-radius: 50%;
+  border: 1px solid #fff;
+}
+
+/* Custom Marker Pins */
+.infra-pin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  color: #fff;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s ease;
+}
+
+.infra-pin:hover {
+  transform: scale(1.28);
+  z-index: 999 !important;
+}
+
+.pin-train {
+  background: linear-gradient(135deg, #ef4444, #b91c1c);
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.85);
+}
+
+.pin-metro {
+  background: linear-gradient(135deg, #06b6d4, #0891b2);
+  box-shadow: 0 0 12px rgba(6, 182, 212, 0.85);
+}
+
+.pin-ferry {
+  background: linear-gradient(135deg, #10b981, #047857);
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.85);
+}
+
+.pin-bus {
+  background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+  box-shadow: 0 0 12px rgba(139, 92, 246, 0.85);
+}
+
+.pin-terminus-origin {
+  background: linear-gradient(135deg, #22c55e, #15803d);
+  box-shadow: 0 0 14px rgba(34, 197, 94, 0.9);
+}
+
+.pin-terminus-dest {
+  background: linear-gradient(135deg, #f43f5e, #be123c);
+  box-shadow: 0 0 14px rgba(244, 63, 94, 0.9);
+}
+
+/* Leaflet Dark Custom Popups */
+.leaflet-popup-content-wrapper {
+  background: rgba(11, 19, 43, 0.95) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  border-radius: 12px !important;
+  color: #f1f5f9 !important;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.65) !important;
+  padding: 4px 6px !important;
+}
+
+.leaflet-popup-tip {
+  background: rgba(11, 19, 43, 0.95) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+}
+
+.infra-popup {
+  font-family: var(--font-sans);
+  line-height: 1.4;
+}
+
+.infra-popup-badge {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  margin-bottom: 0.35rem;
+}
+
+.infra-popup-badge.mode-train {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+.infra-popup-badge.mode-metro {
+  background: rgba(6, 182, 212, 0.2);
+  color: #67e8f9;
+  border: 1px solid rgba(6, 182, 212, 0.4);
+}
+
+.infra-popup-badge.mode-ferry {
+  background: rgba(16, 185, 129, 0.2);
+  color: #6ee7b7;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.infra-popup-badge.mode-bus {
+  background: rgba(139, 92, 246, 0.2);
+  color: #c4b5fd;
+  border: 1px solid rgba(139, 92, 246, 0.4);
+}
+
+.infra-popup-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 0.25rem;
+}
+
+.infra-popup-dist {
+  font-size: 0.8rem;
+  color: var(--accent-cyan);
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+}
+
+.infra-popup-services {
+  font-size: 0.75rem;
+  color: var(--text-muted);
 }
 
 /* Step 2: SQL & Context Grid */

@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NSW Public Transport Crafter | Statewide Infrastructure & Timetable Planning</title>
+  <meta name="description" content="Open public transit planning tool for New South Wales. Query and optimize all buses, trains, and metro lines on GCS with zero added fleet budget.">
+
+  <!-- Google Fonts: Inter & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+
+  <!-- Custom CSS (Relative for GCS hosting) -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="brand">
+      <div class="brand-icon">NSW</div>
+      <div>
+        <h1>NSW Transit <span>Crafter</span></h1>
+        <p style="font-size: 0.75rem; color: var(--text-dim);">Statewide Public Transport Planning & Timetable Optimization</p>
+      </div>
+    </div>
+    <div class="header-badges">
+      <div class="badge badge-live">● GCS Lakehouse Live</div>
+      <div class="badge">10,266 Routes</div>
+      <div class="badge">DuckDB Cloud Streaming</div>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- Step 1: Natural Language Inquiry & AI Clarifier -->
+    <section class="panel" id="panel-query">
+      <div class="panel-header">
+        <div>
+          <span class="step-label">Step 1</span>
+          <h2 class="panel-title">Natural Language Transit Inquiry</h2>
+        </div>
+        <span class="badge">AI Intent Parser</span>
+      </div>
+
+      <div class="query-box">
+        <input 
+          type="text" 
+          id="nlInput" 
+          class="query-input" 
+          placeholder="e.g. How can we optimize route 275 to connect with the train?" 
+          value=""
+        />
+        <button id="btnAnalyze" class="btn">
+          <span>Analyze Query</span>
+        </button>
+      </div>
+
+      <!-- Quick Chips -->
+      <div class="quick-chips">
+        <span class="chips-label">Try Scenarios:</span>
+        <button class="chip" data-q="how can we optimize route 275 to connect with the train">Route 275 Corridor (Triggers Clarification)</button>
+        <button class="chip" data-q="connect Carnes Hill bus to Liverpool Interchange trains">Carnes Hill to Liverpool Interchange</button>
+        <button class="chip" data-q="connect route 275 to route 270 at Toronto Interchange">Route 275 to 270 at Toronto</button>
+        <button class="chip" data-q="connect Maitland bus 181 to Hunter train line">Maitland 181 to Hunter Train</button>
+      </div>
+
+      <!-- Interactive Clarification Box (Dynamic) -->
+      <div id="clarificationBox" class="clarification-card" style="display: none;">
+        <div class="clarification-title">
+          <span>⚡ AI Clarification Required to Build Exact SQL</span>
+        </div>
+        <div id="clarificationQuestions"></div>
+        <div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 0.5rem;">
+          <button id="btnApplyClarification" class="btn">Confirm Parameters & Generate SQL</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Step 2: GCS SQL & Context Layers -->
+    <section class="panel" id="panel-sql">
+      <div class="panel-header">
+        <div>
+          <span class="step-label">Step 2</span>
+          <h2 class="panel-title">Parameterized GCS SQL & Context Engine</h2>
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+          <button id="btnGenerateSql" class="btn btn-secondary">Regenerate SQL</button>
+          <button id="btnRunQuery" class="btn">
+            <span>Run GCS Query</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="step-grid">
+        <div class="sql-editor-wrapper">
+          <div class="sql-toolbar">
+            <span><span>📊 Target Lakehouse: </span><code style="color: var(--accent-cyan);">gs://nsw-transit-spatial-crafter/lake/nsw_stop_times.parquet</code></span>
+            <button id="btnCopySql" class="chip" style="padding: 0.15rem 0.6rem; font-size: 0.72rem;">📋 Copy SQL</button>
+          </div>
+          <textarea id="sqlInput" class="sql-editor" spellcheck="false" placeholder="SQL query loading from GCS lakehouse..."></textarea>
+        </div>
+        <div class="context-stack">
+          <!-- Opal Station Patronage Card -->
+          <div class="context-card opal" id="cardOpal">
+            <span class="context-title">Passenger Demand (Opal)</span>
+            <div class="context-value" id="opalVolume">— trips/mo</div>
+            <div class="context-sub" id="opalSub">Select or query a station interchange</div>
+          </div>
+          <!-- Road Delay Variance Card -->
+          <div class="context-card traffic" id="cardTraffic">
+            <span class="context-title">Traffic Congestion Variance</span>
+            <div class="context-value" id="trafficVariance">— Variance</div>
+            <div class="context-sub" id="trafficSub">Road traffic delay buffer will be computed</div>
+          </div>
+          <!-- Fleet Invariant Card -->
+          <div class="context-card fleet">
+            <span class="context-title">Zero-Added-Budget Check</span>
+            <div class="context-value" style="color: var(--accent-emerald);">0 Extra Buses</div>
+            <div class="context-sub">PVR & Driver duty hours invariant</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Step 3: Synchronized Spatial Map -->
+    <section class="panel" id="panel-map">
+      <div class="panel-header">
+        <div>
+          <span class="step-label">Step 3</span>
+          <h2 class="panel-title">Bus Route Alignment & 1km Multi-Modal Infrastructure</h2>
+        </div>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+          <span id="mapInfraCountBadge" class="badge" style="display: none; background: rgba(0, 229, 255, 0.15); color: var(--accent-cyan); border: 1px solid var(--accent-cyan);">0 Infrastructure Hubs</span>
+          <span class="badge badge-live">1km Catchment Buffer</span>
+        </div>
+      </div>
+      <div class="map-wrapper">
+        <div id="map"></div>
+        <div class="map-legend">
+          <div class="legend-header">🗺️ Corridor Layers (< 1km)</div>
+          <div class="legend-items">
+            <div class="legend-item"><span class="legend-line route-line"></span><span>Main Bus Route</span></div>
+            <div class="legend-item"><span class="legend-swatch buffer-swatch"></span><span>1km Corridor Buffer</span></div>
+            <div class="legend-item"><span class="legend-pin pin-train">🚆</span><span>Train Station</span></div>
+            <div class="legend-item"><span class="legend-pin pin-metro">🚇</span><span>Metro Station</span></div>
+            <div class="legend-item"><span class="legend-pin pin-ferry">⛴️</span><span>Ferry Wharf</span></div>
+            <div class="legend-item"><span class="legend-pin pin-bus">🚏</span><span>Bus Interchange</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Step 4: Full-Day Bidirectional Timetable Recommendations -->
+    <section class="panel" id="panel-recommendations">
+      <div class="panel-header">
+        <div>
+          <span class="step-label">Step 4</span>
+          <h2 class="panel-title">Full-Day Bidirectional Timetable Adjustments</h2>
+        </div>
+        <span class="badge badge-live">Actionable Suggestions</span>
+      </div>
+
+      <!-- KPI Summary Cards -->
+      <div class="kpis-row">
+        <div class="kpi-card">
+          <span class="kpi-label">Total Daily Trips</span>
+          <div class="kpi-num" id="kpiTotalTrips">—</div>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-label">Optimal Connections</span>
+          <div class="kpi-num" id="kpiOptimalPct" style="color: var(--accent-emerald);">—</div>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-label">Peak Vehicles Required</span>
+          <div class="kpi-num" id="kpiPvr">—</div>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-label">Target Buffer Window</span>
+          <div class="kpi-num" id="kpiBuffer" style="font-size: 1.3rem;">5 - 15 min</div>
+        </div>
+      </div>
+
+      <!-- Recommendation Table -->
+      <div class="table-wrapper">
+        <table id="recommendationsTable">
+          <thead>
+            <tr>
+              <th>Interchange</th>
+              <th>Trip ID</th>
+              <th>Destination</th>
+              <th>Scheduled Start</th>
+              <th>Recommended Start</th>
+              <th>Suggested Shift</th>
+              <th>Inbound Buffer (Bus → Train)</th>
+              <th>Outbound Buffer (Train → Bus)</th>
+              <th>Quality Status</th>
+            </tr>
+          </thead>
+          <tbody id="recTableBody">
+            <tr>
+              <td colspan="9" style="text-align: center; color: var(--text-dim); padding: 2rem;">
+                Click "Run GCS Query" to compute full-day timetable recommendations.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <!-- Main Web App Script (Relative for GCS hosting) -->
+  <script type="module" src="app.js"></script>
+</body>
+</html>
