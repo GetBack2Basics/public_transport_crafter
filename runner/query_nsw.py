@@ -95,23 +95,39 @@ def run_interactive_pipeline(
     route_b = route_b or "CCN"
     interchange = interchange or "Morisset"
 
+    # Step 2: Initialize Engine & Context Layers
+    engine = GcsQueryEngine()
+    patronage = engine.get_station_patronage(interchange)
+    congestion = engine.get_corridor_congestion(route_a)
+
+    buffer_adj = 0
+    if congestion:
+        buffer_adj = congestion.get("buffer_adjustment_min", 0)
+    effective_min_buf = min_buffer + buffer_adj
+
     print("\n" + "-" * 80)
-    print(" RESOLVED QUERY PARAMETERS")
+    print(" RESOLVED QUERY PARAMETERS & CONTEXT LAYERS")
     print("-" * 80)
     print(f" Primary Route A       : {route_a} (Agency: {agency_a or 'All'})")
     print(f" Connecting Route B    : {route_b} (Agency: {agency_b or 'All'})")
     print(f" Target Interchange    : {interchange}")
-    print(f" Target Transfer Window: {min_buffer} to {max_buffer} minutes (both directions)")
+    print(f" Target Transfer Window: {min_buffer} to {max_buffer} minutes (base)")
+    if congestion:
+        print(f" Corridor Congestion   : {congestion['corridor']} ({congestion['region']})")
+        print(f" Delay Variance        : ±{congestion['traffic_variance_min']}m (Road Congestion Buffer: +{buffer_adj}m)")
+        print(f" Effective Transfer Win: {effective_min_buf} to {max_buffer + buffer_adj} minutes (Traffic Resilient)")
+    if patronage:
+        print(f" Station Opal Patronage: {patronage['clean_station_name']} -> {patronage['total_monthly_trips']:,} trips/mo (~{patronage['daily_avg_patronage']:,} daily)")
+        print(f" Patronage Tier        : {patronage['patronage_tier']} (Statewide Rank: #{patronage['statewide_rank']})")
     print(f" Schedule Coverage     : Full 24-Hour Operating Day")
 
-    # Step 2: Build Parameterized SQL Query
-    engine = GcsQueryEngine()
+    # Step 3: Build Parameterized SQL Query
     sql = engine.build_transfer_sql(
         route_a=route_a,
         route_b=route_b,
         interchange_filter=interchange,
-        min_buffer_mins=min_buffer,
-        max_buffer_mins=max_buffer,
+        min_buffer_mins=effective_min_buf,
+        max_buffer_mins=max_buffer + buffer_adj,
         agency_id_a=agency_a,
         agency_id_b=agency_b
     )
@@ -121,7 +137,7 @@ def run_interactive_pipeline(
     print("-" * 80)
     print(sql)
 
-    # Step 3: Execute on GCS
+    # Step 4: Execute on GCS
     print("\n" + "-" * 80)
     print(" EXECUTING QUERY AGAINST GCS LAKEHOUSE...")
     print("-" * 80)

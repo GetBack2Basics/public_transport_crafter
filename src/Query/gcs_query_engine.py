@@ -48,12 +48,48 @@ class GcsQueryEngine:
             "stops": f"{self.bucket}/lake/nsw_stops.parquet",
             "trips": f"{self.bucket}/lake/nsw_trips.parquet",
             "stop_times": f"{self.bucket}/lake/nsw_stop_times.parquet",
-            "calendar": f"{self.bucket}/lake/nsw_calendar.parquet"
+            "calendar": f"{self.bucket}/lake/nsw_calendar.parquet",
+            "opal": f"{self.bucket}/lake/nsw_opal_station_patronage.parquet",
+            "congestion": f"{self.bucket}/lake/nsw_corridor_congestion.parquet"
         }
         for tbl_name, gcs_path in tables.items():
             dataset = ds.dataset(gcs_path, filesystem=self.fs)
             self.con.register(tbl_name, dataset)
-        logger.info(f"Registered statewide NSW transit tables from gs://{self.bucket}/lake/ in DuckDB")
+        logger.info(f"Registered statewide NSW transit tables, Opal patronage, and congestion profiles from gs://{self.bucket}/lake/ in DuckDB")
+
+    def get_station_patronage(self, station_name: str) -> Optional[Dict[str, Any]]:
+        """Retrieves Opal monthly entries, exits, and daily volume for a given station."""
+        clean = station_name.split(",")[0].replace("Station", "").strip()
+        q = f"""
+        SELECT clean_station_name, total_monthly_trips, daily_avg_patronage, patronage_tier, statewide_rank
+        FROM opal
+        WHERE clean_station_name ILIKE '%{clean}%'
+        ORDER BY total_monthly_trips DESC
+        LIMIT 1
+        """
+        try:
+            df = self.con.execute(q).df()
+            if not df.empty:
+                return df.iloc[0].to_dict()
+        except Exception as e:
+            logger.warning(f"Failed to lookup Opal patronage: {e}")
+        return None
+
+    def get_corridor_congestion(self, route_name: str) -> Optional[Dict[str, Any]]:
+        """Retrieves corridor congestion variance and buffer adjustments for a route."""
+        q = f"""
+        SELECT corridor, region, routes, traffic_variance_min, buffer_adjustment_min
+        FROM congestion
+        WHERE routes ILIKE '%{route_name}%'
+        LIMIT 1
+        """
+        try:
+            df = self.con.execute(q).df()
+            if not df.empty:
+                return df.iloc[0].to_dict()
+        except Exception as e:
+            logger.warning(f"Failed to lookup corridor congestion: {e}")
+        return None
 
     def build_transfer_sql(
         self,
