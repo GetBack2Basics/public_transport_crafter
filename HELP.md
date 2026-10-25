@@ -3,11 +3,11 @@
 Welcome to the **NSW Public Transport Crafter** user guide! 
 
 > **🧒 ELI10 (Explain Like I'm 10):**
-> Have you ever hopped off a bus at a train station, only to see your train pulling away right in front of you? That's the worst! 
+> Have you ever hopped off a bus at a train station, only to watch your train pulling away right in front of you? That's the worst!
 > 
-> Imagine you and your friend want to meet up at the school gate at 3:15 PM. If your bus always drops you off at 3:17 PM, you keep missing each other! But what if the bus driver was scheduled to leave just 3 minutes earlier? Then you'd meet up easily every single day without needing to buy another bus.
+> Imagine you live in an area with just one bus route. Every morning, your bus arrives at the train station **5 minutes after the all-stops train has already left**, so you're stuck waiting a whole hour on a cold platform for the next train!
 > 
-> **NSW Transit Crafter** does this for thousands of buses and trains across New South Wales. It looks at real government schedules, road paths, and Opal card tap-on data to fix transfer times with zero extra taxpayer dollars!
+> What if the bus was scheduled to leave your neighborhood **8 minutes earlier**? You would step off the bus, walk onto the platform with a comfortable 3-minute buffer, hop straight onto the train, and save nearly an hour of waiting every single day. The bus company doesn't need to purchase another bus or hire an extra driver—we simply shift departure times so buses and trains connect seamlessly!
 
 ---
 
