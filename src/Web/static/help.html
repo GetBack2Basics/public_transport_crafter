@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NSW Transit Crafter | User Guide & System Manual</title>
-  <meta name="description" content="Comprehensive interactive user manual for NSW Public Transport Crafter. Explains GCS Lakehouse, Planning Portal, Data QA Hub, and spatial corridor optimization.">
+  <title>NSW Transit Crafter | Easy User Guide</title>
+  <meta name="description" content="Friendly, step-by-step user guide for NSW Public Transport Crafter. Learn how to plan routes, fix bus-train transfers, and explore all 10,266 NSW routes.">
 
-  <!-- Google Fonts: Inter, Outfit, JetBrains Mono -->
+  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -14,90 +14,63 @@
   <link rel="stylesheet" href="style.css">
 
   <style>
-    .help-container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 2rem 1.5rem 5rem 1.5rem;
-    }
-    .help-hero {
-      background: linear-gradient(135deg, rgba(18, 24, 41, 0.95), rgba(15, 23, 42, 0.85));
+    .help-wrap { max-width: 1100px; margin: 0 auto; padding: 2rem 1.25rem 5rem; }
+    .hero-eli10 {
+      background: linear-gradient(135deg, rgba(18, 24, 41, 0.95), rgba(15, 23, 42, 0.9));
       border: 1px solid var(--border-accent);
       border-radius: 12px;
-      padding: 2.25rem 2rem;
-      margin-bottom: 2.5rem;
-      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
-      position: relative;
-      overflow: hidden;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
     }
-    .help-hero::before {
-      content: "";
-      position: absolute;
-      top: -50px;
-      right: -50px;
-      width: 250px;
-      height: 250px;
-      background: radial-gradient(circle, rgba(0, 229, 255, 0.15) 0%, transparent 70%);
-      pointer-events: none;
-    }
-    .help-hero h1 {
-      font-family: var(--font-heading);
-      font-size: 2rem;
-      font-weight: 800;
-      color: #fff;
-      margin-bottom: 0.75rem;
-      letter-spacing: -0.02em;
-    }
-    .help-hero h1 span {
-      color: var(--accent-cyan);
-    }
-    .help-hero p {
-      color: var(--text-muted);
-      font-size: 1.05rem;
+    .hero-eli10 h1 { font-family: var(--font-heading); font-size: 2rem; font-weight: 800; color: #fff; margin-bottom: 0.75rem; }
+    .hero-eli10 h1 span { color: var(--accent-cyan); }
+    .eli10-bubble {
+      background: rgba(0, 229, 255, 0.08);
+      border-left: 4px solid var(--accent-cyan);
+      border-radius: 0 8px 8px 0;
+      padding: 1rem 1.25rem;
+      margin: 1rem 0;
+      font-size: 0.98rem;
+      color: #e2e8f0;
       line-height: 1.6;
-      max-width: 900px;
     }
-    .toc-grid {
+    .quick-nav {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 1rem;
-      margin: 1.75rem 0 0.5rem 0;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 0.75rem;
+      margin-top: 1.5rem;
     }
-    .toc-card {
-      background: rgba(30, 41, 59, 0.4);
+    .nav-chip {
+      background: rgba(30, 41, 59, 0.5);
       border: 1px solid var(--border-subtle);
       border-radius: 8px;
-      padding: 0.9rem 1.1rem;
+      padding: 0.75rem 1rem;
+      color: #cbd5e1;
       text-decoration: none;
-      color: var(--text-main);
+      font-size: 0.88rem;
+      font-weight: 600;
       display: flex;
       align-items: center;
-      gap: 0.75rem;
-      transition: all 0.2s ease;
+      gap: 0.5rem;
+      transition: all 0.2s;
     }
-    .toc-card:hover {
-      background: rgba(0, 229, 255, 0.12);
+    .nav-chip:hover {
+      background: rgba(0, 229, 255, 0.15);
       border-color: var(--accent-cyan);
-      transform: translateY(-2px);
+      color: #fff;
     }
-    .toc-icon {
-      font-size: 1.3rem;
-    }
-    .toc-text {
-      font-size: 0.9rem;
-      font-weight: 600;
-    }
-
-    .help-section {
+    .guide-card {
       background: var(--bg-card);
       border: 1px solid var(--border-subtle);
       border-radius: 12px;
-      padding: 2.25rem 2rem;
-      margin-bottom: 2.5rem;
+      padding: 2rem;
+      margin-bottom: 2.25rem;
       box-shadow: var(--shadow-card);
     }
-    .help-section h2 {
+    .guide-card h2 {
       font-family: var(--font-heading);
-      font-size: 1.55rem;
+      font-size: 1.45rem;
       font-weight: 700;
       color: #fff;
       margin-bottom: 1rem;
@@ -105,53 +78,42 @@
       border-bottom: 1px solid var(--border-subtle);
       display: flex;
       align-items: center;
-      gap: 0.6rem;
+      gap: 0.5rem;
     }
-    .help-section h3 {
+    .guide-card h3 {
       font-family: var(--font-heading);
-      font-size: 1.2rem;
+      font-size: 1.15rem;
       font-weight: 600;
       color: #38bdf8;
-      margin: 1.5rem 0 0.75rem 0;
+      margin: 1.5rem 0 0.5rem;
     }
-    .help-section p, .help-section li {
+    .guide-card p, .guide-card li {
       color: #cbd5e1;
       font-size: 0.95rem;
       line-height: 1.65;
     }
-    .help-section ul, .help-section ol {
-      margin-left: 1.5rem;
-      margin-bottom: 1rem;
-    }
-    .help-section li {
-      margin-bottom: 0.4rem;
-    }
-
-    /* Screen Grab Card & Lightbox */
-    .screenshot-card {
-      margin: 1.5rem 0 2rem 0;
+    .guide-card ul, .guide-card ol { margin-left: 1.5rem; margin-bottom: 1rem; }
+    .guide-card li { margin-bottom: 0.35rem; }
+    
+    .shot-box {
+      margin: 1.25rem 0 1.75rem;
       background: #0d121f;
       border: 1px solid var(--border-subtle);
-      border-radius: 10px;
+      border-radius: 8px;
       overflow: hidden;
-      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.5);
     }
-    .screenshot-img-wrap {
+    .shot-img-btn {
       cursor: zoom-in;
-      position: relative;
+      display: block;
       background: #000;
     }
-    .screenshot-img-wrap img {
+    .shot-img-btn img {
       width: 100%;
       height: auto;
       display: block;
-      transition: transform 0.25s ease;
     }
-    .screenshot-img-wrap:hover img {
-      opacity: 0.95;
-    }
-    .screenshot-caption {
-      padding: 0.85rem 1.25rem;
+    .shot-label {
+      padding: 0.75rem 1rem;
       font-size: 0.85rem;
       color: var(--text-muted);
       background: #111726;
@@ -160,189 +122,100 @@
       justify-content: space-between;
       align-items: center;
     }
-    .caption-title {
-      font-weight: 600;
-      color: #e2e8f0;
-    }
-    .caption-hint {
-      font-size: 0.78rem;
-      color: var(--accent-cyan);
-      display: flex;
-      align-items: center;
-      gap: 0.3rem;
-    }
+    .shot-label strong { color: #f1f5f9; }
 
-    /* Data Tables */
-    .help-table-wrap {
-      overflow-x: auto;
-      margin: 1.25rem 0;
-      border: 1px solid var(--border-subtle);
-      border-radius: 8px;
-    }
-    .help-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.88rem;
-      text-align: left;
-    }
-    .help-table th {
-      background: rgba(15, 23, 42, 0.9);
-      color: #38bdf8;
-      padding: 0.75rem 1rem;
-      font-weight: 600;
-      border-bottom: 1px solid var(--border-subtle);
-    }
-    .help-table td {
-      padding: 0.75rem 1rem;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-      color: #cbd5e1;
-    }
-    .help-table tr:hover td {
-      background: rgba(255, 255, 255, 0.02);
-    }
-    .help-table a {
-      color: var(--accent-cyan);
-      text-decoration: none;
-    }
-    .help-table a:hover {
-      text-decoration: underline;
-    }
-
-    /* Code Blocks */
-    .code-box {
+    .code-snippet {
       position: relative;
       background: #0b0f19;
       border: 1px solid var(--border-subtle);
-      border-radius: 8px;
-      margin: 1rem 0;
-      overflow: hidden;
+      border-radius: 6px;
+      margin: 0.75rem 0 1.25rem;
     }
-    .code-box pre {
+    .code-snippet pre {
       margin: 0;
-      padding: 1rem 1.25rem;
+      padding: 0.85rem 1rem;
       font-family: var(--font-mono);
-      font-size: 0.85rem;
-      color: #e2e8f0;
+      font-size: 0.82rem;
+      color: #93c5fd;
       overflow-x: auto;
-      line-height: 1.5;
     }
-    .code-box .copy-btn {
+    .copy-pill {
       position: absolute;
-      top: 0.5rem;
-      right: 0.5rem;
-      background: rgba(30, 41, 59, 0.8);
+      top: 0.4rem;
+      right: 0.4rem;
+      background: rgba(30, 41, 59, 0.85);
       border: 1px solid var(--border-subtle);
       color: #cbd5e1;
-      padding: 0.25rem 0.6rem;
+      padding: 0.2rem 0.5rem;
       border-radius: 4px;
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       cursor: pointer;
-      transition: all 0.15s;
     }
-    .code-box .copy-btn:hover {
-      background: var(--accent-cyan);
-      color: #000;
-      border-color: var(--accent-cyan);
-    }
+    .copy-pill:hover { background: var(--accent-cyan); color: #000; }
 
-    /* FAQ accordion */
-    .faq-item {
-      border: 1px solid var(--border-subtle);
-      border-radius: 8px;
-      margin-bottom: 0.75rem;
-      background: rgba(18, 24, 41, 0.5);
+    .help-grid-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+      margin: 1rem 0;
     }
-    .faq-q {
-      padding: 1rem 1.25rem;
-      cursor: pointer;
-      font-weight: 600;
-      color: #f1f5f9;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+    .help-grid-table th {
+      background: rgba(15, 23, 42, 0.9);
+      color: #38bdf8;
+      padding: 0.65rem 0.85rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border-subtle);
     }
-    .faq-q:hover {
-      color: var(--accent-cyan);
+    .help-grid-table td {
+      padding: 0.65rem 0.85rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      color: #cbd5e1;
     }
-    .faq-a {
-      padding: 0 1.25rem 1rem 1.25rem;
-      color: #94a3b8;
-      font-size: 0.92rem;
-      line-height: 1.6;
-    }
+    .help-grid-table a { color: var(--accent-cyan); text-decoration: none; }
+    .help-grid-table a:hover { text-decoration: underline; }
 
-    /* Modal Lightbox */
-    .lightbox-modal {
+    /* Lightbox Modal */
+    .lightbox {
       display: none;
       position: fixed;
-      z-index: 9999;
-      left: 0;
-      top: 0;
-      width: 100vw;
-      height: 100vh;
+      inset: 0;
       background: rgba(5, 8, 15, 0.95);
-      backdrop-filter: blur(8px);
+      z-index: 99999;
       align-items: center;
       justify-content: center;
       flex-direction: column;
-      padding: 1.5rem;
+      padding: 1rem;
     }
-    .lightbox-modal.active {
-      display: flex;
-    }
-    .lightbox-content {
+    .lightbox.active { display: flex; }
+    .lightbox img {
       max-width: 95vw;
       max-height: 85vh;
       object-fit: contain;
-      border-radius: 8px;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+      border-radius: 6px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.8);
       border: 1px solid var(--border-subtle);
     }
-    .lightbox-caption {
-      margin-top: 1rem;
-      color: #e2e8f0;
-      font-size: 0.95rem;
-      text-align: center;
-      max-width: 800px;
-    }
-    .lightbox-close {
+    .lightbox-text { margin-top: 0.75rem; color: #f1f5f9; font-size: 0.9rem; text-align: center; }
+    .lightbox-x {
       position: absolute;
-      top: 1.5rem;
-      right: 2rem;
+      top: 1rem;
+      right: 1.5rem;
+      font-size: 1.8rem;
       color: #fff;
-      font-size: 2rem;
-      font-weight: bold;
       cursor: pointer;
-      background: rgba(30, 41, 59, 0.6);
-      border: 1px solid var(--border-subtle);
-      width: 44px;
-      height: 44px;
+      background: rgba(30, 41, 59, 0.8);
+      width: 40px;
+      height: 40px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: all 0.15s;
-    }
-    .lightbox-close:hover {
-      background: var(--accent-cyan);
-      color: #000;
-    }
-
-    .badge-g1 {
-      display: inline-block;
-      padding: 0.2rem 0.5rem;
-      border-radius: 4px;
-      font-size: 0.75rem;
-      font-weight: 700;
-      background: rgba(16, 185, 129, 0.15);
-      color: #10b981;
-      border: 1px solid rgba(16, 185, 129, 0.4);
     }
   </style>
 </head>
 <body>
 
-  <!-- Top Navigation Header -->
+  <!-- Navigation Header -->
   <header>
     <div class="brand">
       <div class="brand-icon">NSW</div>
@@ -351,13 +224,13 @@
       </div>
     </div>
     <div class="header-badges">
-      <a href="index.html" class="badge" style="text-decoration: none; color: #cbd5e1; border-color: var(--border-subtle); display: flex; align-items: center; gap: 0.35rem; font-weight: 600;">
+      <a href="index.html" class="badge" style="text-decoration: none; color: #cbd5e1; border-color: var(--border-subtle);">
         ← Planning Portal
       </a>
-      <a href="data_qa.html" class="badge" style="text-decoration: none; color: var(--accent-cyan); border-color: rgba(0, 229, 255, 0.4); display: flex; align-items: center; gap: 0.35rem; font-weight: 600;">
+      <a href="data_qa.html" class="badge" style="text-decoration: none; color: var(--accent-cyan); border-color: rgba(0, 229, 255, 0.4);">
         🔍 Data QA Hub
       </a>
-      <a href="geolibre_qa_inspect.html" target="_blank" class="badge" style="text-decoration: none; color: #67e8f9; border-color: rgba(6, 182, 212, 0.4); display: flex; align-items: center; gap: 0.35rem; font-weight: 600;">
+      <a href="geolibre_qa_inspect.html" target="_blank" class="badge" style="text-decoration: none; color: #67e8f9; border-color: rgba(6, 182, 212, 0.4);">
         🗺️ Map Inspector
       </a>
       <div class="badge" style="background: rgba(56, 189, 248, 0.15); border-color: rgba(56, 189, 248, 0.5); color: #38bdf8;">
@@ -366,428 +239,348 @@
     </div>
   </header>
 
-  <div class="help-container">
+  <div class="help-wrap">
     
-    <!-- Hero Header -->
-    <div class="help-hero">
-      <h1>NSW Transit Spatial Crafter — <span>System Manual</span></h1>
+    <!-- Hero / ELI10 Intro -->
+    <div class="hero-eli10">
+      <h1>How to Use NSW Transit Crafter <span>(ELI10 Guide)</span></h1>
       <p>
-        Step-by-step visual operating instructions, spatial architecture reference, zero-added-budget timetable solver workflow, and authoritative data verification guide for the NSW Public Transport Crafter.
+        Welcome! Have you ever taken a bus to a train station, only to watch your train pull away right as you stepped off? 
+        That stinks! <strong>NSW Transit Crafter</strong> is a smart map and timetable tool that fixes that problem without spending any extra taxpayer money.
       </p>
 
-      <div class="toc-grid">
-        <a href="#section-endpoints" class="toc-card">
-          <span class="toc-icon">🌐</span>
-          <span class="toc-text">1. Live GCS Endpoints</span>
-        </a>
-        <a href="#section-architecture" class="toc-card">
-          <span class="toc-icon">🏗️</span>
-          <span class="toc-text">2. Architecture & Zero-Mock</span>
-        </a>
-        <a href="#section-portal" class="toc-card">
-          <span class="toc-icon">⚡</span>
-          <span class="toc-text">3. Planning Portal Walkthrough</span>
-        </a>
-        <a href="#section-qa-hub" class="toc-card">
-          <span class="toc-icon">🔍</span>
-          <span class="toc-text">4. Data QA & Quality Gates</span>
-        </a>
-        <a href="#section-cli" class="toc-card">
-          <span class="toc-icon">💻</span>
-          <span class="toc-text">5. CLI Execution & Pytest</span>
-        </a>
-        <a href="#section-faq" class="toc-card">
-          <span class="toc-icon">❓</span>
-          <span class="toc-text">6. Frequently Asked Questions</span>
-        </a>
+      <div class="eli10-bubble">
+        🧒 <strong>ELI10 (Explain Like I'm 10):</strong> Imagine you and your friend want to trade Pokémon cards at the school gate at 3:15 PM. If your bus always gets there at 3:17 PM, you keep missing each other! But what if the bus driver left just 3 minutes earlier? Then you'd both meet on time without needing a second bus. That is exactly what this tool does for thousands of buses and trains all across New South Wales!
+      </div>
+
+      <div class="quick-nav">
+        <a href="#practical-portal" class="nav-chip"><span>⚡</span> 1. Planning Portal (Practical Guide)</a>
+        <a href="#practical-qa" class="nav-chip"><span>🔍</span> 2. Data QA Hub (Inspect Routes)</a>
+        <a href="#practical-cli" class="nav-chip"><span>💻</span> 3. Command Line & Tests</a>
+        <a href="#faq" class="nav-chip"><span>❓</span> 4. Frequently Asked Questions</a>
+        <a href="#architecture" class="nav-chip"><span>🏗️</span> 5. Behind the Scenes Architecture</a>
+        <a href="#endpoints" class="nav-chip"><span>🌐</span> 6. Live Cloud Endpoints</a>
       </div>
     </div>
 
-    <!-- Section 1: Live GCS Endpoints -->
-    <section id="section-endpoints" class="help-section">
-      <h2><span>1.</span> Live Google Cloud Storage (GCS) Endpoints</h2>
+    <!-- Section 1: Practical Use of the Planning Portal -->
+    <section id="practical-portal" class="guide-card">
+      <h2><span>1.</span> Practical Guide: Planning Connections in the Portal</h2>
       <p>
-        The platform operates on a completely serverless, zero-idle-cost cloud lakehouse architecture hosted on Google Cloud Storage with global HTTP/HTTPS CDN distribution.
+        The Planning Portal is located at <a href="index.html" style="color:var(--accent-cyan);">index.html</a>. It allows you to ask simple questions in everyday English, see real road maps, and get a better schedule instantly.
       </p>
 
-      <div class="help-table-wrap">
-        <table class="help-table">
+      <h3>Step 1: Type What You Want or Click a Quick Scenario</h3>
+      <div class="shot-box">
+        <div class="shot-img-btn" onclick="showPic('screenshots/01_planning_portal_overview.png', 'Figure 1: Initial screen with query search bar and quick scenario buttons')">
+          <img src="screenshots/01_planning_portal_overview.png" alt="Portal Overview" loading="lazy">
+        </div>
+        <div class="shot-label">
+          <strong>Figure 1: Planning Portal Home Screen</strong>
+          <span style="color:var(--accent-cyan); font-size:0.75rem;">🔍 Click to enlarge</span>
+        </div>
+      </div>
+      <p>
+        You don't need to know any computer code! Just type what you're trying to fix:
+      </p>
+      <ul>
+        <li><em>"How can we optimize route 99 to connect with the train?"</em></li>
+        <li><em>"Connect Carnes Hill bus to Liverpool Interchange trains"</em></li>
+        <li>Or click one of the handy buttons like <strong>Route 99 Corridor</strong> or <strong>Route 275 Corridor</strong>!</li>
+      </ul>
+
+      <h3>Step 2: Pick the Right Route if There Are Twins</h3>
+      <div class="shot-box">
+        <div class="shot-img-btn" onclick="showPic('screenshots/02_planning_portal_clarification.png', 'Figure 2: Picking your regional corridor when two routes share the same number')">
+          <img src="screenshots/02_planning_portal_clarification.png" alt="Corridor Clarification" loading="lazy">
+        </div>
+        <div class="shot-label">
+          <strong>Figure 2: Corridor Disambiguation Card</strong>
+          <span style="color:var(--accent-cyan); font-size:0.75rem;">🔍 Click to enlarge</span>
+        </div>
+      </div>
+      <p>
+        Did you know NSW has two different buses called "Route 99"? One is near Lake Haven on the Central Coast, and the other runs near Helensburgh! When this happens, the tool asks: <em>"Which one did you mean?"</em> Just click the one you want.
+      </p>
+
+      <h3>Step 3: Check the Real Road Map & Walkable Area</h3>
+      <div class="shot-box">
+        <div class="shot-img-btn" onclick="showPic('screenshots/04_planning_portal_spatial_map.png', 'Figure 3: Leaflet map showing real road streets in cyan/gold with 1km walking buffer')">
+          <img src="screenshots/04_planning_portal_spatial_map.png" alt="Spatial Map" loading="lazy">
+        </div>
+        <div class="shot-label">
+          <strong>Figure 3: Road-Snapped Spatial Map & 1km Catchment</strong>
+          <span style="color:var(--accent-cyan); font-size:0.75rem;">🔍 Click to enlarge</span>
+        </div>
+      </div>
+      <p>
+        The map shows the exact street turns the bus drives on (no straight zigzag lines across buildings!). The green dotted circle shows a <strong>1-kilometer walking zone</strong> around the stop, highlighting train stations, metro stops, and ferry wharves you can easily walk to.
+      </p>
+
+      <h3>Step 4: See the Magic Fixed Timetable</h3>
+      <div class="shot-box">
+        <div class="shot-img-btn" onclick="showPic('screenshots/05_planning_portal_timetable_recommendations.png', 'Figure 4: Full-day timetable showing suggested departure shifts and transfer buffers')">
+          <img src="screenshots/05_planning_portal_timetable_recommendations.png" alt="Timetable Recommendations" loading="lazy">
+        </div>
+        <div class="shot-label">
+          <strong>Figure 4: Timetable Improvement Recommendations Table</strong>
+          <span style="color:var(--accent-cyan); font-size:0.75rem;">🔍 Click to enlarge</span>
+        </div>
+      </div>
+      <p>
+        The system looks at every single trip from morning until night. It gives each bus trip a small nudge (like leaving <strong>5 minutes later</strong> or <strong>3 minutes earlier</strong>) so passengers have 7 to 17 minutes to walk to the train platform. Nobody has to run for their life, and nobody is stuck freezing on the platform for 45 minutes!
+      </p>
+    </section>
+
+    <!-- Section 2: Practical Guide to Data QA Hub -->
+    <section id="practical-qa" class="guide-card">
+      <h2><span>2.</span> Practical Guide: Exploring Any Route & Verifying Data</h2>
+      <p>
+        The Data QA Hub is located at <a href="data_qa.html" style="color:var(--accent-cyan);">data_qa.html</a>. This is the command room where anyone can look up all <strong>10,266 routes</strong> across NSW and make sure the data is 100% genuine.
+      </p>
+
+      <h3>10,266 Routes Search & Explorer</h3>
+      <div class="shot-box">
+        <div class="shot-img-btn" onclick="showPic('screenshots/09_qa_hub_route_explorer.png', 'Figure 5: Searching routes by name, city, or suburb')">
+          <img src="screenshots/09_qa_hub_route_explorer.png" alt="Route Explorer" loading="lazy">
+        </div>
+        <div class="shot-label">
+          <strong>Figure 5: Route Explorer (Searching 'Hornsby' or any suburb)</strong>
+          <span style="color:var(--accent-cyan); font-size:0.75rem;">🔍 Click to enlarge</span>
+        </div>
+      </div>
+      <p>
+        Type any route number or town (like <em>Newcastle</em>, <em>Parramatta</em>, <em>880</em>, or <em>B1</em>). You can filter by Trains, Sydney Metro M1, Metro Buses, Regional Coaches, or Ferries, and click <strong>🗺️ Inspect on Map</strong> to fly directly to it.
+      </p>
+
+      <h3>GeoLibre Map Inspector with Dual-Symbology</h3>
+      <div class="shot-box">
+        <div class="shot-img-btn" onclick="showPic('screenshots/07_qa_hub_spatial_map_inspector.png', 'Figure 6: High-contrast map inspector with stops table docked below')">
+          <img src="screenshots/07_qa_hub_spatial_map_inspector.png" alt="Map Inspector" loading="lazy">
+        </div>
+        <div class="shot-label">
+          <strong>Figure 6: Standalone Map Inspector & Bottom Table Dock</strong>
+          <span style="color:var(--accent-cyan); font-size:0.75rem;">🔍 Click to enlarge</span>
+        </div>
+      </div>
+      <p>
+        The Map Inspector gives you superpower controls:
+      </p>
+      <ul>
+        <li><strong>Dual-Symbology:</strong> Train and Metro hubs shine with cyan double rings, while bus stops are purple circles.</li>
+        <li><strong>Table Dock:</strong> See every stop along the line in order. Click the <strong>🎯 Zoom</strong> button on any stop to fly right to it!</li>
+        <li><strong>Basemap Switcher:</strong> Switch between clean Street maps, Topo Terrain contours, and real Esri Satellite Photos with an opacity slider!</li>
+      </ul>
+
+      <div class="shot-box">
+        <div class="shot-img-btn" onclick="showPic('screenshots/08_qa_hub_basemap_selector.png', 'Figure 7: Basemap popover with opacity slider')">
+          <img src="screenshots/08_qa_hub_basemap_selector.png" alt="Basemap Popover" loading="lazy">
+        </div>
+        <div class="shot-label">
+          <strong>Figure 7: Basemap Popover & Cartographic Opacity Slider</strong>
+          <span style="color:var(--accent-cyan); font-size:0.75rem;">🔍 Click to enlarge</span>
+        </div>
+      </div>
+
+      <h3>Automated Quality Rules (8 of 8 Passed)</h3>
+      <div class="shot-box">
+        <div class="shot-img-btn" onclick="showPic('screenshots/11_qa_hub_quality_gates.png', 'Figure 8: 8 automated quality gates ensuring zero fake data')">
+          <img src="screenshots/11_qa_hub_quality_gates.png" alt="Quality Gates" loading="lazy">
+        </div>
+        <div class="shot-label">
+          <strong>Figure 8: 8/8 Automated Quality Gates</strong>
+          <span style="color:var(--accent-cyan); font-size:0.75rem;">🔍 Click to enlarge</span>
+        </div>
+      </div>
+      <p>
+        Think of these like the 8 safety checks NASA does before launching a rocket. They check that all feeds come from official government servers, all bus stops are physically inside NSW coordinates, and schedules don't have impossible times.
+      </p>
+    </section>
+
+    <!-- Section 3: Practical Guide to CLI & Tests -->
+    <section id="practical-cli" class="guide-card">
+      <h2><span>3.</span> Practical Guide: Running via Command Line & Tests</h2>
+      <p>
+        Engineers and researchers can run timetable analyses and automated test suites directly from PowerShell or bash.
+      </p>
+
+      <h3>Run Batch Transit Optimization</h3>
+      <div class="code-snippet">
+        <button class="copy-pill" onclick="copySnippet(this)">📋 Copy</button>
+        <pre><code># Optimize Maitland to Newcastle University transfers
+python -m src.Orchestration.query_orchestrator \
+  --query "With the same number of buses and trains, how can the route from Maitland to Newcastle University be optimized?" \
+  --clean-local</code></pre>
+      </div>
+
+      <h3>Run All 31 Automated Tests</h3>
+      <div class="code-snippet">
+        <button class="copy-pill" onclick="copySnippet(this)">📋 Copy</button>
+        <pre><code># Runs full suite: zero-mock AST scanner, contract tests, and GCS checks
+.venv\Scripts\pytest -v</code></pre>
+      </div>
+
+      <h3>Deploy Latest Web Portals to Google Cloud</h3>
+      <div class="code-snippet">
+        <button class="copy-pill" onclick="copySnippet(this)">📋 Copy</button>
+        <pre><code>python scripts/deploy_portal_to_gcs.py</code></pre>
+      </div>
+    </section>
+
+    <!-- Section 4: Frequently Asked Questions -->
+    <section id="faq" class="guide-card">
+      <h2><span>4.</span> Frequently Asked Questions (FAQ)</h2>
+
+      <div style="margin-bottom:1.25rem;">
+        <h4 style="color:#f1f5f9; margin-bottom:0.35rem;">Q: Why doesn't this require any extra buses or drivers?</h4>
+        <p style="color:#94a3b8;">A: The math solver uses a rule called <em>Zero Added Fleet</em>. If an operator has 2 buses driving a route, the solver is only allowed to shift when those same 2 buses depart by a few minutes. It never asks for a 3rd bus!</p>
+      </div>
+
+      <div style="margin-bottom:1.25rem;">
+        <h4 style="color:#f1f5f9; margin-bottom:0.35rem;">Q: Can I check any bus in the state, even out in regional NSW?</h4>
+        <p style="color:#94a3b8;">A: Yes! All 10,266 public transit routes across Sydney, the Blue Mountains, Central Coast, Hunter, Illawarra, and Regional NSW are included.</p>
+      </div>
+
+      <div style="margin-bottom:1.25rem;">
+        <h4 style="color:#f1f5f9; margin-bottom:0.35rem;">Q: Why does the website load fast with zero server costs?</h4>
+        <p style="color:#94a3b8;">A: The website runs completely in your web browser using DuckDB SQL and static Google Cloud Storage hosting. When nobody is using it, it costs $0.00 to keep on standby.</p>
+      </div>
+    </section>
+
+    <!-- Section 5: Behind the Scenes Architecture & Zero-Mock Defense -->
+    <section id="architecture" class="guide-card">
+      <h2><span>5.</span> Behind the Scenes: Architecture & Zero-Mock Defense</h2>
+      <p>
+        Now that you know how to use the system, here is how the magic happens under the hood!
+      </p>
+
+      <div class="eli10-bubble">
+        🧒 <strong>ELI10 (Zero-Mock Defense):</strong> In computer programming, people sometimes cheat by making up "fake data" (like rolling a pair of dice to generate random fake bus arrival times). <strong>We strictly forbid this.</strong> Our automated robot scanners inspect every line of code to prove 100% of the numbers come from Transport for NSW government open data feeds!
+      </div>
+
+      <div class="shot-box">
+        <div class="shot-img-btn" onclick="showPic('screenshots/14_qa_hub_audit_certificate.png', 'Figure 9: Zero-Mock Data Integrity Certificate')">
+          <img src="screenshots/14_qa_hub_audit_certificate.png" alt="Audit Certificate" loading="lazy">
+        </div>
+        <div class="shot-label">
+          <strong>Figure 9: Zero-Mock Data Integrity Certificate</strong>
+          <span style="color:var(--accent-cyan); font-size:0.75rem;">🔍 Click to enlarge</span>
+        </div>
+      </div>
+
+      <h3>How Data Flows from NSW Open Data to Your Screen:</h3>
+      <ol>
+        <li><strong>NSW Open Data Feeds:</strong> The system downloads official GTFS timetables, real Opal card tap-on/tap-off transaction counts, and road traffic congestion statistics.</li>
+        <li><strong>Lakehouse Parquet Files:</strong> Data is saved into 45 high-speed Apache Parquet tables on Google Cloud Storage. Each file is verified with special <code>PAR1</code> bytes.</li>
+        <li><strong>In-Browser DuckDB SQL:</strong> When you search a route, your browser runs real SQL queries directly against the cloud files.</li>
+        <li><strong>Road Snapping:</strong> Bus stops are joined along physical road lines so turns and intersections match reality.</li>
+        <li><strong>Constraint Solver:</strong> Calculates the exact minute adjustment ($\Delta t$) to make connections click together.</li>
+      </ol>
+    </section>
+
+    <!-- Section 6: Live Cloud Endpoints & Data Lake Files -->
+    <section id="endpoints" class="guide-card">
+      <h2><span>6.</span> Live Cloud Storage Endpoints & Lakehouse Files</h2>
+      <p>
+        All websites and data files are live on Google Cloud Storage and can be accessed by anyone, anytime:
+      </p>
+
+      <div style="overflow-x:auto;">
+        <table class="help-grid-table">
           <thead>
             <tr>
               <th>Web Portal Application</th>
-              <th>Live GCS URL</th>
-              <th>Description</th>
+              <th>Public GCS Link</th>
+              <th>What It Does</th>
             </tr>
           </thead>
           <tbody>
             <tr>
               <td><strong>NSW Transit Crafter (Planning Portal)</strong></td>
               <td><a href="https://storage.googleapis.com/nsw-transit-spatial-crafter/index.html" target="_blank">index.html</a></td>
-              <td>Natural language inquiry, DuckDB SQL generation, 1km corridor map, and bidirectional timetable solver.</td>
+              <td>Natural language query tool, road map, and full-day connection solver.</td>
             </tr>
             <tr>
               <td><strong>Data QA & Quality Gates Hub</strong></td>
               <td><a href="https://storage.googleapis.com/nsw-transit-spatial-crafter/data_qa.html" target="_blank">data_qa.html</a></td>
-              <td>10,266 routes explorer, 8/8 automated quality gates, 45 Parquet tables, and zero-mock certificate.</td>
+              <td>Authoritative audit center for all 10,266 routes and 45 Parquet tables.</td>
             </tr>
             <tr>
               <td><strong>GeoLibre Spatial Map Inspector</strong></td>
               <td><a href="https://storage.googleapis.com/nsw-transit-spatial-crafter/geolibre_qa_inspect.html" target="_blank">geolibre_qa_inspect.html</a></td>
-              <td>Standalone WebGL viewer with contrast dual-symbology, 1km buffer, basemap popover, and table dock.</td>
+              <td>Standalone high-contrast spatial map viewer with layer controls.</td>
             </tr>
             <tr>
-              <td><strong>Interactive Web User Guide</strong></td>
+              <td><strong>Interactive User Guide (This Page)</strong></td>
               <td><a href="https://storage.googleapis.com/nsw-transit-spatial-crafter/help.html" target="_blank">help.html</a></td>
-              <td>Complete system manual with high-resolution visual screen grabs and walkthroughs.</td>
+              <td>Step-by-step ELI10 manual with high-resolution visual screen grabs.</td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      <h3>Authoritative Data Lakehouse Artifacts</h3>
-      <div class="help-table-wrap">
-        <table class="help-table">
+      <h3>Authoritative Parquet & JSON Lakehouse Files</h3>
+      <div style="overflow-x:auto;">
+        <table class="help-grid-table">
           <thead>
             <tr>
-              <th>Artifact Name</th>
-              <th>GCS Object URI</th>
-              <th>Verified Metric</th>
-              <th>Format</th>
+              <th>File Name</th>
+              <th>GCS Storage Link</th>
+              <th>Verified Count / Details</th>
             </tr>
           </thead>
           <tbody>
             <tr>
               <td><strong>Data QA Manifest</strong></td>
-              <td><code>gs://nsw-transit-spatial-crafter/lake/nsw_data_qa_manifest.json</code></td>
+              <td><a href="https://storage.googleapis.com/nsw-transit-spatial-crafter/lake/nsw_data_qa_manifest.json" target="_blank">nsw_data_qa_manifest.json</a></td>
               <td>Complete statewide validation metadata</td>
-              <td>JSON</td>
             </tr>
             <tr>
               <td><strong>Statewide Routes Catalog</strong></td>
-              <td><code>gs://nsw-transit-spatial-crafter/lake/nsw_routes_catalog.json</code></td>
+              <td><a href="https://storage.googleapis.com/nsw-transit-spatial-crafter/lake/nsw_routes_catalog.json" target="_blank">nsw_routes_catalog.json</a></td>
               <td>10,266 verified routes across NSW</td>
-              <td>JSON</td>
             </tr>
             <tr>
-              <td><strong>Timetable Optimizations Matrix</strong></td>
-              <td><code>gs://nsw-transit-spatial-crafter/lake/nsw_timetable_optimizations.json</code></td>
+              <td><strong>Timetable Optimizations</strong></td>
+              <td><a href="https://storage.googleapis.com/nsw-transit-spatial-crafter/lake/nsw_timetable_optimizations.json" target="_blank">nsw_timetable_optimizations.json</a></td>
               <td>Full-day bidirectional shift solutions</td>
-              <td>JSON</td>
             </tr>
             <tr>
-              <td><strong>Parquet Lakehouse Tables</strong></td>
+              <td><strong>Parquet Lakehouse Tables (45)</strong></td>
               <td><code>gs://nsw-transit-spatial-crafter/lake/*.parquet</code></td>
-              <td>45 tables, 5,908,991 stop times, 171,277 stops</td>
-              <td>Apache Parquet (<code>PAR1</code>)</td>
+              <td>5,908,991 stop times, 171,277 stops (<code>PAR1</code> verified)</td>
             </tr>
           </tbody>
         </table>
-      </div>
-    </section>
-
-    <!-- Section 2: Architecture & Zero-Mock -->
-    <section id="section-architecture" class="help-section">
-      <h2><span>2.</span> System Architecture & Zero-Mock Standard</h2>
-      <p>
-        The platform enforces a strict <strong>Zero-Mock Standard</strong>: all calculations, coordinates, timetable departures, and Opal passenger patronage figures are derived directly from genuine Transport for NSW open data feeds. Synthetic arrays and simulated fallback schedules are prohibited by automated AST scanners.
-      </p>
-
-      <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 1.25rem; margin: 1rem 0; font-family: var(--font-mono); font-size: 0.85rem; color: #93c5fd; overflow-x: auto;">
-        [User Query] ➔ [1. Transit Query Parser] ➔ [2. Parameterized DuckDB SQL] ➔ [GCS Parquet Lakehouse]<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│<br>
-        [5. Recommendations & KPIs] 🠔 [4. Zero-Resource Solver] 🠔 [3. Synchronized Spatial Map]
-      </div>
-    </section>
-
-    <!-- Section 3: Planning Portal Walkthrough -->
-    <section id="section-portal" class="help-section">
-      <h2><span>3.</span> System 1: NSW Transit Crafter (Planning Portal Walkthrough)</h2>
-      <p>
-        The Planning Portal coordinates natural language queries, generates parameterized DuckDB SQL against GCS Parquet tables, renders interactive road-snapped spatial maps, and calculates zero-added-budget timetable adjustments.
-      </p>
-
-      <h3>Step 1: Natural Language Inquiry & Quick Scenario Chips</h3>
-      <div class="screenshot-card">
-        <div class="screenshot-img-wrap" onclick="openLightbox('screenshots/01_planning_portal_overview.png', 'Figure 1: Initial state of the Planning Portal with inquiry bar, quick scenario chips, and GCS Lakehouse badges.')">
-          <img src="screenshots/01_planning_portal_overview.png" alt="Planning Portal Overview" loading="lazy">
-        </div>
-        <div class="screenshot-caption">
-          <span class="caption-title">Figure 1: Planning Portal Initial Overview</span>
-          <span class="caption-hint">🔍 Click image to enlarge</span>
-        </div>
-      </div>
-      <p>
-        Enter any plain-English transit inquiry or click one of the quick scenario chips (e.g., <em>Route 99 Corridor</em>, <em>Route 275 Corridor</em>, <em>Carnes Hill to Liverpool Interchange</em>).
-      </p>
-
-      <h3>Dynamic Corridor Disambiguation</h3>
-      <div class="screenshot-card">
-        <div class="screenshot-img-wrap" onclick="openLightbox('screenshots/02_planning_portal_clarification.png', 'Figure 2: Dynamic Parameter Clarification card displaying operator choices when a route number operates in multiple NSW jurisdictions.')">
-          <img src="screenshots/02_planning_portal_clarification.png" alt="Parameter Clarification" loading="lazy">
-        </div>
-        <div class="screenshot-caption">
-          <span class="caption-title">Figure 2: Parameter Clarification & Corridor Disambiguation</span>
-          <span class="caption-hint">🔍 Click image to enlarge</span>
-        </div>
-      </div>
-      <p>
-        When a route number exists under multiple agencies (such as Route 99 under Busways Central Coast vs. Premier Illawarra), the system asks you to select your target operating corridor with active trip counts and destination terminals.
-      </p>
-
-      <h3>Step 2: Parameterized GCS SQL & Context Engine</h3>
-      <div class="screenshot-card">
-        <div class="screenshot-img-wrap" onclick="openLightbox('screenshots/03_planning_portal_sql_context.png', 'Figure 3: DuckDB SQL query targeting GCS Parquet tables alongside real Opal passenger demand and zero-budget checks.')">
-          <img src="screenshots/03_planning_portal_sql_context.png" alt="SQL and Context Engine" loading="lazy">
-        </div>
-        <div class="screenshot-caption">
-          <span class="caption-title">Figure 3: Parameterized DuckDB SQL & Context Layers</span>
-          <span class="caption-hint">🔍 Click image to enlarge</span>
-        </div>
-      </div>
-      <div class="code-box">
-        <button class="copy-btn" onclick="copyCode(this)">📋 Copy SQL</button>
-        <pre><code>SELECT stop_id, arrival_time, departure_time, trip_id 
-FROM read_parquet('gs://nsw-transit-spatial-crafter/lake/nsw_stop_times.parquet')
-WHERE route_short_name = '99'</code></pre>
-      </div>
-
-      <h3>Step 3: Synchronized Spatial Corridor Map (1km Catchment)</h3>
-      <div class="screenshot-card">
-        <div class="screenshot-img-wrap" onclick="openLightbox('screenshots/04_planning_portal_spatial_map.png', 'Figure 4: Leaflet spatial map displaying road-following route alignment in cyan/gold, 1km multi-modal catchment buffer, and connecting transit infrastructure.')">
-          <img src="screenshots/04_planning_portal_spatial_map.png" alt="Synchronized Spatial Map" loading="lazy">
-        </div>
-        <div class="screenshot-caption">
-          <span class="caption-title">Figure 4: Road-Snapped Spatial Map with 1km Infrastructure Catchment</span>
-          <span class="caption-hint">🔍 Click image to enlarge</span>
-        </div>
-      </div>
-
-      <h3>Step 4: Full-Day Bidirectional Timetable Adjustments</h3>
-      <div class="screenshot-card">
-        <div class="screenshot-img-wrap" onclick="openLightbox('screenshots/05_planning_portal_timetable_recommendations.png', 'Figure 5: Full-day bidirectional timetable recommendations table with KPI summary, suggested departure shifts, and inbound/outbound transfer buffers.')">
-          <img src="screenshots/05_planning_portal_timetable_recommendations.png" alt="Timetable Recommendations" loading="lazy">
-        </div>
-        <div class="screenshot-caption">
-          <span class="caption-title">Figure 5: Full-Day Bidirectional Timetable Recommendations Table</span>
-          <span class="caption-hint">🔍 Click image to enlarge</span>
-        </div>
-      </div>
-    </section>
-
-    <!-- Section 4: Data QA Hub -->
-    <section id="section-qa-hub" class="help-section">
-      <h2><span>4.</span> System 2: Data QA & Quality Gates Hub</h2>
-      <p>
-        The Data QA Hub provides complete auditing into the data lakehouse, verifying that all 10,266 routes, 171,277 stops, and 45 Parquet tables meet strict zero-mock standards.
-      </p>
-
-      <h3>Executive Overview & Verified Statewide KPIs</h3>
-      <div class="screenshot-card">
-        <div class="screenshot-img-wrap" onclick="openLightbox('screenshots/06_qa_hub_overview_kpis.png', 'Figure 6: Data QA Hub executive header displaying 6 statewide verification KPIs and the 4-point Ground-Truth Verification Guide.')">
-          <img src="screenshots/06_qa_hub_overview_kpis.png" alt="QA Hub Overview KPIs" loading="lazy">
-        </div>
-        <div class="screenshot-caption">
-          <span class="caption-title">Figure 6: Statewide Verification KPIs & Verification Guide</span>
-          <span class="caption-hint">🔍 Click image to enlarge</span>
-        </div>
-      </div>
-
-      <h3>Tab 1: GeoLibre Spatial Map Inspector</h3>
-      <div class="screenshot-card">
-        <div class="screenshot-img-wrap" onclick="openLightbox('screenshots/07_qa_hub_spatial_map_inspector.png', 'Figure 7: GeoLibre Map Inspector with Route 880 loaded, showing dual-symbology stops, 1km buffer, layer controls, and bottom table dock.')">
-          <img src="screenshots/07_qa_hub_spatial_map_inspector.png" alt="Spatial Map Inspector" loading="lazy">
-        </div>
-        <div class="screenshot-caption">
-          <span class="caption-title">Figure 7: GeoLibre Spatial Map Inspector (Route 880)</span>
-          <span class="caption-hint">🔍 Click image to enlarge</span>
-        </div>
-      </div>
-
-      <h3>Basemap Selector & Real-Time Opacity Slider</h3>
-      <div class="screenshot-card">
-        <div class="screenshot-img-wrap" onclick="openLightbox('screenshots/08_qa_hub_basemap_selector.png', 'Figure 8: Basemap Popover card allowing on-the-fly switching between OpenStreetMap Standard, Topo / Terrain, and Esri Satellite Imagery, with real-time opacity slider.')">
-          <img src="screenshots/08_qa_hub_basemap_selector.png" alt="Basemap Selector" loading="lazy">
-        </div>
-        <div class="screenshot-caption">
-          <span class="caption-title">Figure 8: Basemap Popover & Cartographic Opacity Slider</span>
-          <span class="caption-hint">🔍 Click image to enlarge</span>
-        </div>
-      </div>
-
-      <h3>Tab 2: Searchable Route Explorer (10,266 Routes)</h3>
-      <div class="screenshot-card">
-        <div class="screenshot-img-wrap" onclick="openLightbox('screenshots/09_qa_hub_route_explorer.png', 'Figure 9: Searchable Route Explorer filtered for Hornsby, displaying matching routes across Regional Coaches and CDC NSW Hillsbus.')">
-          <img src="screenshots/09_qa_hub_route_explorer.png" alt="Route Explorer" loading="lazy">
-        </div>
-        <div class="screenshot-caption">
-          <span class="caption-title">Figure 9: Searchable Route Explorer Filtered for Hornsby</span>
-          <span class="caption-hint">🔍 Click image to enlarge</span>
-        </div>
-      </div>
-
-      <h3>Instant Corridor Mapping Modal</h3>
-      <div class="screenshot-card">
-        <div class="screenshot-img-wrap" onclick="openLightbox('screenshots/10_qa_hub_disambiguation_modal.png', 'Figure 10: Automatic disambiguation and corridor mapping when selecting a transit route.')">
-          <img src="screenshots/10_qa_hub_disambiguation_modal.png" alt="Disambiguation Modal" loading="lazy">
-        </div>
-        <div class="screenshot-caption">
-          <span class="caption-title">Figure 10: Route Disambiguation & Spatial Alignment Modal</span>
-          <span class="caption-hint">🔍 Click image to enlarge</span>
-        </div>
-      </div>
-
-      <h3>Tab 3: Automated Quality Gates (8/8 Passed)</h3>
-      <div class="screenshot-card">
-        <div class="screenshot-img-wrap" onclick="openLightbox('screenshots/11_qa_hub_quality_gates.png', 'Figure 11: Automated pre-flight quality gates asserting 100% compliance across endpoint whitelisting, spatial bounds, magic bytes, and zero-mock AST scanning.')">
-          <img src="screenshots/11_qa_hub_quality_gates.png" alt="Automated Quality Gates" loading="lazy">
-        </div>
-        <div class="screenshot-caption">
-          <span class="caption-title">Figure 11: 8/8 Automated Quality Gates</span>
-          <span class="caption-hint">🔍 Click image to enlarge</span>
-        </div>
-      </div>
-
-      <h3>Tab 4: Lakehouse Parquet Tables (45 Tables)</h3>
-      <div class="screenshot-card">
-        <div class="screenshot-img-wrap" onclick="openLightbox('screenshots/12_qa_hub_parquet_tables.png', 'Figure 12: Inventory of the 45 Parquet tables in gs://nsw-transit-spatial-crafter/lake/ with row counts, file sizes, primary keys, and PAR1 validation.')">
-          <img src="screenshots/12_qa_hub_parquet_tables.png" alt="Parquet Tables" loading="lazy">
-        </div>
-        <div class="screenshot-caption">
-          <span class="caption-title">Figure 12: 45 Parquet Tables Inventory</span>
-          <span class="caption-hint">🔍 Click image to enlarge</span>
-        </div>
-      </div>
-
-      <h3>Tab 5: Authoritative Feeds Lineage & Provenance</h3>
-      <div class="screenshot-card">
-        <div class="screenshot-img-wrap" onclick="openLightbox('screenshots/13_qa_hub_feeds_lineage.png', 'Figure 13: Feed lineage and refresh cadence documentation for Transport for NSW Open Data feeds.')">
-          <img src="screenshots/13_qa_hub_feeds_lineage.png" alt="Feeds Lineage" loading="lazy">
-        </div>
-        <div class="screenshot-caption">
-          <span class="caption-title">Figure 13: Authoritative Feeds Lineage & Provenance</span>
-          <span class="caption-hint">🔍 Click image to enlarge</span>
-        </div>
-      </div>
-
-      <h3>Tab 6: Zero-Mock Audit Certificate</h3>
-      <div class="screenshot-card">
-        <div class="screenshot-img-wrap" onclick="openLightbox('screenshots/14_qa_hub_audit_certificate.png', 'Figure 14: Formal Zero-Mock Data Integrity Certificate asserting 0 violations across AST scanners, unit test suites, and Parquet binary contracts.')">
-          <img src="screenshots/14_qa_hub_audit_certificate.png" alt="Audit Certificate" loading="lazy">
-        </div>
-        <div class="screenshot-caption">
-          <span class="caption-title">Figure 14: Zero-Mock Audit Certificate</span>
-          <span class="caption-hint">🔍 Click image to enlarge</span>
-        </div>
-      </div>
-    </section>
-
-    <!-- Section 5: CLI & Pytest -->
-    <section id="section-cli" class="help-section">
-      <h2><span>5.</span> Command-Line Interface (CLI) Execution & Tests</h2>
-      <p>
-        Execute automated batch query optimization and test suites from PowerShell or bash:
-      </p>
-
-      <div class="code-box">
-        <button class="copy-btn" onclick="copyCode(this)">📋 Copy Command</button>
-        <pre><code># Run Natural Language Query Orchestration
-python -m src.Orchestration.query_orchestrator \
-  --query "With the same number of buses and trains, how can the route from Maitland to Newcastle University be optimized?" \
-  --clean-local
-
-# Run All 31 Anti-Mock & GCS Integration Tests
-.venv\Scripts\pytest -v</code></pre>
-      </div>
-
-      <div class="code-box">
-        <button class="copy-btn" onclick="copyCode(this)">📋 Copy Command</button>
-        <pre><code># Deploy Web Portals and Documentation to Google Cloud Storage
-python scripts/deploy_portal_to_gcs.py</code></pre>
-      </div>
-    </section>
-
-    <!-- Section 6: FAQ -->
-    <section id="section-faq" class="help-section">
-      <h2><span>6.</span> Frequently Asked Questions (FAQ)</h2>
-      
-      <div class="faq-item">
-        <div class="faq-q" onclick="toggleFaq(this)">
-          <span>Why does the system run with zero idle compute costs?</span>
-          <span>▼</span>
-        </div>
-        <div class="faq-a">
-          The web interfaces are compiled as client-side applications executing in the user's browser. Data artifacts are stored as static JSON and Parquet objects in Google Cloud Storage with global CDN edge caching. No dedicated server or container needs to run while idle.
-        </div>
-      </div>
-
-      <div class="faq-item">
-        <div class="faq-q" onclick="toggleFaq(this)">
-          <span>How does the system ensure zero added fleet budget?</span>
-          <span>▼</span>
-        </div>
-        <div class="faq-a">
-          The mathematical solver enforces a hard Peak Vehicle Requirement (PVR) constraint: ∑ Vehicles(opt) ≤ ∑ Vehicles(base). Departure shifts only rearrange vehicle start times to align with connecting train or ferry arrivals; total vehicle service hours and driver shift duty hours remain strictly invariant.
-        </div>
-      </div>
-
-      <div class="faq-item">
-        <div class="faq-q" onclick="toggleFaq(this)">
-          <span>Can I inspect routes not shown in the quick scenario chips?</span>
-          <span>▼</span>
-        </div>
-        <div class="faq-a">
-          Yes. The system indexes all 10,266 routes operating across New South Wales. Enter any route number (e.g., 880, 333, B1, T1, 275) into the search bar in the Planning Portal or the Data QA Hub to load that corridor's live road-following geometry and schedule.
-        </div>
       </div>
     </section>
 
   </div>
 
   <!-- Interactive Lightbox Modal -->
-  <div id="lightboxModal" class="lightbox-modal" onclick="closeLightbox(event)">
-    <div class="lightbox-close" onclick="closeLightbox(event)">&times;</div>
-    <img id="lightboxImg" class="lightbox-content" src="" alt="Enlarged Screenshot">
-    <div id="lightboxCaption" class="lightbox-caption"></div>
+  <div id="imgModal" class="lightbox" onclick="hidePic(event)">
+    <div class="lightbox-x" onclick="hidePic(event)">&times;</div>
+    <img id="modalImg" src="" alt="Enlarged screenshot">
+    <div id="modalCap" class="lightbox-text"></div>
   </div>
 
   <script>
-    function openLightbox(src, caption) {
-      const modal = document.getElementById('lightboxModal');
-      const img = document.getElementById('lightboxImg');
-      const cap = document.getElementById('lightboxCaption');
-      img.src = src;
-      cap.textContent = caption || '';
-      modal.classList.add('active');
+    function showPic(src, caption) {
+      document.getElementById('modalImg').src = src;
+      document.getElementById('modalCap').textContent = caption || '';
+      document.getElementById('imgModal').classList.add('active');
     }
-
-    function closeLightbox(e) {
-      if (e.target.id === 'lightboxModal' || e.target.classList.contains('lightbox-close')) {
-        document.getElementById('lightboxModal').classList.remove('active');
+    function hidePic(e) {
+      if (e.target.id === 'imgModal' || e.target.classList.contains('lightbox-x')) {
+        document.getElementById('imgModal').classList.remove('active');
       }
     }
-
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        document.getElementById('lightboxModal').classList.remove('active');
-      }
+      if (e.key === 'Escape') document.getElementById('imgModal').classList.remove('active');
     });
-
-    function toggleFaq(header) {
-      const body = header.nextElementSibling;
-      const arrow = header.querySelector('span:last-child');
-      if (body.style.display === 'none') {
-        body.style.display = 'block';
-        arrow.textContent = '▲';
-      } else {
-        body.style.display = 'none';
-        arrow.textContent = '▼';
-      }
-    }
-
-    function copyCode(btn) {
-      const pre = btn.nextElementSibling;
-      const text = pre.innerText;
-      navigator.clipboard.writeText(text).then(() => {
+    function copySnippet(btn) {
+      const code = btn.nextElementSibling.innerText;
+      navigator.clipboard.writeText(code).then(() => {
         const orig = btn.innerText;
         btn.innerText = '✅ Copied!';
         setTimeout(() => { btn.innerText = orig; }, 2000);
