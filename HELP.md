@@ -1,8 +1,8 @@
-# NSW Transit Spatial Crafter — Practical User Guide (ELI10)
+# NSW Transit Spatial Crafter — Practical User Guide
 
 Welcome to the **NSW Public Transport Crafter** user guide! 
 
-> **🧒 ELI10 (Explain Like I'm 10):**
+> **💡 The Everyday Commuter Problem:**
 > Have you ever hopped off a bus at a train station, only to watch your train pulling away right in front of you? That's the worst!
 > 
 > Imagine you live in an area with just one bus route. Every morning, your bus arrives at the train station **5 minutes after the all-stops train has already left**, so you're stuck waiting a whole hour on a cold platform for the next train!
@@ -203,7 +203,7 @@ Hosted on Google Cloud Storage with global CDN distribution:
 
 | Application | GCS Public URL | Description |
 | :--- | :--- | :--- |
-| **Interactive User Guide (ELI10)** | [https://storage.googleapis.com/nsw-transit-spatial-crafter/help.html](https://storage.googleapis.com/nsw-transit-spatial-crafter/help.html) | Practical manual with visual screen grabs and walkthroughs. |
+| **Interactive User Guide** | [https://storage.googleapis.com/nsw-transit-spatial-crafter/help.html](https://storage.googleapis.com/nsw-transit-spatial-crafter/help.html) | Practical manual with visual screen grabs and walkthroughs. |
 | **NSW Transit Crafter (Planning Portal)** | [https://storage.googleapis.com/nsw-transit-spatial-crafter/index.html](https://storage.googleapis.com/nsw-transit-spatial-crafter/index.html) | Natural language query, road maps, and timetable solver. |
 | **Data QA & Quality Gates Hub** | [https://storage.googleapis.com/nsw-transit-spatial-crafter/data_qa.html](https://storage.googleapis.com/nsw-transit-spatial-crafter/data_qa.html) | 10,266 routes explorer, 8 quality gates, and 45 Parquet tables. |
 | **GeoLibre Spatial Map Inspector** | [https://storage.googleapis.com/nsw-transit-spatial-crafter/geolibre_qa_inspect.html](https://storage.googleapis.com/nsw-transit-spatial-crafter/geolibre_qa_inspect.html) | Standalone WebGL map viewer with layer and table dock controls. |

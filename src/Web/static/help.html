@@ -15,7 +15,7 @@
 
   <style>
     .help-wrap { max-width: 1100px; margin: 0 auto; padding: 2rem 1.25rem 5rem; }
-    .hero-eli10 {
+    .hero-intro {
       background: linear-gradient(135deg, rgba(18, 24, 41, 0.95), rgba(15, 23, 42, 0.9));
       border: 1px solid var(--border-accent);
       border-radius: 12px;
@@ -23,9 +23,9 @@
       margin-bottom: 2rem;
       box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
     }
-    .hero-eli10 h1 { font-family: var(--font-heading); font-size: 2rem; font-weight: 800; color: #fff; margin-bottom: 0.75rem; }
-    .hero-eli10 h1 span { color: var(--accent-cyan); }
-    .eli10-bubble {
+    .hero-intro h1 { font-family: var(--font-heading); font-size: 2rem; font-weight: 800; color: #fff; margin-bottom: 0.75rem; }
+    .hero-intro h1 span { color: var(--accent-cyan); }
+    .intro-bubble {
       background: rgba(0, 229, 255, 0.08);
       border-left: 4px solid var(--accent-cyan);
       border-radius: 0 8px 8px 0;
@@ -241,16 +241,16 @@
 
   <div class="help-wrap">
     
-    <!-- Hero / ELI10 Intro -->
-    <div class="hero-eli10">
-      <h1>How to Use NSW Transit Crafter <span>(ELI10 Guide)</span></h1>
+    <!-- Hero Intro -->
+    <div class="hero-intro">
+      <h1>How to Use NSW Transit Crafter <span>(User Guide)</span></h1>
       <p>
         Welcome! Have you ever taken a bus to a train station, only to watch the train pull away right as you stepped off? 
         That's the worst! <strong>NSW Transit Crafter</strong> is a smart map and timetable optimization platform that fixes missed connections across New South Wales without needing any extra taxpayer dollars.
       </p>
 
-      <div class="eli10-bubble">
-        🧒 <strong>ELI10 (Explain Like I'm 10):</strong> Imagine you live in a suburb with just one bus route. Every morning, your bus arrives at the train station <strong>5 minutes after the all-stops train has already departed</strong>. That means you're stuck waiting a whole hour on the platform for the next train!
+      <div class="intro-bubble">
+        💡 <strong>The Everyday Problem:</strong> Imagine you live in a suburb with just one bus route. Every morning, your bus arrives at the train station <strong>5 minutes after the all-stops train has already departed</strong>. That means you're stuck waiting a whole hour on the platform for the next train!
         <br><br>
         Now imagine: <strong>what if the bus simply left your neighborhood 8 minutes earlier?</strong> You would arrive with plenty of time to walk to the platform, hop straight onto the train, and save nearly an hour every single day. The bus company doesn't need to buy a second bus or hire an extra driver—we just shift the departure time slightly so the bus and train actually talk to each other!
       </div>
@@ -456,8 +456,8 @@ python -m src.Orchestration.query_orchestrator \
         Now that you know how to use the system, here is how the magic happens under the hood!
       </p>
 
-      <div class="eli10-bubble">
-        🧒 <strong>ELI10 (Zero-Mock Defense):</strong> In computer programming, people sometimes cheat by making up "fake data" (like rolling a pair of dice to generate random fake bus arrival times). <strong>We strictly forbid this.</strong> Our automated robot scanners inspect every line of code to prove 100% of the numbers come from Transport for NSW government open data feeds!
+      <div class="intro-bubble">
+        🛡️ <strong>Zero Fake Data Guarantee:</strong> In computer modeling, teams sometimes make up numbers (like rolling dice to generate simulated arrival times). <strong>We strictly forbid this.</strong> Our automated scanners inspect every line of code to prove 100% of the numbers come from Transport for NSW government open data feeds!
       </div>
 
       <div class="shot-box">
@@ -515,7 +515,7 @@ python -m src.Orchestration.query_orchestrator \
             <tr>
               <td><strong>Interactive User Guide (This Page)</strong></td>
               <td><a href="https://storage.googleapis.com/nsw-transit-spatial-crafter/help.html" target="_blank">help.html</a></td>
-              <td>Step-by-step ELI10 manual with high-resolution visual screen grabs.</td>
+              <td>Step-by-step practical manual with high-resolution visual screen grabs.</td>
             </tr>
           </tbody>
         </table>
