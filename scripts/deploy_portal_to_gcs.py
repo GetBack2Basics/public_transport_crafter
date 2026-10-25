@@ -39,13 +39,24 @@ def deploy_portal():
 
     # Upload data_qa.html
     qa_file = STATIC_DIR / "data_qa.html"
-    upload_file_to_gcs(qa_file, "data_qa.html", content_type="text/html; charset=utf-8", cache_control="public, max-age=60")
-    upload_file_to_gcs(qa_file, "qa.html", content_type="text/html; charset=utf-8", cache_control="public, max-age=60")
+    upload_file_to_gcs(qa_file, "data_qa.html", content_type="text/html; charset=utf-8", cache_control="no-cache, max-age=0")
+    upload_file_to_gcs(qa_file, "qa.html", content_type="text/html; charset=utf-8", cache_control="no-cache, max-age=0")
 
     # Upload data_qa.js
     qa_js_file = STATIC_DIR / "data_qa.js"
-    upload_file_to_gcs(qa_js_file, "data_qa.js", content_type="application/javascript; charset=utf-8", cache_control="public, max-age=60")
-    upload_file_to_gcs(qa_js_file, "static/data_qa.js", content_type="application/javascript; charset=utf-8", cache_control="public, max-age=60")
+    upload_file_to_gcs(qa_js_file, "data_qa.js", content_type="application/javascript; charset=utf-8", cache_control="no-cache, max-age=0")
+    upload_file_to_gcs(qa_js_file, "static/data_qa.js", content_type="application/javascript; charset=utf-8", cache_control="no-cache, max-age=0")
+
+    # Upload GeoLibre Map Inspector (standalone and docs/qa)
+    inspect_file = STATIC_DIR / "geolibre_qa_inspect.html"
+    if inspect_file.exists():
+        upload_file_to_gcs(inspect_file, "geolibre_qa_inspect.html", content_type="text/html; charset=utf-8", cache_control="no-cache, max-age=0")
+
+    inspect_docs_file = STATIC_DIR / "docs" / "qa" / "geolibre_qa_inspect.html"
+    if inspect_docs_file.exists():
+        upload_file_to_gcs(inspect_docs_file, "docs/qa/geolibre_qa_inspect.html", content_type="text/html; charset=utf-8", cache_control="no-cache, max-age=0")
+    elif inspect_file.exists():
+        upload_file_to_gcs(inspect_file, "docs/qa/geolibre_qa_inspect.html", content_type="text/html; charset=utf-8", cache_control="no-cache, max-age=0")
 
     # Upload Data QA Manifest & Routes Catalog
     manifest_file = BASE_DIR / "data" / "lake" / "nsw_data_qa_manifest.json"
@@ -60,9 +71,22 @@ def deploy_portal():
     if index_file.exists():
         upload_file_to_gcs(index_file, "lake/nsw_route_lookup_index.json", content_type="application/json", cache_control="public, max-age=300")
 
+    opts_file = BASE_DIR / "data" / "lake" / "nsw_timetable_optimizations.json"
+    if opts_file.exists():
+        upload_file_to_gcs(opts_file, "lake/nsw_timetable_optimizations.json", content_type="application/json", cache_control="no-cache, max-age=0")
+
+    active_geoms_file = BASE_DIR / "data" / "lake" / "nsw_active_route_geometries.json"
+    if active_geoms_file.exists():
+        upload_file_to_gcs(active_geoms_file, "lake/nsw_active_route_geometries.json", content_type="application/json", cache_control="public, max-age=300")
+
+    interchanges_file = BASE_DIR / "data" / "lake" / "nsw_interchanges.json"
+    if interchanges_file.exists():
+        upload_file_to_gcs(interchanges_file, "lake/nsw_interchanges.json", content_type="application/json", cache_control="public, max-age=300")
+
     print(f"\nSuccessfully deployed to GCS!")
     print(f"Planning Portal URL: https://storage.googleapis.com/{bucket}/index.html")
     print(f"Data QA Hub URL:     https://storage.googleapis.com/{bucket}/data_qa.html")
+    print(f"GeoLibre Inspect:    https://storage.googleapis.com/{bucket}/geolibre_qa_inspect.html")
     return url1
 
 

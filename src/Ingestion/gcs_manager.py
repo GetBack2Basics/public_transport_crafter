@@ -26,6 +26,18 @@ DEFAULT_BUCKET = os.environ.get("GCS_BUCKET", "nsw-transit-spatial-crafter")
 DATA_DIR = BASE_DIR / "data"
 
 
+DEFAULT_PROJECT = os.environ.get("GOOGLE_CLOUD_PROJECT") or os.environ.get("GCP_PROJECT") or "biblestudy-crafter"
+
+
+def _get_storage_client():
+    """Returns an authenticated google.cloud.storage.Client with resolved project."""
+    from google.cloud import storage
+    try:
+        return storage.Client(project=DEFAULT_PROJECT)
+    except Exception:
+        return storage.Client()
+
+
 def get_active_gcs_bucket() -> str:
     """Returns the configured GCS bucket name."""
     return os.environ.get("GCS_BUCKET", DEFAULT_BUCKET)
@@ -55,8 +67,7 @@ def upload_file_to_gcs(
 
     # Use Python google.cloud.storage SDK directly
     try:
-        from google.cloud import storage
-        client = storage.Client()
+        client = _get_storage_client()
         b = client.bucket(bucket)
         blob = b.blob(gcs_blob_path.lstrip("/"))
         if content_type:
@@ -95,8 +106,7 @@ def upload_directory_to_gcs(
         return
 
     try:
-        from google.cloud import storage
-        client = storage.Client()
+        client = _get_storage_client()
         b = client.bucket(bucket)
         for item in local_dir.rglob("*"):
             if item.is_file():
@@ -135,8 +145,7 @@ def download_blob_from_gcs(
     local_destination.parent.mkdir(parents=True, exist_ok=True)
 
     try:
-        from google.cloud import storage
-        client = storage.Client()
+        client = _get_storage_client()
         b = client.bucket(bucket)
         blob = b.blob(gcs_blob_path.lstrip("/"))
         if blob.exists():
@@ -175,8 +184,7 @@ def list_gcs_files(prefix: str = "", bucket_name: Optional[str] = None) -> List[
     """Lists blob names in the active GCS bucket matching an optional prefix."""
     bucket = bucket_name or get_active_gcs_bucket()
     try:
-        from google.cloud import storage
-        client = storage.Client()
+        client = _get_storage_client()
         b = client.bucket(bucket)
         blobs = b.list_blobs(prefix=prefix)
         return [blob.name for blob in blobs]

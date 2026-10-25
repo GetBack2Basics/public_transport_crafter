@@ -25,6 +25,7 @@ data/reports/
 *.html
 !runner/templates/*.html
 !src/Web/static/*.html
+!src/Web/static/**/*.html
 
 # Secrets & Environment variables
 .env

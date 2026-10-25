@@ -42,6 +42,7 @@ def run_interactive_pipeline(
     print("=" * 80)
 
     clarifier = IntentClarifier()
+    engine = GcsQueryEngine()
 
     # Step 1: Intent Analysis & Clarification
     if query_str and (not route_a or not route_b):
@@ -56,29 +57,37 @@ def run_interactive_pipeline(
                 for opt_idx, opt in enumerate(item["options"], 1):
                     print(f"    [{opt_idx}] {opt}")
 
-            # For scripted/automated runs, automatically select recommended defaults
-            print("\n-> Applying recommended context: Lake Macquarie / Hunter Valley corridor.")
-
         # Resolve routes from analysis
         routes = analysis["detected_routes"]
         if len(routes) >= 2:
-            route_a = routes[0]
-            route_b = routes[1]
+            route_a = route_a or routes[0]
+            route_b = route_b or routes[1]
         elif len(routes) == 1:
-            route_a = routes[0]
-            # Infer connecting route from context
+            route_a = route_a or routes[0]
+            # Infer connecting route from context if present
             q_lower = query_str.lower()
-            if "train" in q_lower or "station" in q_lower:
-                route_b = "CCN"
-            elif "270" in q_lower:
-                route_b = "270"
-            elif "269" in q_lower:
-                route_b = "269"
-            else:
-                route_b = "CCN"
-        else:
-            route_a = "275"
-            route_b = "CCN"
+            if "metro" in q_lower or "m1" in q_lower:
+                route_b = route_b or "M1"
+            elif "ccn" in q_lower:
+                route_b = route_b or "CCN"
+            elif "hun" in q_lower:
+                route_b = route_b or "HUN"
+            elif "bmt" in q_lower:
+                route_b = route_b or "BMT"
+            elif "sco" in q_lower:
+                route_b = route_b or "SCO"
+            elif "t1" in q_lower:
+                route_b = route_b or "T1"
+            elif "train" in q_lower or "station" in q_lower:
+                # Dynamically infer rail line from route's region or interchange
+                if analysis.get("detected_region") == "hunter":
+                    route_b = route_b or "CCN"
+                elif analysis.get("detected_region") == "illawarra":
+                    route_b = route_b or "SCO"
+                elif analysis.get("detected_region") == "blue_mountains":
+                    route_b = route_b or "BMT"
+                else:
+                    route_b = route_b or "T1"
 
         if not interchange and analysis["detected_stations"]:
             interchange = analysis["detected_stations"][0]
@@ -86,18 +95,53 @@ def run_interactive_pipeline(
         min_buffer = analysis["transfer_window"]["min_minutes"]
         max_buffer = analysis["transfer_window"]["max_minutes"]
 
-        # If Hunter context detected, set agency for Lake Macquarie
-        if analysis["detected_region"] == "hunter" and route_a in ["275", "270", "269"]:
-            agency_a = "2450"  # CDC Hunter / Hunter Valley Buses
+    # Dynamic route resolution if route_a specified
+    if route_a:
+        r_key = route_a.lower()
+        if clarifier.route_index:
+            if r_key not in clarifier.route_index:
+                nearest = clarifier.find_nearest_routes(route_a, 5)
+                print(f"\n[NOTICE] Route '{route_a}' was not directly matched in the 10,266 routes catalog.")
+                if nearest:
+                    print(f"Nearest active operating routes in NSW: {', '.join(nearest)}")
+                    route_a = nearest[0]
+                    print(f"-> Proceeding with nearest operating route: Route {route_a}")
+            
+            # Lookup agency dynamically
+            r_info = clarifier.route_index.get(route_a.lower())
+            if r_info and r_info.get("corridors"):
+                first_corr = r_info["corridors"][0]
+                agency_a = agency_a or first_corr.get("agency_id")
+                # If interchange not specified, extract hub from corridor long name only if it matches a hub keyword
+                if not interchange:
+                    long_n = first_corr.get("route_long_name", "")
+                    for term in ["Station", "Interchange", "Wharf"]:
+                        if term.lower() in long_n.lower():
+                            for part in long_n.replace(" via ", " to ").split(" to "):
+                                if term.lower() in part.lower():
+                                    interchange = part.strip()
+                                    break
+                            if interchange:
+                                break
+    else:
+        # If no route provided at all, dynamically select the top active transit route in the lakehouse
+        if clarifier.route_index:
+            sorted_routes = sorted(
+                clarifier.route_index.values(),
+                key=lambda x: sum(c.get("trip_count", 0) for c in x.get("corridors", [])),
+                reverse=True
+            )
+            top_route = sorted_routes[0]["route_short_name"]
+            print(f"\n[INFO] No route specified. Dynamically selecting top active NSW transit corridor: Route {top_route}")
+            route_a = top_route
+        else:
+            route_a = "333"
 
-    # Fallback defaults
-    route_a = route_a or "275"
-    route_b = route_b or "CCN"
-    interchange = interchange or "Morisset"
+    # Dynamic fallback for connecting route
+    route_b = route_b or "T1"
 
     # Step 2: Initialize Engine & Context Layers
-    engine = GcsQueryEngine()
-    patronage = engine.get_station_patronage(interchange)
+    patronage = engine.get_station_patronage(interchange) if interchange else None
     congestion = engine.get_corridor_congestion(route_a)
 
     buffer_adj = 0
@@ -183,9 +227,9 @@ def run_interactive_pipeline(
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Query and Optimize NSW Public Transport on GCS")
     parser.add_argument("query", nargs="?", type=str, help="Natural language query string")
-    parser.add_argument("--route1", type=str, help="Primary route to optimize (e.g. 275)")
-    parser.add_argument("--route2", type=str, help="Connecting route/train line (e.g. CCN, 270)")
-    parser.add_argument("--interchange", type=str, help="Interchange stop/station name (e.g. Morisset, Toronto)")
+    parser.add_argument("-r", "--route", "--route1", dest="route1", type=str, help="Primary route to optimize (e.g. 880, 275, 99, 333, B1, T1)")
+    parser.add_argument("-c", "--route-b", "--route2", dest="route2", type=str, help="Connecting route/train line (e.g. T1, CCN, 270, M1)")
+    parser.add_argument("-i", "--interchange", type=str, help="Interchange stop/station name (e.g. Central, Morisset, Liverpool, Chatswood)")
     parser.add_argument("--min-buf", type=int, default=5, help="Minimum transfer buffer minutes (default: 5)")
     parser.add_argument("--max-buf", type=int, default=15, help="Maximum transfer buffer minutes (default: 15)")
 

@@ -164,10 +164,22 @@ class IntentClarifier:
 
         # 1. Route validation
         if len(routes) == 0:
+            sample_routes = []
+            if self.route_index:
+                # Pick top active routes by trip count
+                sorted_routes = sorted(
+                    self.route_index.values(),
+                    key=lambda x: sum(c.get("trip_count", 0) for c in x.get("corridors", [])),
+                    reverse=True
+                )
+                sample_routes = [f"Route {r['route_short_name']}" for r in sorted_routes[:5]]
+            if not sample_routes:
+                sample_routes = ["Route 333", "Route B1", "Route T1", "Route 275", "Route 852"]
+
             clarifications_needed.append({
                 "parameter": "routes",
                 "question": "Which specific bus route or train line would you like to optimize?",
-                "options": ["Route 275 (Lake Macquarie)", "Route 99 (Helensburgh or Lake Haven)", "Route 852 (Carnes Hill to Liverpool)", "Route 181 (Maitland)"]
+                "options": sample_routes
             })
         else:
             for r in routes:
@@ -204,26 +216,57 @@ class IntentClarifier:
 
         # 2. Station / Interchange validation
         if len(stations) == 0 and not any(rs.get("exists") is False for rs in route_status.values()):
+            # Dynamically derive candidate interchange options from detected route corridors if available
+            interchange_options = []
+            if routes and self.route_index:
+                first_r = routes[0].lower()
+                if first_r in self.route_index:
+                    for c in self.route_index[first_r].get("corridors", []):
+                        long_n = c.get("route_long_name", "")
+                        if " to " in long_n:
+                            parts = long_n.split(" to ")
+                            for p in parts:
+                                p_clean = p.split(" via ")[0].strip()
+                                if p_clean and f"{p_clean} Interchange" not in interchange_options:
+                                    interchange_options.append(f"{p_clean} Interchange")
+            if not interchange_options:
+                interchange_options = ["Major Connecting Station Interchange", "All shared stops along the route"]
+            else:
+                interchange_options.append("All shared stops along the route")
+
             clarifications_needed.append({
                 "parameter": "interchange",
                 "question": "At which station or interchange should the transfer be synchronized?",
-                "options": [
-                    "Morisset Station Interchange",
-                    "Fassifern Station Interchange",
-                    "Old Toronto Station Interchange (Victory Parade)",
-                    "All shared stops along the route"
-                ]
+                "options": interchange_options[:5]
             })
 
         window_specified = bool(re.search(r"\d{1,2}\s*(?:-|to)\s*\d{1,2}\s*min", q_lower))
         is_complete = len(clarifications_needed) == 0
+
+        # Infer region dynamically from route corridors if not explicitly mentioned
+        if not detected_region and routes and self.route_index:
+            first_r = routes[0].lower()
+            if first_r in self.route_index:
+                corrs = self.route_index[first_r].get("corridors", [])
+                if corrs:
+                    agency = corrs[0].get("agency_name", "").lower()
+                    if "hunter" in agency or "newcastle" in agency:
+                        detected_region = "hunter"
+                    elif "illawarra" in agency or "wollongong" in agency:
+                        detected_region = "illawarra"
+                    elif "blue mountains" in agency:
+                        detected_region = "blue_mountains"
+                    elif "central coast" in agency:
+                        detected_region = "central_coast"
+                    elif "sydney" in agency or "transit systems" in agency or "interline" in agency or "forest" in agency or "metro" in agency:
+                        detected_region = "sydney"
 
         return {
             "raw_query": q,
             "detected_routes": routes,
             "route_status": route_status,
             "detected_stations": stations,
-            "detected_region": detected_region or "hunter",
+            "detected_region": detected_region or "statewide",
             "transfer_window": {"min_minutes": min_buf, "max_minutes": max_buf, "explicit": window_specified},
             "is_complete": is_complete,
             "clarifications_needed": clarifications_needed

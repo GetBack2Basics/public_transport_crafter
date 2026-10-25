@@ -56,10 +56,6 @@ routes_df = con.execute("""
     LEFT JOIN 'data/lake/nsw_trips.parquet' t ON r.route_id = t.route_id
     GROUP BY r.route_id, r.route_short_name, r.route_long_name, r.route_type, r.agency_id
     ORDER BY 
-        CASE 
-            WHEN r.route_short_name IN ('275', '99', '852', '181', '270', 'CCN', 'HUN', 'SCO', 'M1', 'T1', 'B1') THEN 0 
-            ELSE 1 
-        END,
         trip_count DESC,
         r.route_short_name
 """).df()
