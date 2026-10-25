@@ -595,24 +595,34 @@ function showRouteConflictModal(cleanCode, candidates) {
     const card = document.createElement("div");
     card.className = "corridor-choice-card";
 
-    let icon = "🚌";
-    let badgeBg = "rgba(59, 130, 246, 0.15)";
-    let badgeColor = "#93c5fd";
-    let badgeBorder = "rgba(59, 130, 246, 0.35)";
+    let roundelClass = "tfnsw-bus";
+    let roundelLetter = "B";
+    if (cand.mode && (cand.mode.toLowerCase().includes("train") || cand.mode.toLowerCase().includes("rail"))) {
+      roundelClass = "tfnsw-train"; roundelLetter = "T";
+    } else if (cand.mode && cand.mode.toLowerCase().includes("metro")) {
+      roundelClass = "tfnsw-metro"; roundelLetter = "M";
+    } else if (cand.mode && cand.mode.toLowerCase().includes("ferry")) {
+      roundelClass = "tfnsw-ferry"; roundelLetter = "F";
+    } else if (cand.mode && cand.mode.toLowerCase().includes("coach")) {
+      roundelClass = "tfnsw-coach"; roundelLetter = "C";
+    } else if (cand.mode && cand.mode.toLowerCase().includes("light rail")) {
+      roundelClass = "tfnsw-lightrail"; roundelLetter = "L";
+    }
+
+    let badgeBg = "rgba(0, 181, 226, 0.15)";
+    let badgeColor = "#38bdf8";
+    let badgeBorder = "rgba(0, 181, 226, 0.35)";
 
     const reg = cand.region || "";
     if (reg.includes("Hunter") || reg.includes("Lake Macquarie")) {
-      icon = "⚓";
       badgeBg = "rgba(16, 185, 129, 0.15)";
       badgeColor = "#34d399";
       badgeBorder = "rgba(16, 185, 129, 0.35)";
     } else if (reg.includes("North Shore") || reg.includes("Sydney")) {
-      icon = "🏙️";
       badgeBg = "rgba(6, 182, 212, 0.15)";
       badgeColor = "#22d3ee";
       badgeBorder = "rgba(6, 182, 212, 0.35)";
     } else if (reg.includes("Illawarra")) {
-      icon = "🌊";
       badgeBg = "rgba(168, 85, 247, 0.15)";
       badgeColor = "#c084fc";
       badgeBorder = "rgba(168, 85, 247, 0.35)";
@@ -627,7 +637,7 @@ function showRouteConflictModal(cleanCode, candidates) {
     card.innerHTML = `
       <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem;">
         <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-          <span style="font-size: 1.15rem;">${icon}</span>
+          <span class="tfnsw-roundel ${roundelClass}" style="width: 22px; height: 22px; font-size: 0.75rem;">${roundelLetter}</span>
           <span style="font-weight: 700; font-size: 0.92rem; color: #f8fafc;">${cand.operator}</span>
           <span class="badge" style="font-size: 0.7rem; background: ${badgeBg}; color: ${badgeColor}; border: 1px solid ${badgeBorder};">
             ${cand.region}
@@ -1001,7 +1011,11 @@ function renderScenarioOnMap(scenario) {
     const isTrain = inf.mode === "train";
     const isMetro = inf.mode === "metro";
     const isFerry = inf.mode === "ferry";
-    const markerColor = isTrain ? "#3b82f6" : isMetro ? "#06b6d4" : isFerry ? "#10b981" : "#f59e0b";
+    const isLightRail = inf.mode === "lightrail" || inf.mode === "light_rail";
+    const isCoach = inf.mode === "coach";
+    const markerColor = isTrain ? "#F99D1C" : isMetro ? "#168388" : isFerry ? "#00774B" : isLightRail ? "#E4002B" : isCoach ? "#732A82" : "#00B5E2";
+    const roundelClass = isTrain ? "tfnsw-train" : isMetro ? "tfnsw-metro" : isFerry ? "tfnsw-ferry" : isLightRail ? "tfnsw-lightrail" : isCoach ? "tfnsw-coach" : "tfnsw-bus";
+    const roundelLetter = isTrain ? "T" : isMetro ? "M" : isFerry ? "F" : isLightRail ? "L" : isCoach ? "C" : "B";
 
     const marker = L.circleMarker([inf.lat, inf.lon], {
       radius: 8,
@@ -1013,8 +1027,11 @@ function renderScenarioOnMap(scenario) {
     });
 
     marker.bindPopup(`
-      <b>${inf.name}</b><br>
-      <span class="badge" style="font-size: 0.7rem; margin: 3px 0;">${inf.badge}</span><br>
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+        <span class="tfnsw-roundel ${roundelClass}" style="width:20px;height:20px;font-size:0.75rem;">${roundelLetter}</span>
+        <b>${inf.name}</b>
+      </div>
+      <span class="infra-popup-badge ${roundelClass}" style="font-size: 0.7rem; margin: 3px 0;">${inf.badge}</span><br>
       <span style="font-size: 0.75rem; color: #cbd5e1;">${inf.connecting_services}</span><br>
       <span style="font-size: 0.72rem; color: #94a3b8;">${inf.distance_m}m from Route ${scenario.route_a}</span>
     `);
@@ -1059,10 +1076,23 @@ function populateAttributeDock(features) {
   features.forEach((f) => {
     const tr = document.createElement("tr");
     tr.style.cursor = "pointer";
+
+    let roundelClass = "tfnsw-bus";
+    let roundelLetter = "B";
+    const modeLower = (f.mode || "").toLowerCase();
+    if (modeLower.includes("train") || modeLower.includes("rail")) { roundelClass = "tfnsw-train"; roundelLetter = "T"; }
+    else if (modeLower.includes("metro")) { roundelClass = "tfnsw-metro"; roundelLetter = "M"; }
+    else if (modeLower.includes("ferry")) { roundelClass = "tfnsw-ferry"; roundelLetter = "F"; }
+    else if (modeLower.includes("light rail")) { roundelClass = "tfnsw-lightrail"; roundelLetter = "L"; }
+    else if (modeLower.includes("coach")) { roundelClass = "tfnsw-coach"; roundelLetter = "C"; }
+
     tr.innerHTML = `
       <td style="font-family: monospace; font-size: 0.75rem; color: var(--accent-cyan);">${f.stop_id}</td>
       <td style="font-weight: 600; color: #f8fafc;">${f.stop_name}</td>
-      <td><span class="badge" style="font-size: 0.7rem;">${f.mode}</span></td>
+      <td>
+        <span class="tfnsw-roundel ${roundelClass}" style="width: 16px; height: 16px; font-size: 0.6rem; margin-right: 4px; vertical-align: middle;">${roundelLetter}</span>
+        <span class="badge" style="font-size: 0.7rem; vertical-align: middle;">${f.mode}</span>
+      </td>
       <td style="text-align: right; font-family: monospace; font-size: 0.75rem;">${Number(f.lat).toFixed(4)}</td>
       <td style="text-align: right; font-family: monospace; font-size: 0.75rem;">${Number(f.lon).toFixed(4)}</td>
       <td style="text-align: right; font-family: monospace; font-size: 0.75rem; color: #34d399;">${f.distance_m}m</td>
@@ -1181,9 +1211,14 @@ function renderInterchangeHubs() {
   state.layers.hubs.clearLayers();
 
   Object.values(state.interchanges).forEach((h) => {
+    const isMetro = (h.rail_line && h.rail_line.toLowerCase().includes("metro")) || (h.name && h.name.toLowerCase().includes("metro"));
+    const roundelClass = isMetro ? "tfnsw-metro" : "tfnsw-train";
+    const roundelLetter = isMetro ? "M" : "T";
+    const hubColor = isMetro ? "#168388" : "#F99D1C";
+
     const marker = L.circleMarker([h.lat, h.lon], {
       radius: 9,
-      fillColor: "#00e5ff",
+      fillColor: hubColor,
       color: "#ffffff",
       weight: 2,
       opacity: 1,
@@ -1191,7 +1226,10 @@ function renderInterchangeHubs() {
     });
 
     marker.bindPopup(`
-      <b>${h.name}</b><br>
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+        <span class="tfnsw-roundel ${roundelClass}" style="width:20px;height:20px;font-size:0.75rem;">${roundelLetter}</span>
+        <b>${h.name}</b>
+      </div>
       <span class="badge" style="font-size: 0.7rem; margin: 3px 0;">${h.region}</span><br>
       <span style="font-size: 0.75rem; color: #cbd5e1;">Rail / Metro: ${h.rail_line}</span>
     `);
@@ -1361,8 +1399,27 @@ function renderRoutesTable() {
     const tr = document.createElement("tr");
 
     let modeClass = "badge";
-    if (r.mode_label.includes("Rail") || r.mode_label.includes("Train")) modeClass = "gate-badge gate-pass";
-    else if (r.mode_label.includes("Metro")) modeClass = "gate-badge gate-tier";
+    let roundelClass = "tfnsw-bus";
+    let roundelLetter = "B";
+
+    if (r.mode_label.includes("Rail") || r.mode_label.includes("Train")) {
+      modeClass = "gate-badge gate-pass";
+      roundelClass = "tfnsw-train";
+      roundelLetter = "T";
+    } else if (r.mode_label.includes("Metro")) {
+      modeClass = "gate-badge gate-tier";
+      roundelClass = "tfnsw-metro";
+      roundelLetter = "M";
+    } else if (r.mode_label.includes("Ferry")) {
+      roundelClass = "tfnsw-ferry";
+      roundelLetter = "F";
+    } else if (r.mode_label.includes("Coach")) {
+      roundelClass = "tfnsw-coach";
+      roundelLetter = "C";
+    } else if (r.mode_label.includes("Light Rail")) {
+      roundelClass = "tfnsw-lightrail";
+      roundelLetter = "L";
+    }
 
     tr.innerHTML = `
       <td>
@@ -1372,7 +1429,8 @@ function renderRoutesTable() {
         <div style="font-size: 0.68rem; color: var(--text-dim); font-family: var(--font-mono);">${r.route_id}</div>
       </td>
       <td>
-        <span class="${modeClass}" style="font-size: 0.72rem;">${r.mode_label}</span>
+        <span class="tfnsw-roundel ${roundelClass}" style="width: 18px; height: 18px; font-size: 0.65rem; margin-right: 6px; vertical-align: middle;">${roundelLetter}</span>
+        <span class="${modeClass}" style="font-size: 0.72rem; vertical-align: middle;">${r.mode_label}</span>
       </td>
       <td style="font-weight: 600; color: var(--text-main); font-size: 0.8rem;">
         ${r.agency_name}

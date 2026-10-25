@@ -316,8 +316,52 @@
         </div>
       </div>
       <p>
-        The map shows the exact street turns the bus drives on (no straight zigzag lines across buildings!). The green dotted circle shows a <strong>1-kilometer walking zone</strong> around the stop, highlighting train stations, metro stops, and ferry wharves you can easily walk to.
+        The map shows the exact street turns the bus drives on (no straight zigzag lines across buildings!). The green dotted boundary marks a <strong>1-kilometer walking catchment</strong> (about a 10-12 minute walk) around the corridor and highlights all multi-modal interchange connections using official <strong>Transport for NSW Mode Symbols and Network Colours</strong> (<a href="https://opendata.transport.nsw.gov.au/data/dataset/transport-mode-symbols-and-pictograms" target="_blank" style="color:var(--accent-cyan); text-decoration: underline;">TfNSW Symbols &amp; Pictograms</a> and <a href="https://opendata.transport.nsw.gov.au/developers/resources" target="_blank" style="color:var(--accent-cyan); text-decoration: underline;">TfNSW Colour Chart</a>):
       </p>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 0.6rem; margin: 0.75rem 0 1.25rem;">
+        <div style="display: flex; align-items: center; gap: 8px; background: rgba(249, 157, 28, 0.12); border: 1px solid rgba(249, 157, 28, 0.35); padding: 6px 12px; border-radius: 6px;">
+          <span class="tfnsw-roundel tfnsw-train" style="width: 22px; height: 22px; font-size: 0.75rem;">T</span>
+          <div>
+            <strong style="color: #f8fafc; font-size: 0.85rem;">Train Stations</strong>
+            <div style="font-size: 0.72rem; color: #cbd5e1;">Orange (#F99D1C / PMS 137C) — Sydney Trains &amp; NSW TrainLink</div>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px; background: rgba(22, 131, 136, 0.12); border: 1px solid rgba(22, 131, 136, 0.35); padding: 6px 12px; border-radius: 6px;">
+          <span class="tfnsw-roundel tfnsw-metro" style="width: 22px; height: 22px; font-size: 0.75rem;">M</span>
+          <div>
+            <strong style="color: #f8fafc; font-size: 0.85rem;">Sydney Metro Stations</strong>
+            <div style="font-size: 0.72rem; color: #cbd5e1;">Teal (#168388 / PMS 321) — Sydney Metro M1</div>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px; background: rgba(0, 181, 226, 0.12); border: 1px solid rgba(0, 181, 226, 0.35); padding: 6px 12px; border-radius: 6px;">
+          <span class="tfnsw-roundel tfnsw-bus" style="width: 22px; height: 22px; font-size: 0.75rem;">B</span>
+          <div>
+            <strong style="color: #f8fafc; font-size: 0.85rem;">Bus Stops &amp; Interchanges</strong>
+            <div style="font-size: 0.72rem; color: #cbd5e1;">Transport Blue (#00B5E2) — Metropolitan &amp; Regional Buses</div>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px; background: rgba(0, 119, 75, 0.12); border: 1px solid rgba(0, 119, 75, 0.35); padding: 6px 12px; border-radius: 6px;">
+          <span class="tfnsw-roundel tfnsw-ferry" style="width: 22px; height: 22px; font-size: 0.75rem;">F</span>
+          <div>
+            <strong style="color: #f8fafc; font-size: 0.85rem;">Ferry Wharves</strong>
+            <div style="font-size: 0.72rem; color: #cbd5e1;">Manly Green (#00774B / PMS 3415C) — Sydney Ferries</div>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px; background: rgba(228, 0, 43, 0.12); border: 1px solid rgba(228, 0, 43, 0.35); padding: 6px 12px; border-radius: 6px;">
+          <span class="tfnsw-roundel tfnsw-lightrail" style="width: 22px; height: 22px; font-size: 0.75rem;">L</span>
+          <div>
+            <strong style="color: #f8fafc; font-size: 0.85rem;">Light Rail Stops</strong>
+            <div style="font-size: 0.72rem; color: #cbd5e1;">Red (#E4002B) — Sydney Light Rail L1, L2, L3</div>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px; background: rgba(115, 42, 130, 0.12); border: 1px solid rgba(115, 42, 130, 0.35); padding: 6px 12px; border-radius: 6px;">
+          <span class="tfnsw-roundel tfnsw-coach" style="width: 22px; height: 22px; font-size: 0.75rem;">C</span>
+          <div>
+            <strong style="color: #f8fafc; font-size: 0.85rem;">Regional Coaches</strong>
+            <div style="font-size: 0.72rem; color: #cbd5e1;">Purple (#732A82 / PMS 7657C) — NSW TrainLink Coaches</div>
+          </div>
+        </div>
+      </div>
 
       <h3>Step 4: See the Magic Fixed Timetable</h3>
       <div class="shot-box">
@@ -369,7 +413,7 @@
         The Map Inspector gives you superpower controls:
       </p>
       <ul>
-        <li><strong>Dual-Symbology:</strong> Train and Metro hubs shine with cyan double rings, while bus stops are purple circles.</li>
+        <li><strong>Official TfNSW Dual-Symbology:</strong> Train [T] and Metro [M] hubs shine with high-contrast circular halos and official TfNSW brand colors (<code style="color:#F99D1C;">#F99D1C</code> &amp; <code style="color:#168388;">#168388</code>), while bus stops are styled in Transport Blue [B] (<code style="color:#00B5E2;">#00B5E2</code>).</li>
         <li><strong>Table Dock:</strong> See every stop along the line in order. Click the <strong>🎯 Zoom</strong> button on any stop to fly right to it!</li>
         <li><strong>Basemap Switcher:</strong> Switch between clean Street maps, Topo Terrain contours, and real Esri Satellite Photos with an opacity slider!</li>
       </ul>
@@ -478,6 +522,29 @@ python -m src.Orchestration.query_orchestrator \
         <li><strong>Road Snapping:</strong> Bus stops are joined along physical road lines so turns and intersections match reality.</li>
         <li><strong>Constraint Solver:</strong> Calculates the exact minute adjustment ($\Delta t$) to make connections click together.</li>
       </ol>
+
+      <h3>Official Transport for NSW Symbology &amp; Brand Standards</h3>
+      <p>
+        The platform strictly implements the design guidelines and assets provided by Transport for NSW:
+      </p>
+      <ul>
+        <li>
+          <a href="https://opendata.transport.nsw.gov.au/data/dataset/transport-mode-symbols-and-pictograms" target="_blank" style="color:var(--accent-cyan); text-decoration: underline;">
+            <strong>Transport Mode Symbols and Pictograms Dataset</strong>
+          </a>: Mode identifiers follow the standard letter roundels (<code>[T]</code> Train, <code>[M]</code> Metro, <code>[B]</code> Bus, <code>[F]</code> Ferry, <code>[L]</code> Light Rail, <code>[C]</code> Coach) for all spatial map pins, legend indicators, and tabular badges.
+        </li>
+        <li>
+          <a href="https://opendata.transport.nsw.gov.au/developers/resources" target="_blank" style="color:var(--accent-cyan); text-decoration: underline;">
+            <strong>Transport Network Colour Chart (TNCC)</strong>
+          </a>: Mode colors are mapped directly from official developer resources:
+          Train (<code style="color:#F99D1C;">#F99D1C</code> Melon Yellow / PMS 137C),
+          Metro (<code style="color:#168388;">#168388</code> Teal / PMS 321),
+          Bus (<code style="color:#00B5E2;">#00B5E2</code> Transport Blue),
+          Ferry (<code style="color:#00774B;">#00774B</code> Manly Green / PMS 3415C),
+          Light Rail (<code style="color:#E4002B;">#E4002B</code> Red), and
+          Regional Coach (<code style="color:#732A82;">#732A82</code> Purple / PMS 7657C).
+        </li>
+      </ul>
     </section>
 
     <!-- Section 6: Live Cloud Endpoints & Data Lake Files -->

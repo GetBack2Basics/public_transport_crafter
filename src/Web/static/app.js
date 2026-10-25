@@ -1389,33 +1389,41 @@ function updateMap(mapData, label, scenarioContext) {
   const infraList = mapData.infrastructure || [];
   infraList.forEach((node) => {
     let modeClass = "pin-bus";
-    let iconEmoji = "🚏";
+    let modeLetter = "B";
     let targetLayer = state.mapLayers.bus;
 
     if (node.mode === "train") {
       modeClass = "pin-train";
-      iconEmoji = "🚆";
+      modeLetter = "T";
       targetLayer = state.mapLayers.train;
     } else if (node.mode === "metro") {
       modeClass = "pin-metro";
-      iconEmoji = "🚇";
+      modeLetter = "M";
       targetLayer = state.mapLayers.metro;
     } else if (node.mode === "ferry") {
       modeClass = "pin-ferry";
-      iconEmoji = "⛴️";
+      modeLetter = "F";
       targetLayer = state.mapLayers.ferry;
+    } else if (node.mode === "lightrail") {
+      modeClass = "pin-lightrail";
+      modeLetter = "L";
+      targetLayer = state.mapLayers.train;
+    } else if (node.mode === "coach") {
+      modeClass = "pin-coach";
+      modeLetter = "C";
+      targetLayer = state.mapLayers.bus;
     }
 
     const pinIcon = L.divIcon({
       className: "custom-infra-div",
-      html: `<div class="infra-pin ${modeClass}" style="width: 28px; height: 28px; font-size: 14px;">${iconEmoji}</div>`,
-      iconSize: [28, 28],
-      iconAnchor: [14, 14]
+      html: `<div class="infra-pin ${modeClass}" style="width: 26px; height: 26px; font-size: 13px; font-weight: 800; font-family: 'Outfit', sans-serif;">${modeLetter}</div>`,
+      iconSize: [26, 26],
+      iconAnchor: [13, 13]
     });
 
     const popupContent = `
       <div class="infra-popup">
-        <span class="infra-popup-badge mode-${node.mode}">${iconEmoji} ${node.badge}</span>
+        <span class="infra-popup-badge mode-${node.mode}"><span class="tfnsw-roundel tfnsw-${node.mode}" style="width: 16px; height: 16px; font-size: 0.6rem; min-width: 16px;">${modeLetter}</span> ${node.badge}</span>
         <div class="infra-popup-name">${node.name}</div>
         <div class="infra-popup-dist">📏 ${node.distance_m}m from selected route</div>
         <div class="infra-popup-services">${node.connecting_services || "Public Transport Node"}</div>
@@ -1489,14 +1497,16 @@ function updateMap(mapData, label, scenarioContext) {
 function inspectNode(nodeData) {
   if (!inspectorBanner || !nodeData) return;
 
-  let iconEmoji = nodeData.icon || "📍";
+  let modeLetter = "B";
   let modeClass = "mode-bus";
-  if (nodeData.mode === "train") { iconEmoji = "🚆"; modeClass = "mode-train"; }
-  else if (nodeData.mode === "metro") { iconEmoji = "🚇"; modeClass = "mode-metro"; }
-  else if (nodeData.mode === "ferry") { iconEmoji = "⛴️"; modeClass = "mode-ferry"; }
+  if (nodeData.mode === "train") { modeLetter = "T"; modeClass = "mode-train"; }
+  else if (nodeData.mode === "metro") { modeLetter = "M"; modeClass = "mode-metro"; }
+  else if (nodeData.mode === "ferry") { modeLetter = "F"; modeClass = "mode-ferry"; }
+  else if (nodeData.mode === "lightrail") { modeLetter = "L"; modeClass = "mode-lightrail"; }
+  else if (nodeData.mode === "coach") { modeLetter = "C"; modeClass = "mode-coach"; }
 
   inspectorBadge.className = `infra-badge ${modeClass}`;
-  inspectorBadge.innerHTML = `${iconEmoji} ${nodeData.badge || "Transit Station"}`;
+  inspectorBadge.innerHTML = `<span class="tfnsw-roundel tfnsw-${nodeData.mode}" style="width: 18px; height: 18px; font-size: 0.68rem; min-width: 18px; margin-right: 4px;">${modeLetter}</span> ${nodeData.badge || "Transit Station"}`;
   inspectorName.textContent = nodeData.name;
   inspectorDist.textContent = nodeData.distance_m != null ? `${nodeData.distance_m}m from selected route` : "Selected Route Alignment";
 
@@ -1727,17 +1737,19 @@ function renderInfrastructureTable(infraList) {
     tr.style.cursor = "pointer";
     tr.title = "Click to inspect on map and view details";
 
-    let iconEmoji = "🚏";
+    let modeLetter = "B";
     let modeClass = "pin-bus";
-    if (node.mode === "train") { iconEmoji = "🚆"; modeClass = "pin-train"; }
-    else if (node.mode === "metro") { iconEmoji = "🚇"; modeClass = "pin-metro"; }
-    else if (node.mode === "ferry") { iconEmoji = "⛴️"; modeClass = "pin-ferry"; }
+    if (node.mode === "train") { modeLetter = "T"; modeClass = "pin-train"; }
+    else if (node.mode === "metro") { modeLetter = "M"; modeClass = "pin-metro"; }
+    else if (node.mode === "ferry") { modeLetter = "F"; modeClass = "pin-ferry"; }
+    else if (node.mode === "lightrail") { modeLetter = "L"; modeClass = "pin-lightrail"; }
+    else if (node.mode === "coach") { modeLetter = "C"; modeClass = "pin-coach"; }
 
     const walkMins = Math.round(node.distance_m / 80);
 
     tr.innerHTML = `
       <td><b>${node.name}</b></td>
-      <td><span class="infra-popup-badge mode-${node.mode}">${iconEmoji} ${node.badge}</span></td>
+      <td><span class="infra-popup-badge mode-${node.mode}"><span class="tfnsw-roundel tfnsw-${node.mode}" style="width: 18px; height: 18px; font-size: 0.68rem; min-width: 18px;">${modeLetter}</span> ${node.badge}</span></td>
       <td style="color: var(--accent-cyan); font-weight: 600;">${node.distance_m} m</td>
       <td style="color: #fff;">${walkMins} min</td>
       <td style="color: var(--text-muted);">${node.connecting_services || "Statewide Public Transit"}</td>

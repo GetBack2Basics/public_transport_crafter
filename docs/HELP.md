@@ -59,11 +59,13 @@ WHERE route_short_name = '99'
 ![Synchronized Spatial Map](screenshots/04_planning_portal_spatial_map.png)
 *Figure 4: Road-snapped transit route in cyan/gold with 1km multi-modal catchment boundary.*
 
-The map snaps directly to the actual road network (no fake straight lines). The dotted green outline marks a **1-kilometer walking catchment** (about a 10-12 minute walk) and highlights:
-- 🚆 **Train Stations**
-- 🚇 **Metro Stations**
-- ⛴️ **Ferry Wharves**
-- 🚏 **Bus Interchanges**
+The map snaps directly to the actual road network (no fake straight lines). The dotted green outline marks a **1-kilometer walking catchment** (about a 10-12 minute walk) and highlights all multi-modal interchange connections using official [Transport for NSW Mode Symbols, Pictograms, and Network Colours](https://opendata.transport.nsw.gov.au/data/dataset/transport-mode-symbols-and-pictograms):
+- **[T] Train Stations** (Official Melon Yellow / Orange `#F99D1C` / PMS 137C Roundel — Sydney Trains & NSW TrainLink)
+- **[M] Metro Stations** (Official Teal `#168388` / PMS 321 Roundel — Sydney Metro M1)
+- **[B] Bus Interchanges** (Official Transport Blue `#00B5E2` Roundel — Metropolitan & Regional Buses)
+- **[F] Ferry Wharves** (Official Manly Green `#00774B` / PMS 3415C Roundel — Sydney Ferries)
+- **[L] Light Rail Stops** (Official Red `#E4002B` Roundel — Sydney Light Rail L1, L2, L3)
+- **[C] Regional Coaches** (Official Purple `#732A82` / PMS 7657C Roundel — NSW TrainLink Regional Coaches)
 
 ### Step 5: Full-Day Bidirectional Timetable Adjustments
 
@@ -96,8 +98,8 @@ The Data QA Hub is hosted at [https://storage.googleapis.com/nsw-transit-spatial
 ![GeoLibre Spatial Map Inspector](screenshots/07_qa_hub_spatial_map_inspector.png)
 *Figure 7: Map Inspector with Route 880 loaded, showing dual-symbology stops and attribute table dock.*
 
-- **Dual-Symbology:** Train and Metro hubs are cyan double circles; bus stops are purple pins.
-- **Table Dock:** View every stop in sequence. Click **🎯 Zoom** on any row to fly directly to that stop on the map.
+- **Official TfNSW Dual-Symbology:** Train [T] and Metro [M] hubs shine with high-contrast circular halos and official TfNSW brand colors (`#F99D1C` & `#168388`), while bus stops are styled in Transport Blue [B] (`#00B5E2`).
+- **Table Dock:** View every stop along the line in sequence with its mode roundel. Click **🎯 Zoom** on any row to fly directly to that stop on the map.
 - **Basemap Switcher:** Switch between OpenStreetMap Standard, Topo / Terrain, and Esri Satellite Imagery with a live opacity slider.
 
 ![Basemap Provider Popover](screenshots/08_qa_hub_basemap_selector.png)
@@ -192,6 +194,17 @@ flowchart TD
 - **0 Synthetic Arrays:** Prohibits `Math.random()`, dummy coordinate generators, or placeholder schedules.
 - **AST Codebase Scanner:** Every script is parsed via an Abstract Syntax Tree (AST) scanner to ensure zero simulated mock data.
 - **31 of 31 Unit & Integration Tests Passed:** Verified mathematical constraints and magic bytes.
+
+### Official Transport for NSW Symbology & Brand Standards
+The application strictly implements the design guidelines and assets provided by Transport for NSW:
+- **Transport Mode Symbols and Pictograms**: Sourced from the official [TfNSW Open Data Dataset](https://opendata.transport.nsw.gov.au/data/dataset/transport-mode-symbols-and-pictograms), utilizing standard letter roundels (`T`, `M`, `B`, `F`, `L`, `C`) for all spatial map pins, legend items, and tabular inspector badges.
+- **Transport Network Colour Chart (TNCC)**: Formatted directly from [TfNSW Developer Resources](https://opendata.transport.nsw.gov.au/developers/resources#TNCC):
+  - **Train [T]**: `#F99D1C` (Melon Yellow / Orange, PMS 137C, Avery 91589A) / `#F6891F` (Regional Trains)
+  - **Metro [M]**: `#168388` (Teal, CMYK 100/22/42/2, PMS 321)
+  - **Bus [B]**: `#00B5E2` (Transport Blue, CMYK 100/17/9/0)
+  - **Ferry [F]**: `#00774B` (Manly Green, CMYK 100/27/89/16, PMS 3415C)
+  - **Light Rail [L]**: `#E4002B` (Red, CMYK 0/100/100/0)
+  - **Coach [C]**: `#732A82` (Purple, CMYK 98/100/0/0, PMS 7657C)
 
 ---
 

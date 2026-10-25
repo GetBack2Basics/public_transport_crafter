@@ -512,23 +512,51 @@ header {
 }
 
 .pin-train {
-  background: linear-gradient(135deg, #ef4444, #b91c1c);
-  box-shadow: 0 0 12px rgba(239, 68, 68, 0.85);
+  background: #f99d1c !important; /* TfNSW Official Train Orange (#F99D1C) */
+  color: #ffffff !important;
+  font-family: var(--font-heading), 'Inter', sans-serif;
+  font-weight: 800;
+  box-shadow: 0 0 14px rgba(249, 157, 28, 0.85);
 }
 
 .pin-metro {
-  background: linear-gradient(135deg, #06b6d4, #0891b2);
-  box-shadow: 0 0 12px rgba(6, 182, 212, 0.85);
+  background: #168388 !important; /* TfNSW Official Metro Teal (#168388) */
+  color: #ffffff !important;
+  font-family: var(--font-heading), 'Inter', sans-serif;
+  font-weight: 800;
+  box-shadow: 0 0 14px rgba(22, 131, 136, 0.85);
 }
 
 .pin-ferry {
-  background: linear-gradient(135deg, #10b981, #047857);
-  box-shadow: 0 0 12px rgba(16, 185, 129, 0.85);
+  background: #00774b !important; /* TfNSW Official Ferry Green (#00774B) */
+  color: #ffffff !important;
+  font-family: var(--font-heading), 'Inter', sans-serif;
+  font-weight: 800;
+  box-shadow: 0 0 14px rgba(0, 119, 75, 0.85);
 }
 
 .pin-bus {
-  background: linear-gradient(135deg, #8b5cf6, #6d28d9);
-  box-shadow: 0 0 12px rgba(139, 92, 246, 0.85);
+  background: #00b5e2 !important; /* TfNSW Official Bus Blue (#00B5E2) */
+  color: #ffffff !important;
+  font-family: var(--font-heading), 'Inter', sans-serif;
+  font-weight: 800;
+  box-shadow: 0 0 14px rgba(0, 181, 226, 0.85);
+}
+
+.pin-lightrail {
+  background: #e4002b !important; /* TfNSW Official Light Rail Red (#E4002B) */
+  color: #ffffff !important;
+  font-family: var(--font-heading), 'Inter', sans-serif;
+  font-weight: 800;
+  box-shadow: 0 0 14px rgba(228, 0, 43, 0.85);
+}
+
+.pin-coach {
+  background: #732a82 !important; /* TfNSW Official Coach Purple (#732A82) */
+  color: #ffffff !important;
+  font-family: var(--font-heading), 'Inter', sans-serif;
+  font-weight: 800;
+  box-shadow: 0 0 14px rgba(115, 42, 130, 0.85);
 }
 
 .pin-terminus-origin {
@@ -564,38 +592,79 @@ header {
 }
 
 .infra-popup-badge {
-  display: inline-block;
-  font-size: 0.7rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
-  padding: 0.15rem 0.5rem;
+  padding: 0.2rem 0.55rem;
   border-radius: 4px;
   margin-bottom: 0.35rem;
 }
 
 .infra-popup-badge.mode-train {
-  background: rgba(239, 68, 68, 0.2);
-  color: #fca5a5;
-  border: 1px solid rgba(239, 68, 68, 0.4);
+  background: rgba(249, 157, 28, 0.2);
+  color: #fbbf24;
+  border: 1px solid rgba(249, 157, 28, 0.5);
 }
 
 .infra-popup-badge.mode-metro {
-  background: rgba(6, 182, 212, 0.2);
-  color: #67e8f9;
-  border: 1px solid rgba(6, 182, 212, 0.4);
+  background: rgba(22, 131, 136, 0.25);
+  color: #5eead4;
+  border: 1px solid rgba(22, 131, 136, 0.5);
 }
 
 .infra-popup-badge.mode-ferry {
-  background: rgba(16, 185, 129, 0.2);
+  background: rgba(0, 119, 75, 0.25);
   color: #6ee7b7;
-  border: 1px solid rgba(16, 185, 129, 0.4);
+  border: 1px solid rgba(0, 119, 75, 0.5);
 }
 
 .infra-popup-badge.mode-bus {
-  background: rgba(139, 92, 246, 0.2);
-  color: #c4b5fd;
-  border: 1px solid rgba(139, 92, 246, 0.4);
+  background: rgba(0, 181, 226, 0.2);
+  color: #38bdf8;
+  border: 1px solid rgba(0, 181, 226, 0.5);
 }
+
+.infra-popup-badge.mode-lightrail {
+  background: rgba(228, 0, 43, 0.2);
+  color: #fda4af;
+  border: 1px solid rgba(228, 0, 43, 0.5);
+}
+
+.infra-popup-badge.mode-coach {
+  background: rgba(115, 42, 130, 0.25);
+  color: #d8b4fe;
+  border: 1px solid rgba(115, 42, 130, 0.5);
+}
+
+/* Transport for NSW (TfNSW) Official Mode Symbology Roundels */
+.tfnsw-roundel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  border-radius: 50%;
+  color: #ffffff !important;
+  font-family: var(--font-heading), 'Inter', sans-serif;
+  font-weight: 800;
+  font-size: 0.74rem;
+  line-height: 1;
+  text-align: center;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  vertical-align: middle;
+  border: 1.5px solid #ffffff;
+}
+
+.tfnsw-roundel.tfnsw-train { background: #f99d1c !important; }
+.tfnsw-roundel.tfnsw-metro { background: #168388 !important; }
+.tfnsw-roundel.tfnsw-bus { background: #00b5e2 !important; }
+.tfnsw-roundel.tfnsw-ferry { background: #00774b !important; }
+.tfnsw-roundel.tfnsw-lightrail { background: #e4002b !important; }
+.tfnsw-roundel.tfnsw-coach { background: #732a82 !important; }
 
 .infra-popup-name {
   font-size: 0.95rem;

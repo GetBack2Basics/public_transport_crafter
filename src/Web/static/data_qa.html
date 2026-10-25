@@ -505,8 +505,8 @@
               <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;"><input type="checkbox" id="layerLiveUpstream" checked> <span style="color: #34d399;">🟢</span> Live GTFS Schedule</label>
               <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;"><input type="checkbox" id="layerLakehouse" checked> <span style="color: #38bdf8;">🔵</span> GCS Parquet Lakehouse</label>
               <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;"><input type="checkbox" id="layerBbox" checked> <span style="color: #f59e0b;">🗺️</span> NSW Bounding Envelope</label>
-              <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;"><input type="checkbox" id="layerHubs" checked> <span style="color: #a855f7;">🚆</span> Interchanges &amp; Stations</label>
-              <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;"><input type="checkbox" id="layerCorridor" checked> <span style="color: #ec4899;">🚌</span> 1km Corridor Catchment</label>
+              <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;"><input type="checkbox" id="layerHubs" checked> <span class="tfnsw-roundel tfnsw-train" style="width: 16px; height: 16px; font-size: 0.58rem;">T</span> Interchanges &amp; Stations</label>
+              <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;"><input type="checkbox" id="layerCorridor" checked> <span class="tfnsw-roundel tfnsw-bus" style="width: 16px; height: 16px; font-size: 0.58rem;">B</span> 1km Corridor Catchment</label>
             </div>
           </div>
 
@@ -542,8 +542,8 @@ GROUP BY 1, 2 ORDER BY stops_count DESC LIMIT 5;</textarea>
                 Cartographic Dual-Symbology
               </div>
               <div style="font-size: 0.75rem; display: flex; flex-direction: column; gap: 0.35rem; color: #cbd5e1;">
-                <div style="display: flex; align-items: center; gap: 0.5rem;"><span style="display: inline-block; width: 14px; height: 14px; border-radius: 50%; background: #00e5ff; border: 2px solid white; box-shadow: 0 0 6px #00e5ff;"></span> Rail / Metro Hub (Double-Ring)</div>
-                <div style="display: flex; align-items: center; gap: 0.5rem;"><span style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: #a855f7; border: 1.5px solid white;"></span> Bus / Coach Stop (Circle)</div>
+                <div style="display: flex; align-items: center; gap: 0.5rem;"><span class="tfnsw-roundel tfnsw-train" style="width: 16px; height: 16px; font-size: 0.58rem;">T</span> <span class="tfnsw-roundel tfnsw-metro" style="width: 16px; height: 16px; font-size: 0.58rem;">M</span> Rail &amp; Metro Hubs (TfNSW Orange/Teal)</div>
+                <div style="display: flex; align-items: center; gap: 0.5rem;"><span class="tfnsw-roundel tfnsw-bus" style="width: 16px; height: 16px; font-size: 0.58rem;">B</span> <span class="tfnsw-roundel tfnsw-coach" style="width: 16px; height: 16px; font-size: 0.58rem;">C</span> Bus &amp; Coach Stops (TfNSW Blue/Purple)</div>
                 <div style="display: flex; align-items: center; gap: 0.5rem;"><span style="display: inline-block; width: 20px; height: 4px; background: #00e5ff; border-top: 1px dashed white;"></span> Road Snapped Alignment (Dashed)</div>
                 <div style="display: flex; align-items: center; gap: 0.5rem;"><span style="display: inline-block; width: 18px; height: 12px; background: rgba(16, 185, 129, 0.25); border: 1px dashed #10b981;"></span> 1km Multi-Modal Buffer (Dotted)</div>
               </div>
@@ -613,11 +613,11 @@ GROUP BY 1, 2 ORDER BY stops_count DESC LIMIT 5;</textarea>
         <div class="quick-chips" style="margin-bottom: 1rem;">
           <span class="chips-label">Quick Filters:</span>
           <button class="chip chip-route-filter active" data-filter="all">All Modes (10,266)</button>
-          <button class="chip chip-route-filter" data-filter="rail">Trains &amp; Heavy Rail</button>
-          <button class="chip chip-route-filter" data-filter="metro">Sydney Metro M1</button>
-          <button class="chip chip-route-filter" data-filter="sydney_bus">Metropolitan Buses</button>
-          <button class="chip chip-route-filter" data-filter="regional_bus">Regional Buses &amp; Coaches</button>
-          <button class="chip chip-route-filter" data-filter="ferry_lightrail">Ferries &amp; Light Rail</button>
+          <button class="chip chip-route-filter" data-filter="rail"><span class="tfnsw-roundel tfnsw-train" style="width: 16px; height: 16px; font-size: 0.55rem; margin-right: 3px;">T</span> Trains &amp; Heavy Rail</button>
+          <button class="chip chip-route-filter" data-filter="metro"><span class="tfnsw-roundel tfnsw-metro" style="width: 16px; height: 16px; font-size: 0.55rem; margin-right: 3px;">M</span> Sydney Metro M1</button>
+          <button class="chip chip-route-filter" data-filter="sydney_bus"><span class="tfnsw-roundel tfnsw-bus" style="width: 16px; height: 16px; font-size: 0.55rem; margin-right: 3px;">B</span> Metropolitan Buses</button>
+          <button class="chip chip-route-filter" data-filter="regional_bus"><span class="tfnsw-roundel tfnsw-coach" style="width: 16px; height: 16px; font-size: 0.55rem; margin-right: 3px;">C</span> Regional Buses &amp; Coaches</button>
+          <button class="chip chip-route-filter" data-filter="ferry_lightrail"><span class="tfnsw-roundel tfnsw-ferry" style="width: 16px; height: 16px; font-size: 0.55rem; margin-right: 3px;">F</span> Ferries &amp; Light Rail</button>
         </div>
 
         <div class="qa-table-container" style="max-height: 520px;">
