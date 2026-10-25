@@ -50,6 +50,19 @@ def deploy_portal():
     if inspect_file.exists():
         upload_file_to_gcs(inspect_file, "geolibre_qa_inspect.html", content_type="text/html; charset=utf-8", cache_control="no-cache, max-age=0")
 
+    # Upload User Guide & Help
+    help_file = STATIC_DIR / "help.html"
+    if help_file.exists():
+        upload_file_to_gcs(help_file, "help.html", content_type="text/html; charset=utf-8", cache_control="public, max-age=120")
+        upload_file_to_gcs(help_file, "static/help.html", content_type="text/html; charset=utf-8", cache_control="public, max-age=120")
+
+    # Upload Screenshots
+    screenshots_dir = STATIC_DIR / "screenshots"
+    if screenshots_dir.exists():
+        for sf in screenshots_dir.glob("*.png"):
+            upload_file_to_gcs(sf, f"screenshots/{sf.name}", content_type="image/png", cache_control="public, max-age=3600")
+            upload_file_to_gcs(sf, f"docs/screenshots/{sf.name}", content_type="image/png", cache_control="public, max-age=3600")
+
     # Upload Data QA Manifest & Routes Catalog
     manifest_file = BASE_DIR / "data" / "lake" / "nsw_data_qa_manifest.json"
     if manifest_file.exists():
@@ -79,6 +92,7 @@ def deploy_portal():
     print(f"Planning Portal URL: https://storage.googleapis.com/{bucket}/index.html")
     print(f"Data QA Hub URL:     https://storage.googleapis.com/{bucket}/data_qa.html")
     print(f"GeoLibre Inspect:    https://storage.googleapis.com/{bucket}/geolibre_qa_inspect.html")
+    print(f"User Guide URL:      https://storage.googleapis.com/{bucket}/help.html")
     return url1
 
 
