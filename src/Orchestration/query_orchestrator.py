@@ -90,10 +90,10 @@ def parse_natural_language_query(query: str) -> Dict[str, Any]:
 
 def execute_transit_pipeline(query: str, output_report_name: str = "transit_insight_report.html") -> Dict[str, Any]:
     """
-    Executes the full end-to-end autonomous JIT transit pipeline.
+    Executes the full end-to-end automated JIT transit pipeline.
     """
     logger.info("=" * 70)
-    logger.info(" NSW Transit Spatial Crafter: Autonomous Query Pipeline")
+    logger.info(" NSW Transit Spatial Crafter: Automated Transit Query Pipeline")
     logger.info(f" Query: '{query}'")
     logger.info("=" * 70)
 
@@ -192,7 +192,7 @@ def execute_transit_pipeline(query: str, output_report_name: str = "transit_insi
 
 
 def main():
-    parser = argparse.ArgumentParser(description="NSW Transit Autonomous Query Orchestrator")
+    parser = argparse.ArgumentParser(description="NSW Transit Automated Query Orchestrator")
     parser.add_argument(
         "--query",
         default="With the same number of buses and trains, how can the route from Maitland to Newcastle University be optimized?",

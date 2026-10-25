@@ -2,10 +2,10 @@
 
 [![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/)
 [![Architecture: FunGIS MapInABox](https://img.shields.io/badge/Architecture-FunGIS%20MapInABox-emerald.svg)](https://github.com/GetBack2Basics/FunGIS_SpatialOlympics26_MapInABox)
-[![Cloud: GCP Antigravity](https://img.shields.io/badge/Compute-GCP%20Antigravity%20($0.00%20Idle)-cyan.svg)](https://github.com/GetBack2Basics/CheatSheets/blob/main/gcp_antigravity_playbook.md)
-[![Defense: AI Anti-Mock 3-Tier](https://img.shields.io/badge/Verification-3--Tier%20Anti--Mock-rose.svg)](https://github.com/GetBack2Basics/CheatSheets/blob/main/ai_anti_mock_hallucination_playbook.md)
+[![Cloud: GCP Cloud Run / GCS](https://img.shields.io/badge/Compute-GCP%20Cloud%20Lakehouse-cyan.svg)](https://cloud.google.com)
+[![Defense: 3-Tier Data Integrity](https://img.shields.io/badge/Verification-3--Tier%20Data%20Integrity-rose.svg)](https://opendata.transport.nsw.gov.au/)
 
-Autonomous, query-driven transit analytics and zero-resource timetable optimization engine for New South Wales (TfNSW).
+Automated, query-driven transit analytics and zero-resource timetable optimization engine for New South Wales (TfNSW).
 
 Forked and refactored from `hunter_spatial_crafter`, this engine **eliminates static pre-configured corridors**. Given any natural language transit query (e.g., *"With the same number of buses and trains, how can the route from Maitland to Newcastle University be optimized?"*), the system dynamically resolves transit subgraphs, checks local Parquet lakes or triggers just-in-time (JIT) ingestion from TfNSW Open Data, calculates walking isochrones, executes zero-resource fleet optimization, and outputs a standalone, offline-first **FunGIS Map-in-a-Box** HTML report with embedded client-side **AlaSQL**.
 
@@ -63,8 +63,9 @@ Forked and refactored from `hunter_spatial_crafter`, this engine **eliminates st
 - **Local Is Strictly Code**: The local filesystem contains only source code, configs, templates, and tests. All data artifacts (`data/`) are ephemeral and git-ignored.
 - **GCS Cloud Lakehouse**: Parquet datasets (GTFS slices, transit lines, Opal matrices) are staged in Google Cloud Storage (`gs://nsw-transit-spatial-crafter/lake/`).
 - **Processing on GCS**: Valhalla pedestrian catchments (`gs://nsw-transit-spatial-crafter/isochrones/`) are computed via ephemeral spot compute workers (`e2-custom-2-9216`) with dynamic NAT IP discovery and immediate VM termination.
-- **Review on GCS**: Compiled FunGIS Map-in-a-Box interactive HTML deliverables are automatically deployed to Google Cloud Storage with `Cache-Control: public, max-age=60` for instant global stakeholder review:
-  `https://storage.googleapis.com/nsw-transit-spatial-crafter/transit_insight_report.html`
+- **Review on GCS**: The interactive Web Planning Portal and Data QA Hub are deployed directly to Google Cloud Storage with global CDN distribution:
+  - **Main Planning Portal**: `https://storage.googleapis.com/nsw-transit-spatial-crafter/index.html`
+  - **Data QA & Audit Hub**: `https://storage.googleapis.com/nsw-transit-spatial-crafter/data_qa.html`
 
 ### C. Mandatory 3-Tier Anti-Mock Defense Model
 - **Tier 1 (Pre-Execution Contract Assertion)**: Asserts endpoint legitimacy (`https://api.transport.nsw.gov.au/`), API token presence, and strict configuration schema before any network call.
@@ -158,7 +159,7 @@ cd c:/Projects/nsw_public_transport_crafter
 echo "TFNSW_API_KEY=your_tfnsw_api_token" > .env
 ```
 
-### 2. Run Autonomous Query Orchestration
+### 2. Run Automated Query Orchestration
 Execute any natural language transit query:
 
 ```bash
@@ -174,11 +175,13 @@ python -m src.Orchestration.query_orchestrator \
 ```
 
 ### 3. Review Deliverables on GCS (Zero Running Server)
-All reviews are hosted directly on Google Cloud Storage with instant global CDN distribution:
-* **Live Report Review**:
-  [https://storage.googleapis.com/nsw-transit-spatial-crafter/transit_insight_report.html](https://storage.googleapis.com/nsw-transit-spatial-crafter/transit_insight_report.html)
-* **Archived Run Review**:
-  `https://storage.googleapis.com/nsw-transit-spatial-crafter/reports/transit_insight_report.html`
+All applications and dashboards are hosted directly on Google Cloud Storage with instant global CDN distribution:
+* **Main Planning Portal**:
+  [https://storage.googleapis.com/nsw-transit-spatial-crafter/index.html](https://storage.googleapis.com/nsw-transit-spatial-crafter/index.html)
+* **Data QA & Audit Hub**:
+  [https://storage.googleapis.com/nsw-transit-spatial-crafter/data_qa.html](https://storage.googleapis.com/nsw-transit-spatial-crafter/data_qa.html)
+* **GeoLibre Map Inspector**:
+  [https://storage.googleapis.com/nsw-transit-spatial-crafter/geolibre_qa_inspect.html](https://storage.googleapis.com/nsw-transit-spatial-crafter/geolibre_qa_inspect.html)
 
 ---
 

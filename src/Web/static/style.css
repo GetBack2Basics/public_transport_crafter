@@ -944,13 +944,15 @@ tr:hover td {
   height: 260px;
 }
 
-/* Step 6: AI Suggested Next Steps */
+/* Step 6: Scenario Simulations & Recommended Actions */
+.scenario-steps-grid,
 .ai-steps-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
   gap: 1.25rem;
 }
 
+.scenario-step-card,
 .ai-step-card {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--border-subtle);
@@ -963,24 +965,28 @@ tr:hover td {
   transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
+.scenario-step-card:hover,
 .ai-step-card:hover {
   transform: translateY(-3px);
   border-color: var(--accent-cyan);
   box-shadow: 0 10px 24px rgba(0, 229, 255, 0.14);
 }
 
+.scenario-step-top,
 .ai-step-top {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
 
+.scenario-step-meta,
 .ai-step-meta {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
+.scenario-step-badge,
 .ai-step-badge {
   font-size: 0.7rem;
   font-weight: 700;
@@ -991,12 +997,14 @@ tr:hover td {
   border: 1px solid rgba(99, 102, 241, 0.4);
 }
 
+.scenario-step-tag,
 .ai-step-tag {
   font-size: 0.7rem;
   font-weight: 600;
   color: var(--accent-cyan);
 }
 
+.scenario-step-title,
 .ai-step-title {
   font-size: 0.98rem;
   font-weight: 700;
@@ -1004,12 +1012,14 @@ tr:hover td {
   line-height: 1.35;
 }
 
+.scenario-step-desc,
 .ai-step-desc {
   font-size: 0.8rem;
   color: var(--text-muted);
   line-height: 1.5;
 }
 
+.scenario-step-btn,
 .ai-step-btn {
   background: rgba(255, 255, 255, 0.06);
   color: #fff;
@@ -1026,6 +1036,7 @@ tr:hover td {
   transition: all 0.15s ease;
 }
 
+.scenario-step-btn:hover,
 .ai-step-btn:hover {
   background: linear-gradient(135deg, var(--accent-cyan), #00b4d8);
   color: #05101e;

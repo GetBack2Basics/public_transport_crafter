@@ -82,7 +82,7 @@ const perfSummaryBody = document.getElementById("perfSummaryBody");
 const infraDirectoryCount = document.getElementById("infraDirectoryCount");
 const infraTableBody = document.getElementById("infraTableBody");
 
-// AI Steps Elements
+// Scenario Steps Elements
 const panelAiSteps = document.getElementById("panel-ai-steps");
 const aiStepsContainer = document.getElementById("aiStepsContainer");
 
@@ -1256,9 +1256,10 @@ function executeScenarioQuery() {
         renderInfrastructureTable(data.map.infrastructure);
       }
 
-      // 6. Render Step 6 AI Suggested Next Steps
-      if (data.ai_suggested_steps) {
-        renderAiSteps(data.ai_suggested_steps);
+      // 6. Render Step 6 Scenario Simulations & Recommended Actions
+      const scenarioSteps = data.scenario_actions || data.ai_suggested_steps;
+      if (scenarioSteps) {
+        renderScenarioSteps(scenarioSteps);
       }
 
       // Smooth scroll to recommendations panel
@@ -1753,32 +1754,32 @@ function renderInfrastructureTable(infraList) {
   });
 }
 
-// Step 6: Render AI Suggested Next Steps Action Cards
-function renderAiSteps(aiSteps) {
-  if (!aiStepsContainer || !aiSteps || aiSteps.length === 0) return;
+// Step 6: Render Scenario Simulations & Action Cards
+function renderScenarioSteps(scenarioSteps) {
+  if (!aiStepsContainer || !scenarioSteps || scenarioSteps.length === 0) return;
   if (panelAiSteps) panelAiSteps.style.display = "block";
 
   aiStepsContainer.innerHTML = "";
 
-  aiSteps.forEach((step) => {
+  scenarioSteps.forEach((step) => {
     const card = document.createElement("div");
-    card.className = "ai-step-card";
+    card.className = "scenario-step-card ai-step-card";
 
     card.innerHTML = `
-      <div class="ai-step-top">
-        <div class="ai-step-meta">
-          <span class="ai-step-badge">${step.badge || "Simulation"}</span>
-          <span class="ai-step-tag">${step.tag || "Smart Step"}</span>
+      <div class="scenario-step-top ai-step-top">
+        <div class="scenario-step-meta ai-step-meta">
+          <span class="scenario-step-badge ai-step-badge">${step.badge || "Simulation"}</span>
+          <span class="scenario-step-tag ai-step-tag">${step.tag || "Scenario"}</span>
         </div>
-        <div class="ai-step-title">${step.title}</div>
-        <div class="ai-step-desc">${step.desc}</div>
+        <div class="scenario-step-title ai-step-title">${step.title}</div>
+        <div class="scenario-step-desc ai-step-desc">${step.desc}</div>
       </div>
-      <button class="ai-step-btn" data-prompt="${step.prompt}">
-        <span>🚀 Explore Simulation</span>
+      <button class="scenario-step-btn ai-step-btn" data-prompt="${step.prompt}">
+        <span>⚡ Explore Scenario</span>
       </button>
     `;
 
-    const btn = card.querySelector(".ai-step-btn");
+    const btn = card.querySelector(".scenario-step-btn") || card.querySelector(".ai-step-btn");
     btn.addEventListener("click", () => {
       if (nlInput) {
         nlInput.value = step.prompt;
@@ -1794,3 +1795,4 @@ function renderAiSteps(aiSteps) {
     aiStepsContainer.appendChild(card);
   });
 }
+const renderAiSteps = renderScenarioSteps; // Backward-compatible alias

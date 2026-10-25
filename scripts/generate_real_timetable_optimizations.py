@@ -530,6 +530,7 @@ ORDER BY b.bus_dep_dt ASC;"""
             "infrastructure": spatial_data["infrastructure"]
         },
         "analytics": analytics,
+        "scenario_actions": ai_steps,
         "ai_suggested_steps": ai_steps,
         "recommendations": recommendations
     }
@@ -957,7 +958,7 @@ ORDER BY b.bus_dep_dt ASC;"""
                 "performance_metrics": {"avg_wait_baseline": 0, "avg_wait_optimized": 0, "wait_reduction_pct": 0, "reliability_pct": 0, "fleet_pvr": 0, "driver_hours_change": "0.0h"}
             }
 
-        # Tailored AI Suggested Next Steps
+        # Tailored Follow-up Scenario Actions
         if "morisset" in key or "275_cdc" in key or ("275" in r_a and "morisset" in stn.lower()):
             ai_steps = [
                 {
@@ -1177,6 +1178,7 @@ ORDER BY b.bus_dep_dt ASC;"""
                 "infrastructure": spatial_data["infrastructure"]
             },
             "analytics": analytics,
+            "scenario_actions": ai_steps,
             "ai_suggested_steps": ai_steps,
             "recommendations": recommendations
         }

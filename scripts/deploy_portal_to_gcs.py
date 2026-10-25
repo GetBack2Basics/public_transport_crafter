@@ -22,10 +22,9 @@ def deploy_portal():
     bucket = get_active_gcs_bucket()
     print(f"Deploying NSW Transit Planning Portal to gs://{bucket}...")
 
-    # Upload index.html at root of bucket and /index.html
+    # Upload index.html at root of bucket
     index_file = STATIC_DIR / "index.html"
     url1 = upload_file_to_gcs(index_file, "index.html", content_type="text/html; charset=utf-8", cache_control="public, max-age=60")
-    upload_file_to_gcs(index_file, "planning_portal.html", content_type="text/html; charset=utf-8", cache_control="public, max-age=60")
 
     # Upload static/style.css
     css_file = STATIC_DIR / "style.css"
@@ -40,23 +39,16 @@ def deploy_portal():
     # Upload data_qa.html
     qa_file = STATIC_DIR / "data_qa.html"
     upload_file_to_gcs(qa_file, "data_qa.html", content_type="text/html; charset=utf-8", cache_control="no-cache, max-age=0")
-    upload_file_to_gcs(qa_file, "qa.html", content_type="text/html; charset=utf-8", cache_control="no-cache, max-age=0")
 
     # Upload data_qa.js
     qa_js_file = STATIC_DIR / "data_qa.js"
     upload_file_to_gcs(qa_js_file, "data_qa.js", content_type="application/javascript; charset=utf-8", cache_control="no-cache, max-age=0")
     upload_file_to_gcs(qa_js_file, "static/data_qa.js", content_type="application/javascript; charset=utf-8", cache_control="no-cache, max-age=0")
 
-    # Upload GeoLibre Map Inspector (standalone and docs/qa)
+    # Upload GeoLibre Map Inspector
     inspect_file = STATIC_DIR / "geolibre_qa_inspect.html"
     if inspect_file.exists():
         upload_file_to_gcs(inspect_file, "geolibre_qa_inspect.html", content_type="text/html; charset=utf-8", cache_control="no-cache, max-age=0")
-
-    inspect_docs_file = STATIC_DIR / "docs" / "qa" / "geolibre_qa_inspect.html"
-    if inspect_docs_file.exists():
-        upload_file_to_gcs(inspect_docs_file, "docs/qa/geolibre_qa_inspect.html", content_type="text/html; charset=utf-8", cache_control="no-cache, max-age=0")
-    elif inspect_file.exists():
-        upload_file_to_gcs(inspect_file, "docs/qa/geolibre_qa_inspect.html", content_type="text/html; charset=utf-8", cache_control="no-cache, max-age=0")
 
     # Upload Data QA Manifest & Routes Catalog
     manifest_file = BASE_DIR / "data" / "lake" / "nsw_data_qa_manifest.json"

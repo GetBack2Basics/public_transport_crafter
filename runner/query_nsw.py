@@ -50,7 +50,7 @@ def run_interactive_pipeline(
         analysis = clarifier.analyze_intent(query_str)
 
         if not analysis["is_complete"]:
-            print("\n[AI CLARIFICATION REQUIRED]:")
+            print("\n[PARAMETER CLARIFICATION REQUIRED]:")
             print("To generate the most accurate timetable coordination query on GCS, please confirm:")
             for idx, item in enumerate(analysis["clarifications_needed"], 1):
                 print(f"\n {idx}. {item['question']}")

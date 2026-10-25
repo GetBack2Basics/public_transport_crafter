@@ -40,14 +40,14 @@
 
   <main class="container">
 
-    <!-- Step 1: Natural Language Inquiry & AI Clarifier -->
+    <!-- Step 1: Natural Language Inquiry & Transit Query Parser -->
     <section class="panel" id="panel-query">
       <div class="panel-header">
         <div>
           <span class="step-label">Step 1</span>
           <h2 class="panel-title">Natural Language Transit Inquiry</h2>
         </div>
-        <span class="badge">AI Intent Parser</span>
+        <span class="badge">Transit Query Parser</span>
       </div>
 
       <div class="query-box">
@@ -76,7 +76,7 @@
       <!-- Interactive Clarification Box (Dynamic) -->
       <div id="clarificationBox" class="clarification-card" style="display: none;">
         <div class="clarification-title">
-          <span>⚡ AI Clarification Required to Build Exact SQL</span>
+          <span>⚙️ Parameter Clarification Required to Build Exact SQL</span>
         </div>
         <div id="clarificationQuestions"></div>
         <div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 0.5rem;">
@@ -332,20 +332,20 @@
       </div>
     </section>
 
-    <!-- Step 6: AI Suggested Next Steps -->
+    <!-- Step 6: Scenario Simulations & Recommended Actions -->
     <section class="panel" id="panel-ai-steps" style="display: none;">
       <div class="panel-header">
         <div>
           <span class="step-label">Step 6</span>
-          <h2 class="panel-title">AI Suggested Next Steps & Scenario Simulations</h2>
+          <h2 class="panel-title">Scenario Simulations & Recommended Actions</h2>
         </div>
-        <span class="badge" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(0, 229, 255, 0.25)); color: #fff; border: 1px solid var(--accent-cyan);">🤖 Transit Copilot</span>
+        <span class="badge" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(0, 229, 255, 0.25)); color: #fff; border: 1px solid var(--accent-cyan);">⚡ Operational Toolkit</span>
       </div>
       <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
         Based on real corridor topology, traffic variances, and station loadings, select any scenario below to explore timetable adjustments or operational simulations:
       </p>
-      <div class="ai-steps-grid" id="aiStepsContainer">
-        <!-- Dynamically populated AI action cards -->
+      <div class="scenario-steps-grid ai-steps-grid" id="aiStepsContainer">
+        <!-- Dynamically populated scenario action cards -->
       </div>
     </section>
 

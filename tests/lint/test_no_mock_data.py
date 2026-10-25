@@ -1,7 +1,7 @@
 """
 tests/lint/test_no_mock_data.py
 Automated AST & Regex Scanner: Breaks CI/CD build on synthetic mock patterns.
-Enforces the GetBack2Basics AI Anti-Mock & Hallucination Defense Model.
+Enforces the Data Integrity & Zero-Mock Standard.
 """
 import os
 import re

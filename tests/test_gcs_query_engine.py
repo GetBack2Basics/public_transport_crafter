@@ -116,15 +116,16 @@ def test_spatial_route_geometry_and_1km_infrastructure():
             assert -38.0 <= infra["lat"] <= -28.0
             assert 140.0 <= infra["lon"] <= 155.0
 
-        # Verify analytics and AI suggested next steps
+        # Verify analytics and scenario simulations
         assert "analytics" in sc
         assert "buffer_distribution" in sc["analytics"]
         assert "hourly_frequency" in sc["analytics"]
         assert "performance_metrics" in sc["analytics"]
 
-        assert "ai_suggested_steps" in sc
-        assert len(sc["ai_suggested_steps"]) >= 3
-        for step in sc["ai_suggested_steps"]:
+        assert "scenario_actions" in sc or "ai_suggested_steps" in sc
+        steps = sc.get("scenario_actions") or sc.get("ai_suggested_steps")
+        assert len(steps) >= 3
+        for step in steps:
             assert "title" in step
             assert "prompt" in step
             assert len(step["title"]) > 0
