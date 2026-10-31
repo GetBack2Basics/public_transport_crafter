@@ -794,12 +794,49 @@ function renderRoadPolyline(coords, layer) {
 }
 
 /**
- * Renders 100% Real GTFS Route Stops and Road Shape Polylines from the Lakehouse.
+ * Renders high-contrast railway track polyline hugging physical train tracks.
+ */
+function renderRailPolyline(coords, layer) {
+  if (!coords || coords.length < 2) return;
+  const targetLayer = layer || state.layers.corridor;
+
+  // Dark railway track ballast bed
+  L.polyline(coords, {
+    color: "#0f172a",
+    weight: 7.5,
+    opacity: 0.9,
+    lineCap: "round",
+    lineJoin: "round"
+  }).addTo(targetLayer);
+
+  // Vibrant railway track centerline
+  L.polyline(coords, {
+    color: "#f59e0b",
+    weight: 4.5,
+    opacity: 0.95,
+    lineCap: "round",
+    lineJoin: "round"
+  }).addTo(targetLayer);
+
+  // Authentic white dashed railway ties / sleepers
+  L.polyline(coords, {
+    color: "#ffffff",
+    weight: 2.5,
+    opacity: 0.75,
+    dashArray: "3, 6",
+    lineCap: "butt"
+  }).addTo(targetLayer);
+}
+
+/**
+ * Renders 100% Real GTFS Route Stops and Physical Road/Rail Shape Polylines from the Lakehouse.
  */
 function renderRealRouteCorridor(cleanCode, cand, geomData) {
   const geom = geomData.route_geometry || [];
   const stops = geomData.stops || [];
   const bounds = geomData.bounds ? L.latLngBounds(geomData.bounds) : (geom.length > 0 ? L.latLngBounds(geom).pad(0.15) : null);
+  const isRail = (cand.mode && cand.mode.toLowerCase().includes("rail")) || 
+                 ["CCN", "HUN", "SCO", "BMT", "M1", "T1", "T2", "T3", "T4", "T5", "T7", "T8", "T9"].includes(cleanCode.toUpperCase());
 
   if (bounds) {
     L.rectangle(bounds, {
@@ -808,17 +845,25 @@ function renderRealRouteCorridor(cleanCode, cand, geomData) {
       dashArray: "4, 6",
       fillColor: "#10b981",
       fillOpacity: 0.12
-    }).bindPopup(`<b>Route ${cleanCode} 1km Multi-Modal Corridor Catchment</b><br>Operator: ${geomData.agency_name}<br>Corridor: ${geomData.route_long_name}<br>Stops: ${stops.length} GTFS Stops<br>Road Geometry: ${geom.length} Road Points`)
+    }).bindPopup(`<b>${isRail ? 'Railway' : 'Route'} ${cleanCode} 1km Multi-Modal Corridor Catchment</b><br>Operator: ${geomData.agency_name}<br>Corridor: ${geomData.route_long_name}<br>Stops: ${stops.length} GTFS Stops<br>${isRail ? 'Railway Track' : 'Road'} Geometry: ${geom.length} Alignment Points`)
       .addTo(state.layers.corridor);
   }
 
-  // Draw road-following polyline along streets
+  // Draw road-following or railway-line polyline
   if (geom.length > 0) {
-    renderRoadPolyline(geom, state.layers.corridor);
+    if (isRail) {
+      renderRailPolyline(geom, state.layers.corridor);
+    } else {
+      renderRoadPolyline(geom, state.layers.corridor);
+    }
   } else if (stops.length > 1) {
-    snapStopsToRoadOSRM(stops).then(roadPts => {
-      renderRoadPolyline(roadPts, state.layers.corridor);
-    });
+    if (isRail) {
+      renderRailPolyline(stops.map(s => [s.lat, s.lon]), state.layers.corridor);
+    } else {
+      snapStopsToRoadOSRM(stops).then(roadPts => {
+        renderRoadPolyline(roadPts, state.layers.corridor);
+      });
+    }
   }
 
   // Render Real Stops

@@ -170,6 +170,52 @@ async def api_execute_query(request: web.Request) -> web.Response:
                     "lon": float(r["stop_lon"])
                 })
 
+        # Authoritative Road Route Geometry & Railway Track Line Geometry lookup
+        route_geom = []
+        train_geom = []
+        bounds = []
+        infrastructure = []
+
+        opts_path = BASE_DIR / "data" / "lake" / "nsw_timetable_optimizations.json"
+        if opts_path.exists():
+            try:
+                with open(opts_path, "r", encoding="utf-8") as f:
+                    opts_data = json.load(f)
+                matched_sc = None
+                for k, sc in opts_data.items():
+                    if sc.get("route_a") == route_a and interchange.lower() in sc.get("interchange", "").lower():
+                        matched_sc = sc
+                        break
+                    if k.startswith(f"{route_a.lower()}_"):
+                        matched_sc = sc
+                        break
+                if matched_sc and "map" in matched_sc:
+                    m = matched_sc["map"]
+                    route_geom = m.get("route_geometry", [])
+                    train_geom = m.get("train_geometry", [])
+                    bounds = m.get("bounds", [])
+                    infrastructure = m.get("infrastructure", [])
+            except Exception as e:
+                logger.warning(f"Error loading optimizations in server: {e}")
+
+        # Check active geometries if route or train geometry still needed
+        geoms_path = BASE_DIR / "data" / "lake" / "nsw_active_route_geometries.json"
+        if (not route_geom or not train_geom) and geoms_path.exists():
+            try:
+                with open(geoms_path, "r", encoding="utf-8") as f:
+                    act_geoms = json.load(f).get("by_short_name", {})
+                if not route_geom and route_a.upper() in act_geoms:
+                    route_geom = act_geoms[route_a.upper()][0].get("route_geometry", [])
+                    if not bounds:
+                        bounds = act_geoms[route_a.upper()][0].get("bounds", [])
+                if not train_geom:
+                    for code in ['CCN', 'HUN', 'SCO', 'BMT', 'M1', 'T1', 'T2', 'T3', 'T4', 'T5', 'T7', 'T8', 'T9']:
+                        if code in route_b.upper() and code in act_geoms:
+                            train_geom = act_geoms[code][0].get("route_geometry", [])
+                            break
+            except Exception as e:
+                logger.warning(f"Error loading active route geometries in server: {e}")
+
         # Calculate KPIs
         total_trips = len(df_opt)
         opt_trips = int((df_opt["status"] == "OPTIMAL").sum()) if not df_opt.empty else 0
@@ -192,7 +238,11 @@ async def api_execute_query(request: web.Request) -> web.Response:
             "raw_connections": raw_sample,
             "map": {
                 "center": [center_lat, center_lon],
-                "stops": stops_list
+                "bounds": bounds,
+                "route_geometry": route_geom,
+                "train_geometry": train_geom,
+                "stops": stops_list,
+                "infrastructure": infrastructure
             },
             "kpis": {
                 "total_trips": total_trips,
