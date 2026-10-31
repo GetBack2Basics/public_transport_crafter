@@ -37,9 +37,19 @@ class GcsQueryEngine:
 
     def __init__(self, bucket_name: Optional[str] = None):
         self.bucket = bucket_name or GCS_BUCKET
-        self.fs = pafs.GcsFileSystem(anonymous=False)
         self.con = duckdb.connect()
-        self._register_statewide_tables()
+        use_remote = bool(os.environ.get("GOOGLE_APPLICATION_CREDENTIALS") or os.environ.get("USE_REMOTE_GCS"))
+        if use_remote:
+            try:
+                self.fs = pafs.GcsFileSystem(anonymous=False)
+                self._register_statewide_tables()
+            except Exception as e:
+                logger.warning(f"Could not connect to GCS filesystem directly ({e}), registering local Parquet lakehouse views.")
+                self.fs = None
+                self._register_local_tables()
+        else:
+            self.fs = None
+            self._register_local_tables()
 
     def _register_statewide_tables(self) -> None:
         """Registers the 5 statewide NSW transit tables directly from GCS."""
@@ -56,6 +66,23 @@ class GcsQueryEngine:
             dataset = ds.dataset(gcs_path, filesystem=self.fs)
             self.con.register(tbl_name, dataset)
         logger.info(f"Registered statewide NSW transit tables, Opal patronage, and congestion profiles from gs://{self.bucket}/lake/ in DuckDB")
+
+    def _register_local_tables(self) -> None:
+        """Registers local lakehouse Parquet tables into DuckDB views."""
+        tables = {
+            "routes": "data/lake/nsw_routes.parquet",
+            "stops": "data/lake/nsw_stops.parquet",
+            "trips": "data/lake/nsw_trips.parquet",
+            "stop_times": "data/lake/nsw_stop_times.parquet",
+            "calendar": "data/lake/nsw_calendar.parquet",
+            "opal": "data/lake/nsw_opal_station_patronage.parquet",
+            "congestion": "data/lake/nsw_corridor_congestion.parquet"
+        }
+        for tbl_name, rel_path in tables.items():
+            full_path = (BASE_DIR / rel_path).as_posix()
+            if os.path.exists(full_path):
+                self.con.execute(f"CREATE OR REPLACE VIEW {tbl_name} AS SELECT * FROM '{full_path}'")
+        logger.info("Registered local lakehouse tables in DuckDB views")
 
     def get_station_patronage(self, station_name: str) -> Optional[Dict[str, Any]]:
         """Retrieves Opal monthly entries, exits, and daily volume for a given station."""
@@ -196,6 +223,31 @@ WHERE ((date_diff('minute', a.arr_a, b.dep_b) BETWEEN 0 AND 45)
     OR (date_diff('minute', b.arr_b, a.dep_a) BETWEEN 0 AND 45))
 {stn_filter_sql}
 ORDER BY a.interchange, a.arr_a, b.arr_b
+"""
+        return sql.strip()
+
+    def build_station_routes_sql(self, stop_ids: List[str]) -> str:
+        """Constructs SQL to query all bus routes and schedules serving a list of transit stop IDs."""
+        stop_id_list_str = ", ".join(f"'{sid}'" for sid in stop_ids)
+        sql = f"""
+SELECT DISTINCT
+    r.route_short_name,
+    r.route_long_name,
+    r.agency_id,
+    s.stop_id,
+    s.stop_name,
+    s.stop_code,
+    t.trip_id,
+    t.trip_headsign,
+    t.direction_id,
+    st.departure_time,
+    st.arrival_time
+FROM routes r
+JOIN trips t ON r.route_id = t.route_id
+JOIN stop_times st ON t.trip_id = st.trip_id
+JOIN stops s ON st.stop_id = s.stop_id
+WHERE s.stop_id IN ({stop_id_list_str})
+ORDER BY st.departure_time, r.route_short_name
 """
         return sql.strip()
 

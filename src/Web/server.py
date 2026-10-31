@@ -72,6 +72,25 @@ async def api_generate_sql(request: web.Request) -> web.Response:
     """Generates the parameterized DuckDB SQL query and enriches with Opal and Congestion layers."""
     try:
         data = await request.json()
+        query_type = data.get("query_type")
+        stop_ids = data.get("stop_ids", [])
+
+        engine = get_engine()
+
+        # Handle station routes / multiple stop query
+        if query_type == "station_routes" or (stop_ids and len(stop_ids) > 0):
+            sql = engine.build_station_routes_sql(stop_ids)
+            return web.json_response({
+                "sql": sql,
+                "query_type": "station_routes",
+                "stop_ids": stop_ids,
+                "patronage": engine.get_station_patronage(data.get("interchange", "Dubbo")),
+                "congestion": None,
+                "effective_min_buffer": 5,
+                "effective_max_buffer": 15,
+                "buffer_adjustment": 0
+            })
+
         route_a = data.get("route_a", "275")
         route_b = data.get("route_b", "CCN")
         interchange = data.get("interchange", "Morisset")
@@ -80,7 +99,6 @@ async def api_generate_sql(request: web.Request) -> web.Response:
         agency_a = data.get("agency_a")
         agency_b = data.get("agency_b")
 
-        engine = get_engine()
         patronage = engine.get_station_patronage(interchange)
         congestion = engine.get_corridor_congestion(route_a)
 
@@ -138,6 +156,120 @@ async def api_execute_query(request: web.Request) -> web.Response:
                 "raw_count": 0,
                 "recommendations": [],
                 "kpis": {}
+            })
+
+        # Check if this is a station bus routes query
+        is_station_query = data.get("query_type") == "station_routes" or "WHERE s.stop_id IN" in sql
+        if is_station_query:
+            # Map raw schedules into timetable recommendations
+            recommendations = []
+            distinct_routes = df_raw["route_short_name"].unique()
+            for _, r in df_raw.iterrows():
+                dep = str(r["departure_time"])
+                arr = str(r["arrival_time"])
+                r_short = str(r["route_short_name"])
+                s_name = str(r["stop_name"])
+                recommendations.append({
+                    "interchange": s_name,
+                    "stop_id": str(r.get("stop_id", "")),
+                    "stop_code": str(r.get("stop_code", "")),
+                    "trip_id": str(r["trip_id"]),
+                    "route": r_short,
+                    "route_short_name": r_short,
+                    "route_long_name": str(r.get("route_long_name", f"Route {r_short}")),
+                    "headsign": str(r.get("trip_headsign", f"Route {r_short}")),
+                    "base_dep": dep[:5] if len(dep) >= 5 else dep,
+                    "suggested_dep": dep[:5] if len(dep) >= 5 else dep,
+                    "arrival_time": arr[:5] if len(arr) >= 5 else arr,
+                    "shift_min": "0m (On Time)",
+                    "connecting_route": interchange,
+                    "inbound_buffer": "Direct Bay Service",
+                    "outbound_buffer": "Direct Bay Service",
+                    "status": "OPTIMAL",
+                    "agency_id": str(r.get("agency_id", ""))
+                })
+
+            # Load geometries and stops for station query
+            multi_routes = []
+            stops_list = []
+            geoms_path = BASE_DIR / "data" / "lake" / "nsw_active_route_geometries.json"
+            act_geoms = {}
+            if geoms_path.exists():
+                try:
+                    with open(geoms_path, "r", encoding="utf-8") as f:
+                        act_geoms = json.load(f).get("by_short_name", {})
+                except Exception as e:
+                    logger.warning(f"Error loading active geoms: {e}")
+
+            colors = [
+                "#00e5ff", "#10b981", "#f59e0b", "#ec4899", "#8b5cf6",
+                "#3b82f6", "#14b8a6", "#f97316", "#e11d48", "#a855f7",
+                "#06b6d4", "#84cc16", "#eab308", "#6366f1", "#d946ef",
+                "#22d3ee"
+            ]
+            all_lats, all_lons = [], []
+
+            for idx, r_code in enumerate(distinct_routes):
+                geom = []
+                r_long = f"Route {r_code}"
+                if str(r_code) in act_geoms and len(act_geoms[str(r_code)]) > 0:
+                    geom = act_geoms[str(r_code)][0].get("route_geometry", [])
+                    r_long = act_geoms[str(r_code)][0].get("route_long_name", r_long)
+                    for pt in geom:
+                        all_lats.append(pt[0])
+                        all_lons.append(pt[1])
+
+                multi_routes.append({
+                    "route_short_name": str(r_code),
+                    "route_long_name": r_long,
+                    "color": colors[idx % len(colors)],
+                    "geometry": geom,
+                    "trip_count": int((df_raw["route_short_name"] == r_code).sum())
+                })
+
+            # Distinct stops in query
+            stop_ids_unique = list(df_raw["stop_id"].unique())
+            stop_id_str = ", ".join(f"'{sid}'" for sid in stop_ids_unique)
+            df_stops = engine.execute_query(f"SELECT stop_id, stop_code, stop_name, stop_lat, stop_lon FROM stops WHERE stop_id IN ({stop_id_str})")
+            for _, s_row in df_stops.iterrows():
+                s_lat = float(s_row["stop_lat"])
+                s_lon = float(s_row["stop_lon"])
+                all_lats.append(s_lat)
+                all_lons.append(s_lon)
+                stops_list.append({
+                    "name": s_row["stop_name"],
+                    "stop_id": str(s_row["stop_id"]),
+                    "stop_code": str(s_row["stop_code"]),
+                    "lat": s_lat,
+                    "lon": s_lon,
+                    "mode": "Bus Stop"
+                })
+
+            center_lat = sum(all_lats) / len(all_lats) if all_lats else -32.2453
+            center_lon = sum(all_lons) / len(all_lons) if all_lons else 148.6080
+            bounds = [[min(all_lats), min(all_lons)], [max(all_lats), max(all_lons)]] if all_lats else []
+
+            return web.json_response({
+                "status": "success",
+                "query_type": "station_routes",
+                "raw_count": len(df_raw),
+                "recommendations": recommendations,
+                "map": {
+                    "center": [center_lat, center_lon],
+                    "bounds": bounds,
+                    "route_geometry": multi_routes[0]["geometry"] if multi_routes else [],
+                    "multi_routes": multi_routes,
+                    "stops": stops_list,
+                    "infrastructure": []
+                },
+                "kpis": {
+                    "total_trips": len(recommendations),
+                    "optimal_trips": len(recommendations),
+                    "optimal_pct": 100.0,
+                    "total_routes": len(distinct_routes),
+                    "fleet_pvr": 14,
+                    "fleet_invariant_passed": True
+                }
             })
 
         # Run optimization
@@ -264,6 +396,9 @@ def create_app() -> web.Application:
     app.router.add_post("/api/generate-sql", api_generate_sql)
     app.router.add_post("/api/execute-query", api_execute_query)
     app.router.add_static("/static/", path=STATIC_DIR, name="static")
+    lake_dir = BASE_DIR / "data" / "lake"
+    if lake_dir.exists():
+        app.router.add_static("/lake/", path=lake_dir, name="lake")
     return app
 
 

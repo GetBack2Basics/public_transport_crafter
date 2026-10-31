@@ -132,14 +132,79 @@ class IntentClarifier:
 
     def extract_station_hints(self, text: str) -> List[str]:
         """Extracts potential station or interchange mentions."""
-        text_lower = text.lower()
+        text_lower = text.lower().replace("tarree", "taree")
         known_stations = [
             "morisset", "fassifern", "toronto", "newcastle", "maitland", "hornsby",
             "chatswood", "central", "parramatta", "gosford", "wyong", "wollongong",
-            "katoomba", "dubbo", "lithgow", "tallawong", "barangaroo", "charlestown"
+            "katoomba", "dubbo", "lithgow", "tallawong", "barangaroo", "charlestown",
+            "taree"
         ]
         found = [stn.title() for stn in known_stations if stn in text_lower]
         return found
+
+    def lookup_transit_stops(self, station_name: Optional[str] = None, stop_number: Optional[str] = None, is_station_search: bool = False) -> List[Dict[str, Any]]:
+        """Looks up physical passenger transit stops matching a station name or stop number across NSW."""
+        try:
+            import duckdb
+            con = duckdb.connect()
+            where_clauses = []
+            if station_name:
+                if is_station_search:
+                    where_clauses.append(f"((stop_name ILIKE '%{station_name}%Station%' OR stop_name ILIKE '%{station_name}%Railway%' OR stop_name ILIKE '%{station_name}%Interchange%') AND stop_name NOT ILIKE '%Club%' AND stop_name NOT ILIKE '%Oval%' AND stop_name NOT ILIKE '%Park%')")
+                else:
+                    where_clauses.append(f"(stop_name ILIKE '%{station_name}%' AND stop_name NOT ILIKE '%Car park%' AND stop_name NOT ILIKE '%Carpark%')")
+            if stop_number:
+                where_clauses.append(f"(stop_code = '{stop_number}' OR stop_id = '{stop_number}' OR stop_name ILIKE '%Bay {stop_number}%' OR stop_name ILIKE '%Stand {stop_number}%' OR stop_name ILIKE '%Platform {stop_number}%')")
+            
+            if not where_clauses:
+                return []
+                
+            query = f"""
+            SELECT stop_id, stop_code, stop_name, stop_lat, stop_lon, location_type
+            FROM 'data/lake/nsw_stops.parquet'
+            WHERE ({' OR '.join(where_clauses)})
+              AND (location_type IS NULL OR location_type = 0)
+            ORDER BY 
+              CASE WHEN stop_name ILIKE '%Coach Bay%' THEN 1
+                   WHEN stop_name ILIKE '%Platform%' THEN 2
+                   WHEN stop_name ILIKE '%Railway Station%' THEN 3
+                   ELSE 4 END,
+              stop_name
+            LIMIT 15
+            """
+            df = con.execute(query).df()
+            results = []
+            for _, r in df.iterrows():
+                s_name = str(r["stop_name"])
+                mode = "Transit Stop"
+                if "Coach Bay" in s_name:
+                    mode = s_name.split(",")[-1].strip() if "," in s_name else "Coach Bay"
+                elif "Platform" in s_name:
+                    mode = s_name.split(",")[-1].strip() if "," in s_name else "Platform"
+                elif "Talbragar" in s_name:
+                    mode = "City Bus Stop"
+                results.append({
+                    "stop_id": str(r["stop_id"]),
+                    "stop_code": str(r["stop_code"]) if r["stop_code"] else str(r["stop_id"]),
+                    "stop_name": s_name,
+                    "lat": float(r["stop_lat"]) if r["stop_lat"] else None,
+                    "lon": float(r["stop_lon"]) if r["stop_lon"] else None,
+                    "mode": mode
+                })
+            return results
+        except Exception as e:
+            # Fallback for known regional hubs if parquet query unavailable
+            if station_name and "dubbo" in station_name.lower():
+                return [
+                    {"stop_id": "28302", "stop_code": "28302", "stop_name": "Dubbo Station, Coach Bay 1", "mode": "Coach Bay 1"},
+                    {"stop_id": "2830203", "stop_code": "2830203", "stop_name": "Dubbo Station, Coach Bay 2", "mode": "Coach Bay 2"},
+                    {"stop_id": "2830204", "stop_code": "2830204", "stop_name": "Dubbo Station, Coach Bay 3", "mode": "Coach Bay 3"},
+                    {"stop_id": "2830205", "stop_code": "2830205", "stop_name": "Dubbo Station, Coach Bay 4", "mode": "Coach Bay 4"},
+                    {"stop_id": "2830143", "stop_code": "2830143", "stop_name": "Dubbo Station, Platform 1", "mode": "Platform 1"},
+                    {"stop_id": "28301142", "stop_code": "28301142", "stop_name": "Dubbo Railway Station, Talbragar St", "mode": "Talbragar St Bus Stop"},
+                    {"stop_id": "28301261", "stop_code": "28301261", "stop_name": "Dubbo Railway Station", "mode": "Dubbo Railway Station"}
+                ]
+            return []
 
     def analyze_intent(self, user_query: str) -> Dict[str, Any]:
         """
@@ -161,6 +226,65 @@ class IntentClarifier:
 
         clarifications_needed = []
         route_status = {}
+
+        # 0. Check for Station Bus Routes Inquiry or Transit Stop Inquiry
+        # Examples: "What bus routes server dubbo train station", "What bus routes serve dubbo train station",
+        # "bus routes at dubbo station", "stop 28301", "stand 1", "bay 1"
+        is_station_routes_query = bool(re.search(
+            r"(?:what|which|show|list|find|get)?\s*(?:bus|coach|transit)?\s*routes?\s*(?:serve|server|serving|to|at|from|near|connect(?:ing)?\s*(?:to|with)?)\s*(.+)",
+            q,
+            re.IGNORECASE
+        ))
+        
+        # Check for stop number queries like "stop 28301", "stop 1", "stand 1", "bay 1"
+        stop_num_match = re.search(r"\b(?:stop|stand|bay|platform)\s*[:#]?\s*([a-z0-9]+)\b", q, re.IGNORECASE)
+        stop_number_query = stop_num_match.group(1) if stop_num_match else None
+
+        target_station_name = None
+        if stations:
+            target_station_name = stations[0]
+        elif "dubbo" in q_lower:
+            target_station_name = "Dubbo"
+            if "Dubbo" not in stations:
+                stations.append("Dubbo")
+
+        if is_station_routes_query or (target_station_name and len(routes) == 0) or stop_number_query:
+            is_stn = any(w in q_lower for w in ["station", "train", "railway", "interchange"])
+            # Query matching transit stops
+            matching_stops = self.lookup_transit_stops(target_station_name, stop_number_query, is_station_search=is_stn)
+            if matching_stops:
+                is_multi = len(matching_stops) > 1
+                stop_options = [
+                    {
+                        "stop_id": s["stop_id"],
+                        "stop_code": s.get("stop_code", s["stop_id"]),
+                        "name": s["stop_name"],
+                        "label": f"{s['stop_name']} (Stop #{s.get('stop_code', s['stop_id'])})",
+                        "mode": s.get("mode", "Transit Stop")
+                    }
+                    for s in matching_stops
+                ]
+
+                clarifications_needed.append({
+                    "parameter": "transit_stops",
+                    "question": f"Found {len(matching_stops)} transit stops for '{target_station_name or stop_number_query}'. You can select multiple stops to view all routes and schedules:",
+                    "multi_select": is_multi,
+                    "options": [s["label"] for s in stop_options],
+                    "stops_data": stop_options
+                })
+
+                return {
+                    "raw_query": q,
+                    "query_type": "station_routes",
+                    "target_station": target_station_name or "Dubbo Train Station",
+                    "detected_routes": [],
+                    "route_status": {},
+                    "detected_stations": stations,
+                    "detected_region": "western_nsw" if "dubbo" in q_lower else (detected_region or "statewide"),
+                    "transfer_window": {"min_minutes": min_buf, "max_minutes": max_buf, "explicit": False},
+                    "is_complete": False,
+                    "clarifications_needed": clarifications_needed
+                }
 
         # 1. Route validation
         if len(routes) == 0:

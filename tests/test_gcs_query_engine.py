@@ -175,3 +175,159 @@ def test_universal_route_parsing_and_nearest_options():
     assert any("77" in opt or "7" in opt for opt in status_7777["nearest_options"])
 
 
+def test_station_bus_routes_intent_and_multi_stop_selection():
+    """
+    Verify requirement:
+    - User searches for: "What bus routes server dubbo train station"
+    - Multiple transit stops with matching numbers/names are returned
+    - User can select multiple stops (multi_select is True)
+    """
+    clarifier = IntentClarifier("data/lake/nsw_route_lookup_index.json")
+
+    # 1. Test "What bus routes server dubbo train station" (including user typo "server")
+    for q in [
+        "What bus routes server dubbo train station",
+        "What bus routes serve dubbo train station",
+        "bus routes at dubbo station"
+    ]:
+        res = clarifier.analyze_intent(q)
+        assert res["query_type"] == "station_routes", f"Failed to identify station_routes for query: {q}"
+        assert res["target_station"] == "Dubbo"
+        assert len(res["clarifications_needed"]) == 1
+        clarif = res["clarifications_needed"][0]
+        assert clarif["parameter"] == "transit_stops"
+        assert clarif["multi_select"] is True, "multi_select MUST be True when multiple transit stops exist"
+        assert len(clarif["stops_data"]) >= 5, "Expected multiple transit stops (Coach Bays, Platforms) at Dubbo Station"
+        
+        # Verify Coach Bays and Platform 1 are present with stop codes
+        stop_names = [s["name"] for s in clarif["stops_data"]]
+        assert any("Coach Bay" in n for n in stop_names), f"Coach bays missing in {stop_names}"
+        assert any("Platform" in n or "Talbragar" in n for n in stop_names)
+
+
+def test_dubbo_station_routes_lakehouse_query_execution():
+    """
+    Verify requirement:
+    - User executes query for Dubbo train station stops
+    - GCS lakehouse query returns all bus routes serving the station and all timetable schedules
+    """
+    engine = GcsQueryEngine()
+    stop_ids = ['28302', '2830203', '2830204', '2830205', '2830143', '28301142', '28301261']
+    sql = engine.build_station_routes_sql(stop_ids)
+
+    assert "SELECT DISTINCT" in sql
+    assert "routes r" in sql
+    assert "stop_times st" in sql
+    assert "28302" in sql
+
+    df = engine.execute_query(sql)
+    assert not df.empty, "Dubbo station query must return non-empty schedules from lakehouse"
+    
+    # Verify schedules count and distinct bus routes
+    assert len(df) >= 50, f"Expected >= 50 scheduled trips at Dubbo Station, got {len(df)}"
+    routes = df["route_short_name"].unique()
+    assert len(routes) >= 15, f"Expected >= 15 distinct bus routes serving Dubbo Station, got {len(routes)}"
+    
+    # Specific known Dubbo bus routes
+    assert "555" in routes, "Route 555 (Narromine) should serve Dubbo Station"
+    assert "556" in routes, "Route 556 (Wellington) should serve Dubbo Station"
+    assert "572" in routes, "Route 572 (Orana Mall Loop) should serve Dubbo Station"
+    assert "361" in routes or "362" in routes, "Tamworth routes should serve Dubbo Coach Terminal"
+
+
+def test_dubbo_route_geometries_present_for_map():
+    """
+    Verify requirement:
+    - User sees all the bus routes on the map
+    - All routes serving Dubbo Station have genuine road network geometry
+    """
+    import json
+    with open("data/lake/nsw_active_route_geometries.json", "r", encoding="utf-8") as f:
+        active_geoms = json.load(f)
+    
+    by_short = active_geoms.get("by_short_name", {})
+    # Core Dubbo routes
+    for r in ["555", "556", "572", "361", "362", "511", "512", "513", "514", "516", "523", "524", "569", "570", "589", "590", "791", "792"]:
+        assert r in by_short, f"Route {r} geometry missing in active_route_geometries"
+        geom = by_short[r][0].get("route_geometry", [])
+        assert len(geom) >= 2, f"Route {r} must have physical road geometry points"
+
+    # Verify scenario in nsw_timetable_optimizations.json
+    with open("data/lake/nsw_timetable_optimizations.json", "r", encoding="utf-8") as f:
+        opts = json.load(f)
+
+    assert "dubbo_train_station" in opts
+    sc = opts["dubbo_train_station"]
+    assert len(sc["stops"]) >= 5
+    assert len(sc["map"]["multi_routes"]) >= 15
+    assert len(sc["recommendations"]) >= 50
+
+
+def test_taree_corridor_bus_routes_and_geometries():
+    """
+    Verify requirements for query: 'busses from Tarree'
+    1. Handles spelling typos ('busses' vs 'buses', 'Tarree' vs 'Taree')
+    2. Retrieves multiple active passenger bus routes operating in Taree
+    3. Guarantees genuine road centerline alignments in active geometries
+    """
+    import json
+    clarifier = IntentClarifier()
+    stations = clarifier.extract_station_hints("busses from Tarree")
+    assert "Taree" in stations, "Taree should be extracted as station hint from 'busses from Tarree'"
+
+    # Verify routes in route lookup index
+    with open("data/lake/nsw_route_lookup_index.json", "r", encoding="utf-8") as f:
+        route_index = json.load(f)
+
+    taree_routes = []
+    for k, item in route_index.items():
+        for c in item.get("corridors", []):
+            if "taree" in c.get("route_long_name", "").lower():
+                taree_routes.append(item["route_short_name"])
+                break
+
+    assert len(taree_routes) >= 10, f"Expected at least 10 Taree bus routes, found {len(taree_routes)}"
+    for core_r in ["310", "316", "320", "319", "311", "312", "313", "314", "150"]:
+        assert core_r in taree_routes, f"Core Taree bus route {core_r} should be present"
+
+    # Verify road network centerlines in active geometries
+    with open("data/lake/nsw_active_route_geometries.json", "r", encoding="utf-8") as f:
+        active_geoms = json.load(f)
+
+    by_short = active_geoms.get("by_short_name", {})
+    for core_r in ["310", "316", "320", "319", "311", "312", "313", "314", "150", "154", "309", "135", "136"]:
+        assert core_r in by_short, f"Route {core_r} must be in active route geometries"
+        geom = by_short[core_r][0].get("route_geometry", [])
+        assert len(geom) >= 2, f"Route {core_r} must have authentic road geometry coordinates"
+
+
+def test_taree_lakehouse_multi_bus_sql_query():
+    """
+    Verify DuckDB query against lakehouse Parquet tables for multiple Taree bus routes.
+    """
+    import duckdb
+    con = duckdb.connect()
+    
+    # Query trips for multiple selected Taree routes
+    selected_routes = ["310", "316", "320", "319", "150"]
+    route_list_str = ", ".join(f"'{r}'" for r in selected_routes)
+    
+    query = f"""
+    SELECT DISTINCT
+        r.route_short_name,
+        r.route_long_name,
+        t.trip_id,
+        t.trip_headsign
+    FROM 'data/lake/nsw_routes.parquet' r
+    JOIN 'data/lake/nsw_trips.parquet' t ON r.route_id = t.route_id
+    WHERE r.route_short_name IN ({route_list_str})
+    ORDER BY r.route_short_name
+    """
+    df = con.execute(query).df()
+    assert len(df) > 0, "Query should return scheduled trips for selected Taree bus routes"
+    retrieved_routes = set(df["route_short_name"].unique())
+    assert len(retrieved_routes) >= 4, "Should return trips across multiple selected routes"
+
+
+
+
