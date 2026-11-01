@@ -63,30 +63,8 @@ def deploy_portal():
             upload_file_to_gcs(sf, f"screenshots/{sf.name}", content_type="image/png", cache_control="public, max-age=3600")
             upload_file_to_gcs(sf, f"docs/screenshots/{sf.name}", content_type="image/png", cache_control="public, max-age=3600")
 
-    # Upload Data QA Manifest & Routes Catalog
-    manifest_file = BASE_DIR / "data" / "lake" / "nsw_data_qa_manifest.json"
-    if manifest_file.exists():
-        upload_file_to_gcs(manifest_file, "lake/nsw_data_qa_manifest.json", content_type="application/json", cache_control="public, max-age=120")
-
-    catalog_file = BASE_DIR / "data" / "lake" / "nsw_routes_catalog.json"
-    if catalog_file.exists():
-        upload_file_to_gcs(catalog_file, "lake/nsw_routes_catalog.json", content_type="application/json", cache_control="public, max-age=300")
-
-    index_file = BASE_DIR / "data" / "lake" / "nsw_route_lookup_index.json"
-    if index_file.exists():
-        upload_file_to_gcs(index_file, "lake/nsw_route_lookup_index.json", content_type="application/json", cache_control="public, max-age=300")
-
-    opts_file = BASE_DIR / "data" / "lake" / "nsw_timetable_optimizations.json"
-    if opts_file.exists():
-        upload_file_to_gcs(opts_file, "lake/nsw_timetable_optimizations.json", content_type="application/json", cache_control="no-cache, max-age=0")
-
-    active_geoms_file = BASE_DIR / "data" / "lake" / "nsw_active_route_geometries.json"
-    if active_geoms_file.exists():
-        upload_file_to_gcs(active_geoms_file, "lake/nsw_active_route_geometries.json", content_type="application/json", cache_control="public, max-age=300")
-
-    interchanges_file = BASE_DIR / "data" / "lake" / "nsw_interchanges.json"
-    if interchanges_file.exists():
-        upload_file_to_gcs(interchanges_file, "lake/nsw_interchanges.json", content_type="application/json", cache_control="public, max-age=300")
+    # NOTE: lake data layers (QA manifest, routes catalog, optimizations, geometries, interchanges)
+    # are published directly to GCS by their generator scripts; deploy never uploads local lake copies.
 
     print(f"\nSuccessfully deployed to GCS!")
     print(f"Planning Portal URL: https://storage.googleapis.com/{bucket}/index.html")

@@ -38,18 +38,17 @@ class GcsQueryEngine:
     def __init__(self, bucket_name: Optional[str] = None):
         self.bucket = bucket_name or GCS_BUCKET
         self.con = duckdb.connect()
-        use_remote = bool(os.environ.get("GOOGLE_APPLICATION_CREDENTIALS") or os.environ.get("USE_REMOTE_GCS"))
-        if use_remote:
-            try:
-                self.fs = pafs.GcsFileSystem(anonymous=False)
-                self._register_statewide_tables()
-            except Exception as e:
-                logger.warning(f"Could not connect to GCS filesystem directly ({e}), registering local Parquet lakehouse views.")
-                self.fs = None
-                self._register_local_tables()
-        else:
-            self.fs = None
+        # GCS is the authoritative target. Local Parquet views are an explicit, opt-in escape hatch
+        # (ALLOW_LOCAL_LAKE=1) and are never used as a silent fallback.
+        self.fs = None
+        if os.environ.get("ALLOW_LOCAL_LAKE") == "1":
+            logger.warning("ALLOW_LOCAL_LAKE=1: using LOCAL Parquet views (not the GCS lakehouse)")
             self._register_local_tables()
+        else:
+            self.fs = pafs.GcsFileSystem(anonymous=False)  # raises if ADC/credentials are unavailable
+            self._register_statewide_tables()
+        self.source = "local" if self.fs is None else f"gs://{self.bucket}/lake/"
+        logger.info(f"Lakehouse source: {self.source}")
 
     def _register_statewide_tables(self) -> None:
         """Registers the 5 statewide NSW transit tables directly from GCS."""
@@ -101,6 +100,107 @@ class GcsQueryEngine:
         except Exception as e:
             logger.warning(f"Failed to lookup Opal patronage: {e}")
         return None
+
+    # GTFS route_type -> node mode (NSW extended route types)
+    _ROUTE_TYPE_MODE = {
+        2: "train", 106: "train", 100: "train", 400: "train",
+        401: "metro", 1: "metro",
+        900: "lightrail", 0: "lightrail",
+        4: "ferry", 1000: "ferry",
+        204: "coach", 205: "coach", 202: "coach", 200: "coach", 3: "bus",
+    }
+    _MODE_PRIORITY = ["train", "metro", "lightrail", "ferry", "coach", "bus"]
+
+    def verify_infrastructure_activity(self, nodes: List[Dict[str, Any]], today=None) -> List[Dict[str, Any]]:
+        """
+        Verifies each name-detected infrastructure node against GTFS and drops inactive/mis-typed nodes.
+
+        A node is kept only if scheduled trips of a route type matching its claimed mode
+        (train/metro/lightrail/ferry) call at it (or its child platforms) within the feed's
+        calendar validity window. Bus nodes just need any active scheduled service. Kept nodes
+        are annotated with `active`, `departures_today`, `weekly_services` and an `opal` summary.
+        """
+        if not nodes:
+            return []
+        from datetime import datetime
+        from zoneinfo import ZoneInfo
+        now = today or datetime.now(ZoneInfo("Australia/Sydney"))
+        today_str = now.strftime("%Y%m%d")
+        dow = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"][now.weekday()]
+
+        def q(s: str) -> str:
+            return s.replace("'", "''")
+
+        values = ", ".join(
+            f"({i}, '{q(str(n['name']))}', {float(n['lat'])}, {float(n['lon'])})" for i, n in enumerate(nodes)
+        )
+        sql = f"""
+        WITH n(idx, name, lat, lon) AS (VALUES {values}),
+        base AS (
+            SELECT n.idx, s.stop_id FROM n
+            JOIN stops s ON s.stop_name = n.name
+             AND ABS(s.stop_lat - n.lat) < 0.0006 AND ABS(s.stop_lon - n.lon) < 0.0006
+        ),
+        cand AS (
+            SELECT idx, stop_id FROM base
+            UNION
+            SELECT b.idx, c.stop_id FROM base b JOIN stops c ON c.parent_station = b.stop_id
+        )
+        SELECT cand.idx, r.route_type,
+               COUNT(DISTINCT t.trip_id) AS trips_in_feed,
+               COUNT(DISTINCT CASE WHEN c.{dow} = 1 AND c.start_date <= '{today_str}' AND c.end_date >= '{today_str}'
+                                   THEN t.trip_id END) AS trips_today
+        FROM cand
+        JOIN stop_times st ON st.stop_id = cand.stop_id
+        JOIN trips t ON t.trip_id = st.trip_id
+        JOIN routes r ON r.route_id = t.route_id
+        JOIN calendar c ON c.service_id = t.service_id
+        WHERE c.end_date >= '{today_str}'
+        GROUP BY cand.idx, r.route_type
+        """
+        try:
+            df = self.con.execute(sql).df()
+        except Exception as e:
+            logger.warning(f"Infrastructure activity verification failed, returning nodes unverified: {e}")
+            return nodes
+
+        served: Dict[int, Dict[str, Dict[str, int]]] = {}
+        for _, row in df.iterrows():
+            mode = self._ROUTE_TYPE_MODE.get(int(row["route_type"]), "bus")
+            m = served.setdefault(int(row["idx"]), {}).setdefault(mode, {"feed": 0, "today": 0})
+            m["feed"] += int(row["trips_in_feed"])
+            m["today"] += int(row["trips_today"])
+
+        verified = []
+        for i, node in enumerate(nodes):
+            modes = served.get(i, {})
+            claimed = node.get("mode")
+            if claimed not in modes:
+                # Non-running or mis-typed (e.g. a "Rural Fire Station" bus stop tagged as a train station)
+                logger.info(f"Dropping inactive/mis-typed infrastructure node '{node.get('name')}' (claimed {claimed}, GTFS modes {list(modes)})")
+                continue
+            info = modes[claimed]
+            out = dict(node)
+            out["active"] = True
+            out["departures_today"] = info["today"]
+            out["weekly_services"] = info["feed"]
+            out["opal"] = self._opal_summary(out)
+            verified.append(out)
+        return verified
+
+    def _opal_summary(self, node: Dict[str, Any]) -> str:
+        """Opal patronage text for a verified node (station-level taps exist for rail/metro/light rail only)."""
+        today_n = node.get("departures_today", 0)
+        sched = f"{today_n} scheduled services today" if today_n else "No services today (runs other days)"
+        if node.get("mode") in ("train", "metro", "lightrail"):
+            clean = str(node["name"]).split(",")[0]
+            for token in (" Station", " Platform"):
+                clean = clean.split(token)[0]
+            p = self.get_station_patronage(clean.strip())
+            if p:
+                return (f"{int(p['daily_avg_patronage']):,} Opal trips/day • Rank #{int(p['statewide_rank'])} "
+                        f"({p['patronage_tier']}) • {sched}")
+        return f"Opal tap data not published at stop level • {sched}"
 
     def get_corridor_congestion(self, route_name: str) -> Optional[Dict[str, Any]]:
         """Retrieves corridor congestion variance and buffer adjustments for a route."""

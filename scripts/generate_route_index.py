@@ -1,17 +1,18 @@
 import sys
 sys.path.insert(0, r"c:\Projects\nsw_public_transport_crafter\.venv\Lib\site-packages")
-import duckdb
 import json
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(BASE_DIR))
+from src.Ingestion.lake_io import get_lake_engine, publish_lake_json
 
-con = duckdb.connect()
+con = get_lake_engine().con  # routes / trips views backed by GCS Parquet
 
 print("=== Analyzing Distinct Route Short Names across NSW ===")
 res = con.execute("""
     SELECT count(DISTINCT route_short_name) as distinct_names, count(*) as total_routes
-    FROM 'data/lake/nsw_routes.parquet'
+    FROM routes
 """).df()
 print(res)
 
@@ -23,8 +24,8 @@ routes_df = con.execute("""
         r.route_type,
         r.agency_id,
         count(t.trip_id) as trip_count
-    FROM 'data/lake/nsw_routes.parquet' r
-    LEFT JOIN 'data/lake/nsw_trips.parquet' t ON r.route_id = t.route_id
+    FROM routes r
+    LEFT JOIN trips t ON r.route_id = t.route_id
     GROUP BY r.route_id, r.route_short_name, r.route_long_name, r.route_type, r.agency_id
     ORDER BY trip_count DESC
 """).df()
@@ -90,8 +91,5 @@ for _, row in routes_df.iterrows():
 print(f"Total distinct route short names: {len(route_index):,}")
 
 # Save compact route index
-out_file = BASE_DIR / "data" / "lake" / "nsw_route_lookup_index.json"
-with open(out_file, "w", encoding="utf-8") as f:
-    json.dump(route_index, f)
-
-print(f"Wrote {out_file} ({out_file.stat().st_size / 1024:.1f} KB)")
+publish_lake_json("nsw_route_lookup_index.json", route_index)
+print("Published nsw_route_lookup_index.json to GCS")

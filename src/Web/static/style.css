@@ -1,500 +1,95 @@
 /*
   src/Web/static/style.css
-  Modern, high-aesthetic styling for NSW Transit Planning Portal.
-  Glassmorphism, dark palette, vibrant accent glows, clean responsive layout.
+  Harmonized styles for NSW Transit Planning Portal with Tailwind Theme Palette.
+  TfNSW Roundels, Map Pins, Leaflet UI Customization, Animations, and Badges.
 */
 
 :root {
-  --bg-primary: #0a0e17;
-  --bg-secondary: #121829;
-  --bg-card: rgba(18, 24, 41, 0.75);
-  --bg-card-hover: rgba(26, 34, 56, 0.85);
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  --border-accent: rgba(0, 229, 255, 0.3);
+  --primary: #001026;
+  --primary-container: #0b2545;
+  --secondary: #006973;
+  --secondary-container: #81f0ff;
+  --surface: #faf8ff;
+  --surface-container-low: #f2f3ff;
+  --surface-container: #eaedff;
+  --surface-container-high: #e2e7ff;
+  --surface-container-lowest: #ffffff;
+  --on-surface: #131b2e;
+  --on-surface-variant: #44474e;
+  --on-tertiary-container: #d47300;
   
-  --text-main: #f0f4f8;
-  --text-muted: #8e9bb0;
-  --text-dim: #5c687e;
-  
-  --accent-cyan: #00e5ff;
-  --accent-emerald: #10b981;
-  --accent-amber: #f59e0b;
-  --accent-rose: #f43f5e;
-  --accent-indigo: #6366f1;
-  
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-heading: 'Outfit', sans-serif;
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-heading: 'Space Grotesk', sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
-  
-  --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.4);
-  --shadow-glow: 0 0 20px rgba(0, 229, 255, 0.15);
 }
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-body {
-  background-color: var(--bg-primary);
-  color: var(--text-main);
-  font-family: var(--font-sans);
-  line-height: 1.5;
-  min-height: 100vh;
-  background-image: 
-    radial-gradient(circle at 15% 20%, rgba(0, 229, 255, 0.05) 0%, transparent 40%),
-    radial-gradient(circle at 85% 75%, rgba(99, 102, 241, 0.05) 0%, transparent 40%);
-  background-attachment: fixed;
-}
-
-/* Header */
-header {
-  background: rgba(10, 14, 23, 0.85);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border-subtle);
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  padding: 1rem 2rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.brand-icon {
-  width: 36px;
-  height: 36px;
-  background: linear-gradient(135deg, var(--accent-cyan), var(--accent-indigo));
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 800;
-  color: #000;
-  font-size: 1.1rem;
-}
-
-.brand h1 {
-  font-family: var(--font-heading);
-  font-size: 1.25rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-}
-
-.brand span {
-  color: var(--accent-cyan);
-}
-
-.header-badges {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.badge {
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 0.25rem 0.65rem;
-  border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--border-subtle);
-  color: var(--text-muted);
-}
-
-.badge-live {
-  background: rgba(16, 185, 129, 0.12);
-  border-color: rgba(16, 185, 129, 0.3);
-  color: var(--accent-emerald);
-}
-
-/* Layout */
-.container {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 2rem;
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-}
-
-/* Cards & Sections */
-.panel {
-  background: var(--bg-card);
-  backdrop-filter: blur(16px);
-  border: 1px solid var(--border-subtle);
-  border-radius: 14px;
-  padding: 1.5rem;
-  box-shadow: var(--shadow-card);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.panel:hover {
-  border-color: rgba(255, 255, 255, 0.14);
-}
-
-.panel-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-}
-
-.step-label {
-  font-family: var(--font-heading);
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--accent-cyan);
-  font-weight: 700;
-}
-
-.panel-title {
-  font-family: var(--font-heading);
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: #fff;
-}
-
-/* Step 1: Input & Clarification */
-.query-box {
-  display: flex;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
-}
-
-.query-input {
-  flex: 1;
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid var(--border-subtle);
-  border-radius: 10px;
-  padding: 0.85rem 1.2rem;
-  font-size: 1rem;
-  color: #fff;
-  font-family: var(--font-sans);
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.query-input:focus {
-  outline: none;
-  border-color: var(--accent-cyan);
-  box-shadow: 0 0 12px rgba(0, 229, 255, 0.2);
-}
-
-.btn {
-  background: linear-gradient(135deg, var(--accent-cyan), #00b4d8);
-  color: #05101e;
-  border: none;
-  border-radius: 10px;
-  padding: 0 1.5rem;
-  font-weight: 700;
-  font-size: 0.95rem;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s;
-}
-
-.btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 15px rgba(0, 229, 255, 0.35);
-}
-
-.btn:active {
-  transform: translateY(0);
-}
-
+/* Button glow and pulse animations */
 .btn-pulse {
   animation: pulse-glow 1.8s infinite;
-  border: 1px solid rgba(255, 255, 255, 0.8) !important;
 }
 
 @keyframes pulse-glow {
   0% {
-    box-shadow: 0 0 0 0 rgba(0, 229, 255, 0.75);
+    box-shadow: 0 0 0 0 rgba(0, 105, 115, 0.7);
   }
   70% {
-    box-shadow: 0 0 0 10px rgba(0, 229, 255, 0);
+    box-shadow: 0 0 0 10px rgba(0, 105, 115, 0);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(0, 229, 255, 0);
+    box-shadow: 0 0 0 0 rgba(0, 105, 115, 0);
   }
 }
 
-.btn-secondary {
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--text-main);
-  border: 1px solid var(--border-subtle);
+/* Spinner */
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
 }
 
-.btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.14);
-  box-shadow: none;
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
-/* Prompt Chips */
-.quick-chips {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-.chips-label {
-  font-size: 0.8rem;
-  color: var(--text-dim);
-}
-
-.chip {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--border-subtle);
-  border-radius: 9999px;
-  padding: 0.3rem 0.8rem;
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.chip:hover {
-  border-color: var(--accent-cyan);
-  color: var(--accent-cyan);
-  background: rgba(0, 229, 255, 0.06);
-}
-
-/* Clarification Box */
-.clarification-card {
-  background: rgba(18, 24, 41, 0.95);
-  border: 1px solid var(--border-accent);
-  border-radius: 12px;
-  padding: 1.25rem;
-  margin-top: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.clarification-title {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-weight: 600;
-  color: var(--accent-cyan);
-  font-size: 0.95rem;
-}
-
-.clarification-question {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.clarification-label {
-  font-size: 0.85rem;
-  color: var(--text-main);
-  font-weight: 500;
-}
-
-.options-group {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
+/* Option Button selected states for dynamic clarification */
 .option-btn {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--border-subtle);
-  color: var(--text-muted);
-  padding: 0.4rem 0.8rem;
-  border-radius: 8px;
-  font-size: 0.82rem;
-  cursor: pointer;
   transition: all 0.15s ease;
-}
-
-.option-btn:hover {
-  border-color: rgba(255, 255, 255, 0.3);
-  color: #fff;
 }
 
 .option-btn.selected {
-  background: rgba(0, 229, 255, 0.15);
-  border-color: var(--accent-cyan);
-  color: var(--accent-cyan);
-  font-weight: 600;
+  border-color: #006973 !important;
+  background-color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(0, 105, 115, 0.12) !important;
+  opacity: 1 !important;
 }
 
-/* Step 2: SQL & Context */
-.step-grid {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 1.5rem;
-}
-
-@media (max-width: 960px) {
-  .step-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.sql-editor {
-  width: 100%;
-  height: 220px;
-  background: #060910;
-  border: 1px solid var(--border-subtle);
-  border-radius: 10px;
-  padding: 1rem;
-  color: #7dd3fc;
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  line-height: 1.6;
-  resize: vertical;
-}
-
-.sql-editor:focus {
-  outline: none;
-  border-color: var(--accent-cyan);
-}
-
-.context-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.context-card {
-  background: rgba(0, 0, 0, 0.25);
-  border: 1px solid var(--border-subtle);
-  border-radius: 10px;
-  padding: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
-.context-card.opal {
-  border-left: 3px solid var(--accent-indigo);
-}
-
-.context-card.traffic {
-  border-left: 3px solid var(--accent-amber);
-}
-
-.context-card.fleet {
-  border-left: 3px solid var(--accent-emerald);
-}
-
-.context-title {
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-dim);
-  font-weight: 700;
-}
-
-.context-value {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #fff;
-}
-
-.context-sub {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-}
-
-/* Step 3: Map & 1km Multi-Modal Infrastructure */
-.map-wrapper {
-  position: relative;
-  width: 100%;
-  border-radius: 12px;
-  overflow: hidden;
-  border: 1px solid var(--border-subtle);
-}
-
-#map {
-  width: 100%;
-  height: 520px;
-  background: #090e17;
-  z-index: 10;
-}
-
-/* Map HUD Legend */
-.map-legend {
-  position: absolute;
-  bottom: 18px;
-  right: 18px;
-  background: rgba(11, 19, 43, 0.88);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 10px;
-  padding: 0.75rem 1rem;
-  z-index: 400;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-  pointer-events: auto;
-  max-width: 260px;
-}
-
-.legend-header {
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--accent-cyan);
-  margin-bottom: 0.5rem;
-  padding-bottom: 0.35rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.legend-items {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  font-size: 0.78rem;
-  color: var(--text-main);
-}
-
-.legend-line.route-line {
-  width: 20px;
-  height: 4px;
-  background: var(--accent-cyan);
-  border-radius: 2px;
-  box-shadow: 0 0 8px rgba(0, 229, 255, 0.7);
-}
-
-.legend-swatch.buffer-swatch {
-  width: 20px;
-  height: 10px;
-  background: rgba(99, 102, 241, 0.25);
-  border: 1px dashed rgba(99, 102, 241, 0.8);
-  border-radius: 2px;
-}
-
-.legend-pin {
-  width: 20px;
-  height: 20px;
+/* TfNSW Official Multi-Modal Roundels */
+.tfnsw-roundel {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.75rem;
   border-radius: 50%;
-  border: 1px solid #fff;
+  color: #ffffff !important;
+  font-family: var(--font-heading), 'Plus Jakarta Sans', sans-serif;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+  flex-shrink: 0;
 }
 
-/* Custom Marker Pins */
+.tfnsw-roundel.tfnsw-train { background: #f99d1c !important; }
+.tfnsw-roundel.tfnsw-metro { background: #168388 !important; }
+.tfnsw-roundel.tfnsw-bus { background: #00b5e2 !important; }
+.tfnsw-roundel.tfnsw-ferry { background: #00774b !important; }
+.tfnsw-roundel.tfnsw-lightrail { background: #e4002b !important; }
+.tfnsw-roundel.tfnsw-coach { background: #732a82 !important; }
+
+/* Custom Leaflet Map Pins */
 .infra-pin {
   display: flex;
   align-items: center;
@@ -507,88 +102,87 @@ header {
 }
 
 .infra-pin:hover {
-  transform: scale(1.28);
+  transform: scale(1.3);
   z-index: 999 !important;
 }
 
 .pin-train {
-  background: #f99d1c !important; /* TfNSW Official Train Orange (#F99D1C) */
+  background: #f99d1c !important;
   color: #ffffff !important;
-  font-family: var(--font-heading), 'Inter', sans-serif;
-  font-weight: 800;
-  box-shadow: 0 0 14px rgba(249, 157, 28, 0.85);
+  font-family: var(--font-heading);
+  font-weight: 700;
+  box-shadow: 0 0 12px rgba(249, 157, 28, 0.8);
 }
 
 .pin-metro {
-  background: #168388 !important; /* TfNSW Official Metro Teal (#168388) */
+  background: #168388 !important;
   color: #ffffff !important;
-  font-family: var(--font-heading), 'Inter', sans-serif;
-  font-weight: 800;
-  box-shadow: 0 0 14px rgba(22, 131, 136, 0.85);
+  font-family: var(--font-heading);
+  font-weight: 700;
+  box-shadow: 0 0 12px rgba(22, 131, 136, 0.8);
 }
 
 .pin-ferry {
-  background: #00774b !important; /* TfNSW Official Ferry Green (#00774B) */
+  background: #00774b !important;
   color: #ffffff !important;
-  font-family: var(--font-heading), 'Inter', sans-serif;
-  font-weight: 800;
-  box-shadow: 0 0 14px rgba(0, 119, 75, 0.85);
+  font-family: var(--font-heading);
+  font-weight: 700;
+  box-shadow: 0 0 12px rgba(0, 119, 75, 0.8);
 }
 
 .pin-bus {
-  background: #00b5e2 !important; /* TfNSW Official Bus Blue (#00B5E2) */
+  background: #00b5e2 !important;
   color: #ffffff !important;
-  font-family: var(--font-heading), 'Inter', sans-serif;
-  font-weight: 800;
-  box-shadow: 0 0 14px rgba(0, 181, 226, 0.85);
+  font-family: var(--font-heading);
+  font-weight: 700;
+  box-shadow: 0 0 12px rgba(0, 181, 226, 0.8);
 }
 
 .pin-lightrail {
-  background: #e4002b !important; /* TfNSW Official Light Rail Red (#E4002B) */
+  background: #e4002b !important;
   color: #ffffff !important;
-  font-family: var(--font-heading), 'Inter', sans-serif;
-  font-weight: 800;
-  box-shadow: 0 0 14px rgba(228, 0, 43, 0.85);
+  font-family: var(--font-heading);
+  font-weight: 700;
+  box-shadow: 0 0 12px rgba(228, 0, 43, 0.8);
 }
 
 .pin-coach {
-  background: #732a82 !important; /* TfNSW Official Coach Purple (#732A82) */
+  background: #732a82 !important;
   color: #ffffff !important;
-  font-family: var(--font-heading), 'Inter', sans-serif;
-  font-weight: 800;
-  box-shadow: 0 0 14px rgba(115, 42, 130, 0.85);
+  font-family: var(--font-heading);
+  font-weight: 700;
+  box-shadow: 0 0 12px rgba(115, 42, 130, 0.8);
 }
 
 .pin-terminus-origin {
-  background: linear-gradient(135deg, #22c55e, #15803d);
-  box-shadow: 0 0 14px rgba(34, 197, 94, 0.9);
+  background: linear-gradient(135deg, #10b981, #047857);
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.85);
 }
 
 .pin-terminus-dest {
-  background: linear-gradient(135deg, #f43f5e, #be123c);
-  box-shadow: 0 0 14px rgba(244, 63, 94, 0.9);
+  background: linear-gradient(135deg, #ef4444, #b91c1c);
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.85);
 }
 
-/* Leaflet Dark Custom Popups */
+/* Leaflet Clean Contemporary Popups */
 .leaflet-popup-content-wrapper {
-  background: rgba(11, 19, 43, 0.95) !important;
-  backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  background: #001026 !important;
+  color: #ffffff !important;
   border-radius: 12px !important;
-  color: #f1f5f9 !important;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.65) !important;
+  box-shadow: 0 10px 30px rgba(0, 16, 38, 0.4) !important;
   padding: 4px 6px !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
 }
 
 .leaflet-popup-tip {
-  background: rgba(11, 19, 43, 0.95) !important;
-  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  background: #001026 !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
 }
 
 .infra-popup {
   font-family: var(--font-sans);
   line-height: 1.4;
+  padding: 4px;
 }
 
 .infra-popup-badge {
@@ -598,517 +192,438 @@ header {
   font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
-  padding: 0.2rem 0.55rem;
-  border-radius: 4px;
   margin-bottom: 0.35rem;
 }
 
-.infra-popup-badge.mode-train {
-  background: rgba(249, 157, 28, 0.2);
-  color: #fbbf24;
-  border: 1px solid rgba(249, 157, 28, 0.5);
-}
-
-.infra-popup-badge.mode-metro {
-  background: rgba(22, 131, 136, 0.25);
-  color: #5eead4;
-  border: 1px solid rgba(22, 131, 136, 0.5);
-}
-
-.infra-popup-badge.mode-ferry {
-  background: rgba(0, 119, 75, 0.25);
-  color: #6ee7b7;
-  border: 1px solid rgba(0, 119, 75, 0.5);
-}
-
-.infra-popup-badge.mode-bus {
-  background: rgba(0, 181, 226, 0.2);
-  color: #38bdf8;
-  border: 1px solid rgba(0, 181, 226, 0.5);
-}
-
-.infra-popup-badge.mode-lightrail {
-  background: rgba(228, 0, 43, 0.2);
-  color: #fda4af;
-  border: 1px solid rgba(228, 0, 43, 0.5);
-}
-
-.infra-popup-badge.mode-coach {
-  background: rgba(115, 42, 130, 0.25);
-  color: #d8b4fe;
-  border: 1px solid rgba(115, 42, 130, 0.5);
-}
-
-/* Transport for NSW (TfNSW) Official Mode Symbology Roundels */
-.tfnsw-roundel {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  min-width: 22px;
-  border-radius: 50%;
-  color: #ffffff !important;
-  font-family: var(--font-heading), 'Inter', sans-serif;
-  font-weight: 800;
-  font-size: 0.74rem;
-  line-height: 1;
-  text-align: center;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
-  vertical-align: middle;
-  border: 1.5px solid #ffffff;
-}
-
-.tfnsw-roundel.tfnsw-train { background: #f99d1c !important; }
-.tfnsw-roundel.tfnsw-metro { background: #168388 !important; }
-.tfnsw-roundel.tfnsw-bus { background: #00b5e2 !important; }
-.tfnsw-roundel.tfnsw-ferry { background: #00774b !important; }
-.tfnsw-roundel.tfnsw-lightrail { background: #e4002b !important; }
-.tfnsw-roundel.tfnsw-coach { background: #732a82 !important; }
+.infra-popup-badge.mode-train { color: #ffdcc3; }
+.infra-popup-badge.mode-metro { color: #81f0ff; }
+.infra-popup-badge.mode-ferry { color: #a7f3d0; }
+.infra-popup-badge.mode-bus { color: #90f1ff; }
+.infra-popup-badge.mode-lightrail { color: #fecdd3; }
+.infra-popup-badge.mode-coach { color: #e9d5ff; }
 
 .infra-popup-name {
   font-size: 0.95rem;
   font-weight: 700;
-  color: #fff;
-  margin-bottom: 0.25rem;
+  color: #ffffff;
+  margin-bottom: 0.35rem;
+  font-family: var(--font-heading);
 }
 
 .infra-popup-dist {
-  font-size: 0.8rem;
-  color: var(--accent-cyan);
+  font-size: 0.78rem;
+  color: #81f0ff;
   font-weight: 600;
-  margin-bottom: 0.3rem;
+  margin-bottom: 0.25rem;
 }
 
 .infra-popup-services {
-  font-size: 0.75rem;
-  color: var(--text-muted);
+  font-size: 0.72rem;
+  color: #94a3b8;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 0.35rem;
+  margin-top: 0.35rem;
 }
 
-/* Step 2: SQL & Context Grid */
-.step-grid {
-  display: grid;
-  grid-template-columns: 1.8fr 1.2fr;
-  gap: 1.5rem;
-  align-items: start;
+/* Leaflet Controls Styling */
+.leaflet-bar {
+  border: none !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+  border-radius: 8px !important;
+  overflow: hidden;
 }
 
-@media (max-width: 960px) {
-  .step-grid {
-    grid-template-columns: 1fr;
-  }
+.leaflet-bar a {
+  background-color: #ffffff !important;
+  color: #131b2e !important;
+  border-bottom: 1px solid #eaedff !important;
 }
 
-.sql-editor-wrapper {
+.leaflet-bar a:hover {
+  background-color: #f2f3ff !important;
+}
+
+.leaflet-control-layers {
+  background: #ffffff !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08) !important;
+  border: 1px solid #eaedff !important;
+  color: #131b2e !important;
+  font-family: var(--font-sans) !important;
+  font-size: 0.8rem !important;
+}
+
+
+/* ==========================================================================
+   Legacy token bridge
+   app.js still emits inline styles that use the original dark-theme variable
+   names. Map them onto the light Tailwind palette so dynamic content stays legible.
+   ========================================================================== */
+:root {
+  --accent-cyan: #006973;
+  --accent-teal: #006d78;
+  --accent-emerald: #00774b;
+  --accent-amber: #b45f00;
+  --accent-rose: #ba1a1a;
+  --text-main: #131b2e;
+  --text-muted: #44474e;
+  --text-dim: #74777f;
+}
+
+/* Leaflet popups stay dark navy, so re-map the tokens to light-on-dark values */
+.leaflet-popup-content {
+  --accent-cyan: #81f0ff;
+  --accent-teal: #66d6e5;
+  --accent-emerald: #6ee7b7;
+  --text-main: #ffffff;
+  --text-muted: #cbd5e1;
+  --text-dim: #94a3b8;
+  font-family: var(--font-sans);
+}
+
+html { scroll-behavior: smooth; }
+body { font-family: var(--font-sans); }
+section[id^="panel-"] { scroll-margin-top: 8rem; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: #c4c6cf; border-radius: 9999px; }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* ---------- Shell: sidebar nav ---------- */
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: 0.5rem;
+  color: var(--on-surface-variant);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  text-decoration: none;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.nav-link:hover { background: var(--surface-container-high); color: var(--on-surface); }
+.nav-link.active {
+  background: var(--primary-container);
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+/* ---------- Shell: header workflow pills ---------- */
+.step-pill {
+  padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
+  background: var(--surface-container);
+  color: var(--on-surface);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.step-pill:hover { background: var(--surface-container-high); }
+.step-pill.active { background: var(--primary-container); color: #ffffff; }
+
+.ribbon-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.5rem;
+  background: var(--surface-container);
+  color: var(--on-surface);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* ---------- Panels ---------- */
+.panel-card {
+  background: var(--surface-container-lowest);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.step-tag {
+  padding: 0.25rem 0.625rem;
+  border-radius: 0.25rem;
+  background: var(--primary);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.tile-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--on-surface-variant);
+}
+
+.context-tile,
+.kpi-tile {
+  padding: 1rem;
+  border-radius: 0.75rem;
+  background: var(--surface-container-low);
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
+.kpi-tile { gap: 0.125rem; }
 
-.sql-toolbar {
-  display: flex;
-  justify-content: space-between;
+/* ---------- Buttons ---------- */
+.btn {
+  display: inline-flex;
   align-items: center;
-  padding: 0.35rem 0.75rem;
-  background: rgba(0, 0, 0, 0.4);
-  border: 1px solid var(--border-subtle);
-  border-bottom: none;
-  border-radius: 10px 10px 0 0;
-  font-size: 0.75rem;
-  color: var(--text-dim);
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.25rem;
+  padding: 0 1.25rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: var(--secondary);
+  color: #ffffff;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  transition: background-color 0.15s ease, opacity 0.15s ease;
+  white-space: nowrap;
 }
+.btn:hover { background: #00575f; }
+.btn:disabled { opacity: 0.65; cursor: progress; }
+.btn-primary { background: var(--primary); }
+.btn-primary:hover { background: var(--primary-container); }
+.btn-secondary { background: var(--surface-container); color: var(--on-surface); box-shadow: none; }
+.btn-secondary:hover { background: var(--surface-container-high); }
 
+/* ---------- Chips ---------- */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.375rem 0.75rem;
+  border: 1px solid transparent;
+  border-radius: 9999px;
+  background: var(--surface-container);
+  color: var(--on-surface);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.chip:hover { background: var(--surface-container-high); }
+.chip-featured { background: var(--primary); color: #ffffff; }
+.chip-featured:hover { background: var(--primary-container); }
+
+/* ---------- Badges ---------- */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.6rem;
+  border: 1px solid transparent;
+  border-radius: 9999px;
+  background: var(--surface-container);
+  color: var(--on-surface-variant);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+.badge-accent { background: rgba(0, 105, 115, 0.1); color: var(--secondary); }
+
+.badge-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.badge-tag.optimal { background: rgba(0, 105, 115, 0.12); color: var(--secondary); }
+.badge-tag.tight { background: rgba(212, 115, 0, 0.14); color: #a35700; }
+.badge-tag.long { background: rgba(186, 26, 26, 0.1); color: #ba1a1a; }
+
+/* ---------- Clarification (Step 1, rendered by app.js) ---------- */
+.clarification-question { display: flex; flex-direction: column; gap: 0.75rem; }
+.clarification-label { font-size: 14px; line-height: 20px; color: var(--on-surface-variant); }
+.clarification-label b { color: var(--on-surface); }
+.options-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 0.75rem;
+}
+.option-btn {
+  text-align: left;
+  padding: 1rem;
+  border: 2px solid transparent;
+  border-radius: 0.75rem;
+  background: var(--surface-container-lowest);
+  color: var(--on-surface);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  cursor: pointer;
+  opacity: 0.85;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+.option-btn:hover { opacity: 1; box-shadow: 0 4px 12px rgba(0, 16, 38, 0.08); }
+
+/* ---------- SQL editor ---------- */
 .sql-editor {
   width: 100%;
-  min-height: 290px;
-  background: #060d17;
-  color: #67e8f9;
-  font-family: var(--font-mono);
-  font-size: 0.82rem;
-  line-height: 1.55;
+  min-height: 340px;
+  flex: 1;
   padding: 1rem;
-  border-radius: 0 0 10px 10px;
-  border: 1px solid var(--border-subtle);
+  border: none;
+  outline: none;
   resize: vertical;
-  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.6);
-  white-space: pre;
+  background: var(--primary);
+  color: #d5e3ff;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.65;
   tab-size: 2;
 }
+.sql-editor::placeholder { color: #778db2; }
 
-.sql-editor:focus {
-  outline: none;
-  border-color: var(--accent-cyan);
-  box-shadow: 0 0 12px rgba(0, 229, 255, 0.25), inset 0 2px 10px rgba(0, 0, 0, 0.6);
+/* ---------- Map ---------- */
+#map { font-family: var(--font-sans); z-index: 1; }
+.legend-roundel { width: 16px; height: 16px; font-size: 9px; }
+
+.pin-hub {
+  background: linear-gradient(135deg, #006973, #001026) !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 14px rgba(0, 105, 115, 0.85);
 }
 
-.context-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.context-card {
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid var(--border-subtle);
-  border-radius: 10px;
-  padding: 1.1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  border-left: 4px solid var(--accent-indigo);
-  transition: transform 0.15s ease, border-color 0.15s ease;
-}
-
-.context-card:hover {
-  transform: translateY(-2px);
-  border-color: var(--border-glow);
-}
-
-.context-card.opal {
-  border-left-color: var(--accent-cyan);
-}
-
-.context-card.traffic {
-  border-left-color: var(--accent-amber);
-}
-
-.context-card.fleet {
-  border-left-color: var(--accent-emerald);
-}
-
-.context-title {
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  font-weight: 700;
-  letter-spacing: 0.04em;
-}
-
-.context-value {
-  font-size: 1.35rem;
-  font-weight: 700;
-  color: #fff;
-  font-family: var(--font-heading);
-}
-
-.context-sub {
-  font-size: 0.8rem;
-  color: var(--text-dim);
-}
-
-/* Step 4: Tables & KPIs */
-.kpis-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.kpi-card {
-  background: rgba(0, 0, 0, 0.25);
-  border: 1px solid var(--border-subtle);
-  border-radius: 10px;
-  padding: 1rem;
+/* ---------- Inspector banner (dark card) ---------- */
+.inspector-item {
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  background: var(--primary-container);
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
 }
-
-.kpi-label {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  text-transform: uppercase;
-}
-
-.kpi-num {
-  font-size: 1.6rem;
-  font-weight: 800;
-  color: #fff;
-  font-family: var(--font-heading);
-}
-
-.table-wrapper {
-  overflow-x: auto;
-  border-radius: 10px;
-  border: 1px solid var(--border-subtle);
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  text-align: left;
-  font-size: 0.875rem;
-}
-
-th {
-  background: rgba(255, 255, 255, 0.03);
-  color: var(--text-muted);
-  font-weight: 600;
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--border-subtle);
-  white-space: nowrap;
-}
-
-td {
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-  color: var(--text-main);
-  white-space: nowrap;
-}
-
-tr:hover td {
-  background: rgba(255, 255, 255, 0.02);
-}
-
-.badge-tag {
-  font-size: 0.72rem;
-  font-weight: 700;
-  padding: 0.2rem 0.5rem;
-  border-radius: 4px;
-}
-
-.badge-tag.optimal {
-  background: rgba(16, 185, 129, 0.15);
-  color: var(--accent-emerald);
-}
-
-.badge-tag.tight {
-  background: rgba(245, 158, 11, 0.15);
-  color: var(--accent-amber);
-}
-
-.badge-tag.long {
-  background: rgba(244, 63, 94, 0.15);
-  color: var(--accent-rose);
-}
-
-/* Loading Overlay */
-.spinner {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(0, 0, 0, 0.2);
-  border-top-color: #000;
-  border-radius: 50%;
-  animation: spin 0.6s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-/* Selected Transit Node / Route Inspector Banner */
-.inspector-banner {
-  background: linear-gradient(135deg, rgba(11, 19, 43, 0.95), rgba(15, 23, 42, 0.95));
-  border: 1px solid var(--accent-cyan);
-  border-left: 4px solid var(--accent-cyan);
-  border-radius: 12px;
-  padding: 1.25rem 1.5rem;
-  margin-bottom: 1.5rem;
-  box-shadow: 0 8px 24px rgba(0, 229, 255, 0.15);
-  animation: fadeInDown 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@keyframes fadeInDown {
-  from { opacity: 0; transform: translateY(-8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.inspector-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.inspector-title-group {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-
-.inspector-name {
-  font-size: 1.25rem;
-  font-weight: 800;
-  color: #fff;
-  font-family: var(--font-heading);
-  margin: 0;
-}
-
-.inspector-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1.25rem;
-}
-
-.inspector-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-}
-
 .inspector-label {
-  font-size: 0.72rem;
-  text-transform: uppercase;
+  font-size: 11px;
+  font-weight: 700;
   letter-spacing: 0.05em;
-  color: var(--text-dim);
-  font-weight: 700;
+  text-transform: uppercase;
+  color: #778db2;
 }
+.inspector-val { font-size: 14px; font-weight: 600; color: #ffffff; }
 
-.inspector-val {
-  font-size: 1rem;
-  font-weight: 700;
-  color: #fff;
-}
-
-/* Step 5: Charts Grid */
-.charts-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
-  margin-bottom: 1.5rem;
-}
-
-@media (max-width: 960px) {
-  .charts-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.chart-card {
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid var(--border-subtle);
-  border-radius: 12px;
-  padding: 1.25rem;
-  display: flex;
-  flex-direction: column;
-}
-
-.chart-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 1rem;
-  gap: 0.5rem;
-}
-
-.chart-title {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: #fff;
-}
-
-.chart-subtitle {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  margin-top: 0.2rem;
-}
-
-.chart-canvas-container {
-  position: relative;
-  width: 100%;
-  height: 260px;
-}
-
-/* Step 6: Scenario Simulations & Recommended Actions */
-.scenario-steps-grid,
-.ai-steps-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
-  gap: 1.25rem;
-}
-
-.scenario-step-card,
-.ai-step-card {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--border-subtle);
-  border-radius: 12px;
-  padding: 1.25rem;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: 1rem;
-  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.scenario-step-card:hover,
-.ai-step-card:hover {
-  transform: translateY(-3px);
-  border-color: var(--accent-cyan);
-  box-shadow: 0 10px 24px rgba(0, 229, 255, 0.14);
-}
-
-.scenario-step-top,
-.ai-step-top {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.scenario-step-meta,
-.ai-step-meta {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.scenario-step-badge,
-.ai-step-badge {
-  font-size: 0.7rem;
-  font-weight: 700;
-  padding: 0.2rem 0.5rem;
-  border-radius: 4px;
-  background: rgba(99, 102, 241, 0.2);
-  color: #a5b4fc;
-  border: 1px solid rgba(99, 102, 241, 0.4);
-}
-
-.scenario-step-tag,
-.ai-step-tag {
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: var(--accent-cyan);
-}
-
-.scenario-step-title,
-.ai-step-title {
-  font-size: 0.98rem;
-  font-weight: 700;
-  color: #fff;
-  line-height: 1.35;
-}
-
-.scenario-step-desc,
-.ai-step-desc {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  line-height: 1.5;
-}
-
-.scenario-step-btn,
-.ai-step-btn {
-  background: rgba(255, 255, 255, 0.06);
-  color: #fff;
-  border: 1px solid var(--border-subtle);
-  border-radius: 8px;
-  padding: 0.55rem 1rem;
-  font-size: 0.82rem;
-  font-weight: 700;
-  cursor: pointer;
+.infra-badge {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  transition: all 0.15s ease;
+  gap: 0.35rem;
+  padding: 0.2rem 0.65rem;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
 }
+.infra-badge.mode-train { background: rgba(249, 157, 28, 0.22); color: #ffdcc3; }
+.infra-badge.mode-metro { background: rgba(22, 131, 136, 0.3); color: #81f0ff; }
+.infra-badge.mode-bus { background: rgba(0, 181, 226, 0.22); color: #90f1ff; }
+.infra-badge.mode-ferry { background: rgba(0, 119, 75, 0.3); color: #a7f3d0; }
+.infra-badge.mode-lightrail { background: rgba(228, 0, 43, 0.25); color: #fecdd3; }
+.infra-badge.mode-coach { background: rgba(115, 42, 130, 0.3); color: #e9d5ff; }
 
-.scenario-step-btn:hover,
-.ai-step-btn:hover {
-  background: linear-gradient(135deg, var(--accent-cyan), #00b4d8);
-  color: #05101e;
-  border-color: var(--accent-cyan);
-  box-shadow: 0 4px 14px rgba(0, 229, 255, 0.35);
+/* ---------- Data tables ---------- */
+.table-wrapper {
+  overflow-x: auto;
+  border-radius: 0.75rem;
+  background: var(--surface-container-low);
 }
+.data-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; line-height: 20px; }
+.data-table thead { background: var(--surface-container); }
+.data-table th {
+  padding: 0.75rem 1rem;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--on-surface-variant);
+  white-space: nowrap;
+}
+.data-table td { padding: 0.75rem 1rem; color: var(--on-surface); border-top: 1px solid var(--surface-container); vertical-align: middle; }
+.data-table tbody tr { transition: background-color 0.12s ease; }
+.data-table tbody tr:hover { background: rgba(234, 237, 255, 0.6); }
+.data-table code { font-family: var(--font-mono); font-size: 12px; color: var(--on-surface-variant); }
+.data-table .empty-cell { text-align: center; color: var(--text-dim); padding: 2rem; }
+
+/* Mode badges inside light tables (popup palette is too pale here) */
+.data-table .infra-popup-badge { margin-bottom: 0; }
+.data-table .infra-popup-badge.mode-train { color: #a35700; }
+.data-table .infra-popup-badge.mode-metro { color: #0f6064; }
+.data-table .infra-popup-badge.mode-bus { color: #007a99; }
+.data-table .infra-popup-badge.mode-ferry { color: #00774b; }
+.data-table .infra-popup-badge.mode-lightrail { color: #b00021; }
+.data-table .infra-popup-badge.mode-coach { color: #732a82; }
+
+/* ---------- Charts ---------- */
+.chart-canvas-container { position: relative; height: 260px; width: 100%; }
+
+/* ---------- Scenario cards (Step 6, rendered by app.js) ---------- */
+.scenario-step-card {
+  padding: 1.25rem;
+  border-radius: 0.75rem;
+  background: var(--surface-container-low);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1.25rem;
+  transition: box-shadow 0.15s ease;
+}
+.scenario-step-card:hover { box-shadow: 0 4px 12px rgba(0, 16, 38, 0.08); }
+.scenario-step-top { display: flex; flex-direction: column; gap: 0.75rem; }
+.scenario-step-meta { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.scenario-step-badge {
+  padding: 0.25rem 0.625rem;
+  border-radius: 0.25rem;
+  background: var(--surface-container);
+  color: var(--on-surface);
+  font-size: 11px;
+  font-weight: 700;
+}
+.scenario-step-tag {
+  padding: 0.125rem 0.5rem;
+  border-radius: 0.25rem;
+  background: rgba(0, 105, 115, 0.1);
+  color: var(--secondary);
+  font-size: 11px;
+  font-weight: 700;
+}
+.scenario-step-title { font-family: var(--font-heading); font-size: 18px; line-height: 24px; font-weight: 600; color: var(--on-surface); }
+.scenario-step-desc { font-size: 14px; line-height: 1.6; color: var(--on-surface-variant); }
+.scenario-step-btn {
+  width: 100%;
+  height: 2.5rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: var(--surface-container);
+  color: var(--on-surface);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.scenario-step-card:hover .scenario-step-btn { background: var(--primary); color: #ffffff; }

@@ -46,6 +46,60 @@ def get_engine() -> GcsQueryEngine:
     return _engine
 
 
+_lake_cache: Dict[str, Any] = {}
+LAKE_TTL_SECONDS = 300
+LAKE_PROXY_ALLOWED = {
+    "nsw_timetable_optimizations.json", "nsw_opal_station_patronage.json", "nsw_corridor_congestion.json",
+    "nsw_active_route_geometries.json", "nsw_interchanges.json", "nsw_routes_catalog.json",
+    "nsw_route_lookup_index.json", "nsw_data_qa_manifest.json",
+}
+
+
+def load_lake_bytes(name: str) -> bytes:
+    """Fetches lake/<name> from GCS (cached 5 min). Never reads the local workspace."""
+    import time
+    import tempfile
+    from src.Ingestion.gcs_manager import download_blob_from_gcs
+
+    hit = _lake_cache.get(name)
+    if hit and time.time() - hit[0] < LAKE_TTL_SECONDS:
+        return hit[1]
+    with tempfile.TemporaryDirectory() as tmp:
+        dest = Path(tmp) / name
+        if download_blob_from_gcs(f"lake/{name}", dest):
+            data = dest.read_bytes()
+            _lake_cache[name] = (time.time(), data)
+            return data
+    if hit:  # serve stale rather than fail if GCS blips
+        return hit[1]
+    raise FileNotFoundError(f"gs://{os.environ.get('GCS_BUCKET', 'nsw-transit-spatial-crafter')}/lake/{name} not available")
+
+
+def load_lake_json(name: str) -> Dict[str, Any]:
+    try:
+        return json.loads(load_lake_bytes(name).decode("utf-8"))
+    except Exception as e:
+        logger.warning(f"Could not load {name} from GCS: {e}")
+        return {}
+
+
+def load_optimizations() -> Dict[str, Any]:
+    """nsw_timetable_optimizations.json from the GCS lakehouse."""
+    return load_lake_json("nsw_timetable_optimizations.json")
+
+
+async def handle_lake_proxy(request: web.Request) -> web.Response:
+    """Serves /lake/<file> straight from the GCS lakehouse (allow-listed JSON layers only)."""
+    name = request.match_info["name"]
+    if name not in LAKE_PROXY_ALLOWED:
+        return web.json_response({"error": "not found"}, status=404)
+    try:
+        body = load_lake_bytes(name)
+    except FileNotFoundError as e:
+        return web.json_response({"error": str(e)}, status=404)
+    return web.Response(body=body, content_type="application/json", headers={"Cache-Control": "public, max-age=300"})
+
+
 async def handle_index(request: web.Request) -> web.FileResponse:
     """Serves the main web app index.html."""
     index_file = STATIC_DIR / "index.html"
@@ -308,11 +362,9 @@ async def api_execute_query(request: web.Request) -> web.Response:
         bounds = []
         infrastructure = []
 
-        opts_path = BASE_DIR / "data" / "lake" / "nsw_timetable_optimizations.json"
-        if opts_path.exists():
+        opts_data = load_optimizations()
+        if opts_data:
             try:
-                with open(opts_path, "r", encoding="utf-8") as f:
-                    opts_data = json.load(f)
                 matched_sc = None
                 for k, sc in opts_data.items():
                     if sc.get("route_a") == route_a and interchange.lower() in sc.get("interchange", "").lower():
@@ -331,11 +383,9 @@ async def api_execute_query(request: web.Request) -> web.Response:
                 logger.warning(f"Error loading optimizations in server: {e}")
 
         # Check active geometries if route or train geometry still needed
-        geoms_path = BASE_DIR / "data" / "lake" / "nsw_active_route_geometries.json"
-        if (not route_geom or not train_geom) and geoms_path.exists():
+        if not route_geom or not train_geom:
             try:
-                with open(geoms_path, "r", encoding="utf-8") as f:
-                    act_geoms = json.load(f).get("by_short_name", {})
+                act_geoms = load_lake_json("nsw_active_route_geometries.json").get("by_short_name", {})
                 if not route_geom and route_a.upper() in act_geoms:
                     route_geom = act_geoms[route_a.upper()][0].get("route_geometry", [])
                     if not bounds:
@@ -347,6 +397,9 @@ async def api_execute_query(request: web.Request) -> web.Response:
                             break
             except Exception as e:
                 logger.warning(f"Error loading active route geometries in server: {e}")
+
+        # Only show nodes GTFS confirms are actually served, with Opal/service info
+        infrastructure = engine.verify_infrastructure_activity(infrastructure)
 
         # Calculate KPIs
         total_trips = len(df_opt)
@@ -396,9 +449,7 @@ def create_app() -> web.Application:
     app.router.add_post("/api/generate-sql", api_generate_sql)
     app.router.add_post("/api/execute-query", api_execute_query)
     app.router.add_static("/static/", path=STATIC_DIR, name="static")
-    lake_dir = BASE_DIR / "data" / "lake"
-    if lake_dir.exists():
-        app.router.add_static("/lake/", path=lake_dir, name="lake")
+    app.router.add_get("/lake/{name}", handle_lake_proxy)  # GCS-backed; no local lake directory
     return app
 
 

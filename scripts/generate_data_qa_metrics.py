@@ -1,31 +1,37 @@
 import os
 import sys
-import glob
 import json
-import duckdb
 from pathlib import Path
+import pyarrow.dataset as ds
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(BASE_DIR))
+from src.Ingestion.lake_io import get_lake_engine, list_lake_parquet, publish_lake_json
+from src.Ingestion.gcs_manager import get_active_gcs_bucket
 
-con = duckdb.connect()
+engine = get_lake_engine()
+con = engine.con
+bucket = get_active_gcs_bucket()
 
-print("=== Generating Lakehouse Table Inventory QA Metrics ===")
+print("=== Generating Lakehouse Table Inventory QA Metrics (from GCS) ===")
 table_metrics = []
-for p in sorted(glob.glob(str(BASE_DIR / "data" / "lake" / "*.parquet"))):
-    filename = os.path.basename(p)
-    size_mb = round(os.path.getsize(p) / (1024 * 1024), 3)
+for filename, size_bytes in sorted(list_lake_parquet().items()):
+    size_mb = round(size_bytes / (1024 * 1024), 3)
     try:
-        cnt = con.execute(f"SELECT count(*) FROM '{p}'").fetchone()[0]
-        cols_df = con.execute(f"DESCRIBE SELECT * FROM '{p}'").df()
+        dataset = ds.dataset(f"{bucket}/lake/{filename}", filesystem=engine.fs)
+        con.register("qa_tbl", dataset)
+        cnt = con.execute("SELECT count(*) FROM qa_tbl").fetchall()[0][0]
+        cols_df = con.execute("DESCRIBE SELECT * FROM qa_tbl").df()
         cols = cols_df["column_name"].tolist()
         types = cols_df["column_type"].tolist()
         
         # Check null count on first column
-        null_cnt = con.execute(f"SELECT count(*) FROM '{p}' WHERE {cols[0]} IS NULL").fetchone()[0]
+        null_cnt = con.execute(f"SELECT count(*) FROM qa_tbl WHERE \"{cols[0]}\" IS NULL").fetchall()[0][0]
+        con.unregister("qa_tbl")
         
         table_metrics.append({
             "table_name": filename,
-            "gcs_uri": f"gs://nsw-transit-spatial-crafter/lake/{filename}",
+            "gcs_uri": f"gs://{bucket}/lake/{filename}",
             "row_count": cnt,
             "size_mb": size_mb,
             "column_count": len(cols),
@@ -41,6 +47,7 @@ for p in sorted(glob.glob(str(BASE_DIR / "data" / "lake" / "*.parquet"))):
         print(f"Error on {filename}: {e}")
 
 print(f"Generated metrics for {len(table_metrics)} lakehouse tables.")
+assert table_metrics, "No table metrics generated from GCS Parquet; refusing to publish an empty QA manifest."
 
 print("=== Generating Searchable Route Catalog Index (10,266 routes) ===")
 # Extract all distinct routes
@@ -52,8 +59,8 @@ routes_df = con.execute("""
         r.route_type,
         r.agency_id,
         count(t.trip_id) as trip_count
-    FROM 'data/lake/nsw_routes.parquet' r
-    LEFT JOIN 'data/lake/nsw_trips.parquet' t ON r.route_id = t.route_id
+    FROM routes r
+    LEFT JOIN trips t ON r.route_id = t.route_id
     GROUP BY r.route_id, r.route_short_name, r.route_long_name, r.route_type, r.agency_id
     ORDER BY 
         trip_count DESC,
@@ -148,14 +155,6 @@ manifest = {
 }
 
 # Save manifest and routes index
-manifest_path = BASE_DIR / "data" / "lake" / "nsw_data_qa_manifest.json"
-routes_catalog_path = BASE_DIR / "data" / "lake" / "nsw_routes_catalog.json"
-
-with open(manifest_path, "w", encoding="utf-8") as f:
-    json.dump(manifest, f, indent=2)
-
-with open(routes_catalog_path, "w", encoding="utf-8") as f:
-    json.dump(routes_catalog, f)
-
-print(f"Saved {manifest_path} ({os.path.getsize(manifest_path)/1024:.1f} KB)")
-print(f"Saved {routes_catalog_path} ({os.path.getsize(routes_catalog_path)/1024:.1f} KB)")
+publish_lake_json("nsw_data_qa_manifest.json", manifest, cache_control="public, max-age=120", indent=2)
+publish_lake_json("nsw_routes_catalog.json", routes_catalog)
+print("Published nsw_data_qa_manifest.json and nsw_routes_catalog.json to GCS")

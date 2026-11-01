@@ -105,10 +105,8 @@ def test_data_qa_manifest_contract_and_route_99():
     assert "2606" in agencies, "Must include Busways Central Coast Route 99 (agency 2606)"
 
     # Verify Route 99 in optimizations
-    opt_path = Path("data/lake/nsw_timetable_optimizations.json")
-    assert opt_path.exists()
-    with open(opt_path, "r", encoding="utf-8") as f:
-        opts = json.load(f)
+    from tests.gcs_helpers import load_gcs_lake_json
+    opts = load_gcs_lake_json("nsw_timetable_optimizations.json")
 
     assert "99_premier_illawarra_helensburgh" in opts, "Must include Route 99 Helensburgh Station optimization"
     h_opt = opts["99_premier_illawarra_helensburgh"]

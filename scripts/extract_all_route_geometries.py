@@ -2,10 +2,10 @@
 """
 scripts/extract_all_route_geometries.py
 Extracts 100% REAL GTFS stops and road-following polyline shapes for all NSW transit routes.
-Sources:
-1. data/lake/nsw_routes.parquet, nsw_trips.parquet, nsw_stop_times.parquet, nsw_stops.parquet
-2. shapes.txt from data/cache/nsw_gtfs_complete.zip
-Generates data/lake/nsw_route_geometries.json
+Sources (all on GCS):
+1. gs://<bucket>/lake/nsw_routes, nsw_trips, nsw_stop_times, nsw_stops Parquet tables
+2. shapes.txt from gs://<bucket>/cache/nsw_gtfs_complete.zip (streamed to a temp file)
+Publishes gs://<bucket>/lake/nsw_route_geometries.json (no local data written)
 """
 
 import sys
@@ -17,9 +17,14 @@ import json
 import time
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+import tempfile
 
-con = duckdb.connect()
+BASE_DIR = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(BASE_DIR))
+from src.Ingestion.lake_io import get_lake_engine, publish_lake_json
+from src.Ingestion.gcs_manager import download_blob_from_gcs
+
+con = get_lake_engine().con  # routes / trips / stop_times / stops views backed by GCS Parquet
 
 print("=== 1. Extracting representative trips and stops from Parquet ===")
 t0 = time.time()
@@ -28,9 +33,9 @@ WITH trip_counts AS (
     SELECT t.route_id, r.route_short_name, r.route_long_name, r.agency_id, r.route_type,
            t.trip_id, t.shape_id, count(st.stop_sequence) as stop_count,
            ROW_NUMBER() OVER (PARTITION BY t.route_id ORDER BY count(st.stop_sequence) DESC) as rn
-    FROM 'data/lake/nsw_trips.parquet' t
-    JOIN 'data/lake/nsw_routes.parquet' r ON t.route_id = r.route_id
-    JOIN 'data/lake/nsw_stop_times.parquet' st ON t.trip_id = st.trip_id
+    FROM trips t
+    JOIN routes r ON t.route_id = r.route_id
+    JOIN stop_times st ON t.trip_id = st.trip_id
     GROUP BY t.route_id, r.route_short_name, r.route_long_name, r.agency_id, r.route_type, t.trip_id, t.shape_id
 )
 SELECT tc.route_id, tc.route_short_name, tc.route_long_name, tc.agency_id, tc.route_type,
@@ -48,8 +53,8 @@ q_stops = f"""
 WITH rep_trips AS ({q_rep})
 SELECT rt.route_id, st.stop_sequence, s.stop_id, s.stop_name, s.stop_lat, s.stop_lon
 FROM rep_trips rt
-JOIN 'data/lake/nsw_stop_times.parquet' st ON rt.trip_id = st.trip_id
-JOIN 'data/lake/nsw_stops.parquet' s ON st.stop_id = s.stop_id
+JOIN stop_times st ON rt.trip_id = st.trip_id
+JOIN stops s ON st.stop_id = s.stop_id
 ORDER BY rt.route_id, st.stop_sequence
 """
 df_stops = con.execute(q_stops).df()
@@ -75,7 +80,10 @@ print(f"=== 3. Extracting and simplifying road shape polylines for {len(target_s
 t2 = time.time()
 
 raw_shapes = {s: [] for s in target_shapes}
-with zipfile.ZipFile(BASE_DIR / 'data' / 'cache' / 'nsw_gtfs_complete.zip') as z:
+_tmp = tempfile.TemporaryDirectory()
+_zip_path = Path(_tmp.name) / 'nsw_gtfs_complete.zip'
+assert download_blob_from_gcs('cache/nsw_gtfs_complete.zip', _zip_path), "gs://<bucket>/cache/nsw_gtfs_complete.zip not found"
+with zipfile.ZipFile(_zip_path) as z:
     with z.open('shapes.txt') as f:
         f.readline() # header
         for line in f:
@@ -87,6 +95,7 @@ with zipfile.ZipFile(BASE_DIR / 'data' / 'cache' / 'nsw_gtfs_complete.zip') as z
             if sid in raw_shapes:
                 raw_shapes[sid].append((float(parts[2]), float(parts[1]), int(parts[3]))) # lon, lat, seq
 
+_tmp.cleanup()
 print(f"Read shapes in {time.time()-t2:.2f}s. Now simplifying geometries...")
 t3 = time.time()
 
@@ -174,12 +183,8 @@ for _, r in df_rep.iterrows():
     
     route_geometries["by_short_name"][rsn_key].append(item)
 
-out_file = BASE_DIR / "data" / "lake" / "nsw_route_geometries.json"
-print(f"=== 4. Writing {out_file} ===")
-with open(out_file, "w", encoding="utf-8") as f:
-    json.dump(route_geometries, f, separators=(',', ':'))
-
-file_size_mb = out_file.stat().st_size / (1024 * 1024)
-print(f"Done! Written {out_file.name} ({file_size_mb:.2f} MB)")
+print("=== 4. Publishing nsw_route_geometries.json to GCS ===")
+publish_lake_json("nsw_route_geometries.json", route_geometries, cache_control="no-cache, max-age=0")
+print("Done! Published gs://<bucket>/lake/nsw_route_geometries.json")
 print(f"Total routes with road geometry: {len(route_geometries['by_route_id']):,}")
 print(f"Total distinct route short names: {len(route_geometries['by_short_name']):,}")

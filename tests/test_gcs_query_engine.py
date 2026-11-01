@@ -89,11 +89,8 @@ def test_bidirectional_shift_optimizer():
 def test_spatial_route_geometry_and_1km_infrastructure():
     import json
     from pathlib import Path
-    opts_file = Path("data/lake/nsw_timetable_optimizations.json")
-    assert opts_file.exists(), "nsw_timetable_optimizations.json must exist"
-
-    with open(opts_file, "r", encoding="utf-8") as f:
-        data = json.load(f)
+    from tests.gcs_helpers import load_gcs_lake_json
+    data = load_gcs_lake_json("nsw_timetable_optimizations.json")
 
     assert "275_cdc_hunter_morisset" in data
     assert "275_interline_liverpool" in data
@@ -242,8 +239,8 @@ def test_dubbo_route_geometries_present_for_map():
     - All routes serving Dubbo Station have genuine road network geometry
     """
     import json
-    with open("data/lake/nsw_active_route_geometries.json", "r", encoding="utf-8") as f:
-        active_geoms = json.load(f)
+    from tests.gcs_helpers import load_gcs_lake_json
+    active_geoms = load_gcs_lake_json("nsw_active_route_geometries.json")
     
     by_short = active_geoms.get("by_short_name", {})
     # Core Dubbo routes
@@ -253,8 +250,8 @@ def test_dubbo_route_geometries_present_for_map():
         assert len(geom) >= 2, f"Route {r} must have physical road geometry points"
 
     # Verify scenario in nsw_timetable_optimizations.json
-    with open("data/lake/nsw_timetable_optimizations.json", "r", encoding="utf-8") as f:
-        opts = json.load(f)
+    from tests.gcs_helpers import load_gcs_lake_json
+    opts = load_gcs_lake_json("nsw_timetable_optimizations.json")
 
     assert "dubbo_train_station" in opts
     sc = opts["dubbo_train_station"]
@@ -291,8 +288,8 @@ def test_taree_corridor_bus_routes_and_geometries():
         assert core_r in taree_routes, f"Core Taree bus route {core_r} should be present"
 
     # Verify road network centerlines in active geometries
-    with open("data/lake/nsw_active_route_geometries.json", "r", encoding="utf-8") as f:
-        active_geoms = json.load(f)
+    from tests.gcs_helpers import load_gcs_lake_json
+    active_geoms = load_gcs_lake_json("nsw_active_route_geometries.json")
 
     by_short = active_geoms.get("by_short_name", {})
     for core_r in ["310", "316", "320", "319", "311", "312", "313", "314", "150", "154", "309", "135", "136"]:

@@ -310,6 +310,30 @@ function bindEvents() {
     });
   });
 
+  // Header global search -> routes into the Step 1 natural language inquiry
+  const globalSearch = document.getElementById("globalSearch");
+  if (globalSearch) {
+    globalSearch.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter" || !globalSearch.value.trim()) return;
+      nlInput.value = globalSearch.value.trim();
+      analyzeQuery(nlInput.value);
+      const panelQuery = document.getElementById("panel-query");
+      if (panelQuery) panelQuery.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }
+
+  // Header "Run Optimizer" -> same action as Step 2 "Run GCS Query"
+  const btnHeaderRun = document.getElementById("btnHeaderRun");
+  if (btnHeaderRun) {
+    btnHeaderRun.addEventListener("click", () => {
+      if (btnRunQuery.disabled) return;
+      executeScenarioQuery();
+    });
+  }
+
+  // Sidebar + workflow pill active-section highlighting
+  bindSectionNavHighlight();
+
   // Close Inspector Button
   if (btnCloseInspector) {
     btnCloseInspector.addEventListener("click", () => {
@@ -1221,7 +1245,7 @@ async function analyzeQuery(queryText) {
     renderGenericClarificationPrompt();
     clarificationBox.style.display = "flex";
   } finally {
-    btnAnalyze.innerHTML = "<span>Analyze Query</span>";
+    btnAnalyze.innerHTML = '<span class="material-symbols-outlined text-[20px]">manage_search</span><span>Analyze Query</span>';
     btnAnalyze.disabled = false;
   }
 }
@@ -2112,11 +2136,11 @@ function updateMap(mapData, label, scenarioContext) {
         marker.bindPopup(`
           <div style="min-width: 200px; font-family: Inter, sans-serif;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem;">
-              <b style="color: #0284c7; font-size: 0.92rem;">${s.name}</b>
+              <b style="color: #81f0ff; font-size: 0.92rem;">${s.name}</b>
             </div>
-            <span class="badge" style="font-size: 0.7rem; background: rgba(0, 229, 255, 0.15); color: #0284c7;">Stop #${s.stop_code || s.stop_id}</span>
-            <div style="font-size: 0.8rem; color: #475569; margin-top: 0.25rem;">${s.mode || "Transit Stop"}</div>
-            <div style="font-size: 0.74rem; color: #0284c7; margin-top: 0.4rem; font-weight: 600;">
+            <span class="badge" style="font-size: 0.7rem; background: rgba(129, 240, 255, 0.15); color: #81f0ff;">Stop #${s.stop_code || s.stop_id}</span>
+            <div style="font-size: 0.8rem; color: #cbd5e1; margin-top: 0.25rem;">${s.mode || "Transit Stop"}</div>
+            <div style="font-size: 0.74rem; color: #81f0ff; margin-top: 0.4rem; font-weight: 600;">
               Serving Routes: ${(s.routes ? s.routes.slice(0, 10).join(", ") : "Connecting Services")}
             </div>
           </div>
@@ -2417,6 +2441,7 @@ function updateMap(mapData, label, scenarioContext) {
         <div class="infra-popup-name">${node.name}</div>
         <div class="infra-popup-dist">📏 ${node.distance_m}m from selected route</div>
         <div class="infra-popup-services">${node.connecting_services || "Public Transport Node"}</div>
+        ${node.opal ? `<div class="infra-popup-opal" style="margin-top: 0.3rem; font-size: 0.75rem; color: #fbbf24; font-weight: 600;">💳 Opal: ${node.opal}</div>` : ""}
         <div style="margin-top: 0.35rem; font-size: 0.72rem; color: #67e8f9;">👉 Click marker to inspect details in table below</div>
       </div>
     `;
@@ -2544,7 +2569,7 @@ function renderRecommendationsTable(recommendations) {
       <td><code>${row.trip_id}</code></td>
       <td>${row.headsign || "Connecting Service"}</td>
       <td style="color: var(--text-muted);">${row.base_dep}</td>
-      <td style="color: #fff; font-weight: 700;">${row.suggested_dep}</td>
+      <td style="color: var(--text-main); font-weight: 700;">${row.suggested_dep}</td>
       <td style="color: var(--accent-cyan); font-weight: 700;">${row.shift_min}</td>
       <td>${row.inbound_buffer}</td>
       <td>${row.outbound_buffer}</td>
@@ -2591,8 +2616,8 @@ function renderAnalyticsSection(analytics, corridorLabel) {
       </tr>
       <tr>
         <td><b>Fleet Resource Requirement</b></td>
-        <td style="color: #fff;">${pm.fleet_pvr} Buses</td>
-        <td style="color: #fff; font-weight: 700;">${pm.fleet_pvr} Buses</td>
+        <td style="color: var(--text-main);">${pm.fleet_pvr} Buses</td>
+        <td style="color: var(--text-main); font-weight: 700;">${pm.fleet_pvr} Buses</td>
         <td><span class="badge-tag optimal">0 Extra Budget ($0.00)</span></td>
         <td style="color: var(--accent-emerald);">${pm.driver_hours_change}</td>
       </tr>
@@ -2616,16 +2641,16 @@ function renderAnalyticsSection(analytics, corridorLabel) {
           {
             label: "Baseline Existing Schedule",
             data: bd.baseline,
-            backgroundColor: "rgba(245, 158, 11, 0.65)",
-            borderColor: "#f59e0b",
+            backgroundColor: "rgba(212, 115, 0, 0.7)",
+            borderColor: "#d47300",
             borderWidth: 1.5,
             borderRadius: 6
           },
           {
             label: "Coordinated GCS Optimization",
             data: bd.optimized,
-            backgroundColor: "rgba(16, 185, 129, 0.75)",
-            borderColor: "#10b981",
+            backgroundColor: "rgba(0, 105, 115, 0.85)",
+            borderColor: "#006973",
             borderWidth: 1.5,
             borderRadius: 6
           }
@@ -2636,25 +2661,25 @@ function renderAnalyticsSection(analytics, corridorLabel) {
         maintainAspectRatio: false,
         plugins: {
           legend: {
-            labels: { color: "#cbd5e1", font: { family: "Inter", size: 12 } }
+            labels: { color: "#44474e", font: { family: "Plus Jakarta Sans", size: 12, weight: "600" } }
           },
           tooltip: {
-            backgroundColor: "rgba(11, 19, 43, 0.95)",
+            backgroundColor: "rgba(0, 16, 38, 0.95)",
             titleColor: "#fff",
-            bodyColor: "#e2e8f0",
-            borderColor: "rgba(255, 255, 255, 0.15)",
+            bodyColor: "#d5e3ff",
+            borderColor: "rgba(255, 255, 255, 0.12)",
             borderWidth: 1
           }
         },
         scales: {
           x: {
-            ticks: { color: "#94a3b8", font: { family: "Inter", size: 11 } },
-            grid: { color: "rgba(255, 255, 255, 0.04)" }
+            ticks: { color: "#44474e", font: { family: "Plus Jakarta Sans", size: 11 } },
+            grid: { color: "rgba(19, 27, 46, 0.05)" }
           },
           y: {
             beginAtZero: true,
-            ticks: { color: "#94a3b8", font: { family: "Inter", size: 11 }, precision: 0 },
-            grid: { color: "rgba(255, 255, 255, 0.05)" }
+            ticks: { color: "#44474e", font: { family: "Plus Jakarta Sans", size: 11 }, precision: 0 },
+            grid: { color: "rgba(19, 27, 46, 0.07)" }
           }
         }
       }
@@ -2675,21 +2700,21 @@ function renderAnalyticsSection(analytics, corridorLabel) {
           {
             label: "Bus Feeder Departures",
             data: hf.bus_trips,
-            borderColor: "#00e5ff",
-            backgroundColor: "rgba(0, 229, 255, 0.12)",
+            borderColor: "#006973",
+            backgroundColor: "rgba(0, 105, 115, 0.12)",
             fill: true,
             tension: 0.35,
-            pointBackgroundColor: "#00e5ff",
+            pointBackgroundColor: "#006973",
             pointRadius: 3
           },
           {
             label: "Connecting Train/Metro Arrivals",
             data: hf.connecting_trips,
-            borderColor: "#818cf8",
-            backgroundColor: "rgba(129, 140, 248, 0.08)",
+            borderColor: "#0b2545",
+            backgroundColor: "rgba(11, 37, 69, 0.06)",
             fill: true,
             tension: 0.35,
-            pointBackgroundColor: "#818cf8",
+            pointBackgroundColor: "#0b2545",
             pointRadius: 3
           }
         ]
@@ -2699,25 +2724,25 @@ function renderAnalyticsSection(analytics, corridorLabel) {
         maintainAspectRatio: false,
         plugins: {
           legend: {
-            labels: { color: "#cbd5e1", font: { family: "Inter", size: 12 } }
+            labels: { color: "#44474e", font: { family: "Plus Jakarta Sans", size: 12, weight: "600" } }
           },
           tooltip: {
-            backgroundColor: "rgba(11, 19, 43, 0.95)",
+            backgroundColor: "rgba(0, 16, 38, 0.95)",
             titleColor: "#fff",
-            bodyColor: "#e2e8f0",
-            borderColor: "rgba(255, 255, 255, 0.15)",
+            bodyColor: "#d5e3ff",
+            borderColor: "rgba(255, 255, 255, 0.12)",
             borderWidth: 1
           }
         },
         scales: {
           x: {
-            ticks: { color: "#94a3b8", font: { family: "Inter", size: 11 } },
-            grid: { color: "rgba(255, 255, 255, 0.04)" }
+            ticks: { color: "#44474e", font: { family: "Plus Jakarta Sans", size: 11 } },
+            grid: { color: "rgba(19, 27, 46, 0.05)" }
           },
           y: {
             beginAtZero: true,
-            ticks: { color: "#94a3b8", font: { family: "Inter", size: 11 }, precision: 0 },
-            grid: { color: "rgba(255, 255, 255, 0.05)" }
+            ticks: { color: "#44474e", font: { family: "Plus Jakarta Sans", size: 11 }, precision: 0 },
+            grid: { color: "rgba(19, 27, 46, 0.07)" }
           }
         }
       }
@@ -2752,7 +2777,7 @@ function renderInfrastructureTable(infraList) {
       <td><b>${node.name}</b></td>
       <td><span class="infra-popup-badge mode-${node.mode}"><span class="tfnsw-roundel tfnsw-${node.mode}" style="width: 18px; height: 18px; font-size: 0.68rem; min-width: 18px;">${modeLetter}</span> ${node.badge}</span></td>
       <td style="color: var(--accent-cyan); font-weight: 600;">${node.distance_m} m</td>
-      <td style="color: #fff;">${walkMins} min</td>
+      <td style="color: var(--text-main);">${walkMins} min</td>
       <td style="color: var(--text-muted);">${node.connecting_services || "Statewide Public Transit"}</td>
     `;
 
@@ -2809,3 +2834,26 @@ function renderScenarioSteps(scenarioSteps) {
   });
 }
 const renderAiSteps = renderScenarioSteps; // Backward-compatible alias
+
+
+// Highlight the sidebar nav link and header workflow pill for the panel currently in view
+function bindSectionNavHighlight() {
+  const links = Array.from(document.querySelectorAll('#sideNav a.nav-link[href^="#"], a.step-pill[href^="#"]'));
+  if (links.length === 0 || typeof IntersectionObserver === "undefined") return;
+
+  const setActive = (id) => {
+    links.forEach((a) => a.classList.toggle("active", a.getAttribute("href") === `#${id}`));
+  };
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      const visible = entries
+        .filter((e) => e.isIntersecting)
+        .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+      if (visible.length > 0) setActive(visible[0].target.id);
+    },
+    { rootMargin: "-120px 0px -55% 0px", threshold: 0 }
+  );
+
+  document.querySelectorAll('section[id^="panel-"]').forEach((sec) => observer.observe(sec));
+}

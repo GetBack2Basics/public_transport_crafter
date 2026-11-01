@@ -25,6 +25,8 @@ import time
 import urllib.request
 import logging
 import argparse
+import re
+import tempfile
 from pathlib import Path
 from typing import Optional, Dict, Any, List
 import pandas as pd
@@ -34,7 +36,7 @@ if str(BASE_DIR) not in sys.path:
     sys.path.insert(0, str(BASE_DIR))
 
 from src.Query.gcs_query_engine import GcsQueryEngine
-from src.Ingestion.gcs_manager import upload_file_to_gcs, get_active_gcs_bucket
+from src.Ingestion.gcs_manager import upload_file_to_gcs, download_blob_from_gcs, get_active_gcs_bucket
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("generate_real_timetable_optimizations")
@@ -141,71 +143,70 @@ def extract_corridor_spatial_data(engine, trip_id, route_name, station_keyword):
 
     bounds = [[min_lat, min_lon], [max_lat, max_lon]]
 
-    # 2. Extract candidate infrastructure stops in bounding box
+    # 2. Candidate stops in bounding box, classified purely from official GTFS:
+    #    mode = route_type of the routes that actually serve the stop (active calendar services only).
+    #    Stops with no scheduled service (e.g. historic stations) never appear.
+    from datetime import datetime
+    today_str = datetime.now().strftime("%Y%m%d")
     q_cand = f"""
-    SELECT DISTINCT s.stop_id, s.stop_name, s.stop_lat, s.stop_lon
+    SELECT s.stop_name, s.stop_lat, s.stop_lon, r.route_type, COUNT(DISTINCT t.trip_id) AS trips
     FROM stops s
+    JOIN stop_times st ON st.stop_id = s.stop_id
+    JOIN trips t ON t.trip_id = st.trip_id
+    JOIN routes r ON r.route_id = t.route_id
+    JOIN calendar c ON c.service_id = t.service_id
     WHERE s.stop_lat BETWEEN {min_lat} AND {max_lat}
       AND s.stop_lon BETWEEN {min_lon} AND {max_lon}
+      AND c.end_date >= '{today_str}'
       AND (
-          s.stop_name ILIKE '%Station%'
+          r.route_type NOT IN (3, 700, 712, 714)  -- any rail / metro / light rail / ferry / coach stop
           OR s.stop_name ILIKE '%Interchange%'
+          OR s.stop_name ILIKE '%Station%'
           OR s.stop_name ILIKE '%Wharf%'
-          OR s.stop_name ILIKE '%Ferry%'
-          OR s.stop_name ILIKE '%Jetty%'
-          OR s.stop_name ILIKE '%Metro%'
-          OR s.stop_name ILIKE '%Stand%'
       )
+    GROUP BY s.stop_name, s.stop_lat, s.stop_lon, r.route_type
     """
     df_cand = engine.con.execute(q_cand).df()
 
-    # 3. Calculate distance to polyline and filter within 1km (1000m)
+    MODE_INFO = {
+        "train": ("Train Station", "Heavy Rail Suburban & Intercity Trains"),
+        "metro": ("Metro Station", "Sydney Metro Automated Rapid Transit"),
+        "lightrail": ("Light Rail Stop", "Sydney / Newcastle Light Rail"),
+        "ferry": ("Ferry Wharf", "Public Passenger Ferry Service"),
+        "coach": ("Coach Stop", "Regional Coach Services"),
+        "bus": ("Bus Stop", "Scheduled Bus Services"),
+    }
+
+    # 3. Pick each stop's mode by priority (rail > ferry > coach > bus), then filter within 1km
     infrastructure = []
     seen_names = set()
-
+    stop_modes = {}
     for _, row in df_cand.iterrows():
-        s_name = row['stop_name']
-        s_lat = float(row['stop_lat'])
-        s_lon = float(row['stop_lon'])
+        key = (row['stop_name'].strip(), float(row['stop_lat']), float(row['stop_lon']))
+        mode = engine._ROUTE_TYPE_MODE.get(int(row['route_type']), "bus")
+        stop_modes.setdefault(key, set()).add(mode)
 
-        # Skip generic intermediate street stops if not a hub
-        if "Stand" in s_name and "Station" not in s_name and "Interchange" not in s_name:
-            continue
-
+    for (clean_name, s_lat, s_lon), modes in stop_modes.items():
+        mode = next(m for m in engine._MODE_PRIORITY if m in modes)
         min_d = min(haversine_m(s_lat, s_lon, r_lat, r_lon) for r_lat, r_lon in route_pts)
-        if min_d <= 1000:
-            # Mode detection
-            clean_name = s_name.strip()
-            if clean_name in seen_names:
-                continue
-            seen_names.add(clean_name)
+        if min_d > 1000 or (clean_name, mode) in seen_names:
+            continue
+        seen_names.add((clean_name, mode))
+        badge, services = MODE_INFO[mode]
+        if mode == "bus" and "Interchange" in clean_name:
+            badge = "Bus Interchange"
+        infrastructure.append({
+            "name": clean_name,
+            "mode": mode,
+            "badge": badge,
+            "lat": s_lat,
+            "lon": s_lon,
+            "distance_m": int(min_d),
+            "connecting_services": services
+        })
 
-            if "Metro" in s_name:
-                mode = "metro"
-                badge = "Metro Station"
-                services = "Sydney Metro M1 Automated Rapid Transit"
-            elif "Wharf" in s_name or "Ferry" in s_name or "Jetty" in s_name:
-                mode = "ferry"
-                badge = "Ferry Wharf"
-                services = "Public Passenger Ferry & Lake Vessel Service"
-            elif "Platform" in s_name or ("Station" in s_name and "Stand" not in s_name):
-                mode = "train"
-                badge = "Train Station"
-                services = "Heavy Rail Suburban & Intercity Trains"
-            else:
-                mode = "bus"
-                badge = "Bus Interchange"
-                services = "Key Bus Feeder & Arterial Interchange"
-
-            infrastructure.append({
-                "name": clean_name,
-                "mode": mode,
-                "badge": badge,
-                "lat": s_lat,
-                "lon": s_lon,
-                "distance_m": int(min_d),
-                "connecting_services": services
-            })
+    # Annotate with today's activity + Opal summary (all nodes are already GTFS-active)
+    infrastructure = engine.verify_infrastructure_activity(infrastructure)
 
     # Sort infrastructure by mode and distance
     infrastructure.sort(key=lambda x: (0 if x['mode'] in ('train', 'metro') else 1 if x['mode'] == 'ferry' else 2, x['distance_m']))
@@ -376,7 +377,7 @@ JOIN train_events tr ON tr.train_arr_dt BETWEEN b.bus_dep_dt + INTERVAL 0 MINUTE
 ORDER BY b.bus_dep_dt ASC;"""
 
     try:
-        df_res = engine.con.execute(sql.replace(f"read_parquet('gs://{bucket}/lake/", "read_parquet('data/lake/")).df()
+        df_res = run_lake_sql(engine, sql, bucket)
     except Exception as e:
         logger.warning(f"Failed local fallback SQL: {e}")
         df_res = pd.DataFrame()
@@ -536,19 +537,49 @@ ORDER BY b.bus_dep_dt ASC;"""
     }
 
 
+def run_lake_sql(engine, sql: str, bucket: str) -> pd.DataFrame:
+    """Runs SQL against the GCS lakehouse tables registered on the engine (routes/trips/stop_times/stops)."""
+    sql = re.sub(r"read_parquet\('gs://[^/]+/lake/nsw_(\w+)\.parquet'\)", r"\1", sql)
+    return engine.con.execute(sql).df()
+
+
+def load_remote_optimizations(bucket: str) -> dict:
+    """Loads the current optimizations JSON from GCS (no persistent local copy)."""
+    with tempfile.TemporaryDirectory() as tmp:
+        dest = Path(tmp) / "nsw_timetable_optimizations.json"
+        if download_blob_from_gcs("lake/nsw_timetable_optimizations.json", dest, bucket_name=bucket):
+            try:
+                return json.loads(dest.read_text(encoding="utf-8"))
+            except Exception:
+                return {}
+    return {}
+
+
+def publish_optimizations(data: dict, upload_to_gcs: bool) -> None:
+    """Writes the JSON to a temp file and publishes it directly to GCS."""
+    if not upload_to_gcs:
+        logger.info("Skipping GCS upload (--no-upload specified); nothing persisted locally.")
+        return
+    with tempfile.TemporaryDirectory() as tmp:
+        out_file = Path(tmp) / "nsw_timetable_optimizations.json"
+        out_file.write_text(json.dumps(data, indent=2), encoding="utf-8")
+        upload_file_to_gcs(
+            out_file,
+            "lake/nsw_timetable_optimizations.json",
+            content_type="application/json; charset=utf-8",
+            cache_control="public, max-age=300"
+        )
+    logger.info(f"Published {len(data)} optimization mappings to GCS.")
+
+
 def generate_all_real_optimizations(target_route: Optional[str] = None, target_interchange: Optional[str] = None, target_route_b: Optional[str] = None, upload_to_gcs: bool = True):
     bucket = get_active_gcs_bucket()
     logger.info(f"Connecting GcsQueryEngine to GCS bucket: gs://{bucket}...")
     engine = GcsQueryEngine(bucket_name=bucket)
+    if engine.fs is None:
+        raise RuntimeError("Lakehouse engine is not connected to GCS (set USE_REMOTE_GCS=1 with valid ADC); refusing to run on local files.")
 
-    out_file = BASE_DIR / "data" / "lake" / "nsw_timetable_optimizations.json"
-    lake_output = {}
-    if out_file.exists():
-        try:
-            with open(out_file, "r", encoding="utf-8") as f:
-                lake_output = json.load(f)
-        except Exception:
-            lake_output = {}
+    lake_output = load_remote_optimizations(bucket)
 
     if target_route:
         logger.info(f"Generating dynamic optimization for target route: {target_route}...")
@@ -558,16 +589,7 @@ def generate_all_real_optimizations(target_route: Optional[str] = None, target_i
             for alias in scenario.get("aliases", []):
                 lake_output[alias] = scenario
             logger.info(f"Successfully computed optimization for Route {target_route} (Key: {scenario['key']})")
-            with open(out_file, "w", encoding="utf-8") as f:
-                json.dump(lake_output, f, indent=2)
-            if upload_to_gcs:
-                upload_file_to_gcs(
-                    out_file,
-                    "lake/nsw_timetable_optimizations.json",
-                    content_type="application/json; charset=utf-8",
-                    cache_control="public, max-age=300"
-                )
-                logger.info(f"Uploaded updated optimization matrices with Route {target_route} to GCS.")
+            publish_optimizations(lake_output, upload_to_gcs)
             return lake_output
         else:
             logger.error(f"Could not compute optimization for Route {target_route}")
@@ -851,7 +873,7 @@ JOIN train_events tr ON tr.train_arr_dt BETWEEN b.bus_dep_dt + INTERVAL {eff_min
 ORDER BY b.bus_dep_dt ASC;"""
 
         try:
-            df_res = engine.con.execute(sql.replace(f"read_parquet('gs://{bucket}/lake/", "read_parquet('data/lake/")).df()
+            df_res = run_lake_sql(engine, sql, bucket)
             recommendations = []
             seen_trips = set()
 
@@ -1187,22 +1209,7 @@ ORDER BY b.bus_dep_dt ASC;"""
         for alias in sc.get("aliases", []):
             lake_output[alias] = scenario_data
 
-    out_file = BASE_DIR / "data" / "lake" / "nsw_timetable_optimizations.json"
-    with open(out_file, "w", encoding="utf-8") as f:
-        json.dump(lake_output, f, indent=2)
-
-    logger.info(f"Wrote {len(lake_output)} real optimization mappings with spatial layers to {out_file} ({out_file.stat().st_size} bytes)")
-
-    if upload_to_gcs:
-        upload_file_to_gcs(
-            out_file,
-            "lake/nsw_timetable_optimizations.json",
-            content_type="application/json; charset=utf-8",
-            cache_control="public, max-age=300"
-        )
-        logger.info("Successfully uploaded real optimization matrices with 1km infrastructure to GCS.")
-    else:
-        logger.info("Skipping GCS upload (--no-upload specified).")
+    publish_optimizations(lake_output, upload_to_gcs)
 
 
 if __name__ == "__main__":
